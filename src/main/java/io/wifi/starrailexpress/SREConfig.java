@@ -142,6 +142,16 @@ public class SREConfig implements ConfigData {
     public boolean isTeammedStatsSyncEnabled = true;
     @ConfigEntry.Category(value = "stats")
     public boolean isDetailedStatsSyncEnabled = false;
+    @ConfigEntry.Category(value = "progression")
+    public boolean enableProgressionSystem = true;
+    @ConfigEntry.Category(value = "progression")
+    public boolean progressionSyncServerEnabled = false;
+    @ConfigEntry.Category(value = "progression")
+    public boolean enableWeeklyTasks = true;
+    @ConfigEntry.Category(value = "progression")
+    public int dailyTaskCount = 6;
+    @ConfigEntry.Category(value = "progression")
+    public int weeklyTaskCount = 6;
     // 皮肤设置
     @ConfigEntry.Category(value = "skin")
     public boolean isItemSkinEnabled = true;

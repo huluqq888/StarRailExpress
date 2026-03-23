@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.api;
 
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import net.minecraft.resources.ResourceLocation;
@@ -58,6 +59,7 @@ public class RoleMethodDispatcher {
      */
     public static void callOnFinishQuest(Player player, String quest, int taskStreak, boolean isParallelTask) {
         SRERole role = getCurrentRole(player);
+        SREPlayerProgressionComponent.KEY.get(player).onRoundQuestFinished(quest);
         if (role != null) {
             // 计算连击奖励
             int streakBonus = Math.min(taskStreak * GameConstants.STREAK_BONUS_PER_LEVEL,

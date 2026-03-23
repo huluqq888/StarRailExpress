@@ -1,0 +1,295 @@
+package io.wifi.starrailexpress.client.gui.screen;
+
+import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
+import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent.FactionCardType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.agmas.noellesroles.client.widget.custom_button.ModernButton;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProgressionPassScreen extends Screen {
+
+    // ------- layout constants -------
+    /** 每行任务高度 */
+    private static final int ROW_H      = 44;
+    /** 行间距 */
+    private static final int ROW_STRIDE = ROW_H + 6;
+    /** 顶部标题区高度: 标题 + 等级行 + 经验条 + 内边距 */
+    private static final int HDR_H      = 92;
+    /** 统计卡片区高度: 卡片 48 + 间距 8 */
+    private static final int SUM_H      = 56;
+    /** Tab 按钮行高度: 按钮 22 + 间距 4 */
+    private static final int TAB_H      = 26;
+    /** 任务区顶部偏移 = HDR_H + SUM_H + TAB_H */
+    private static final int QUEST_TOP  = HDR_H + SUM_H + TAB_H;  // 174
+    /** 分页行高度 */
+    private static final int PG_H       = 28;
+    /** 底部区域高度: 信息文字 + 阵营按钮 */
+    private static final int BT_H       = 76;
+
+    // ------- 组件状态 -------
+    private final SREPlayerProgressionComponent progression;
+    private final List<Button> cardButtons = new ArrayList<>();
+
+    private int activeTab  = 0;   // 0 = 每日, 1 = 周常
+    private int dailyPage  = 0;
+    private int weeklyPage = 0;
+
+    // ------- 布局缓存 (computeLayout → init，render 直接读取) -------
+    private int panelX, panelY, panelW, panelH;
+    private int questAreaY, questAreaH, rowsPerPage;
+
+    public ProgressionPassScreen() {
+        super(Component.translatable("sre.pass.name"));
+        this.progression = SREPlayerProgressionComponent.KEY.get(Minecraft.getInstance().player);
+    }
+
+    // =========================================================================
+    //  布局计算
+    // =========================================================================
+
+    private void computeLayout() {
+        panelW      = Math.max(240, this.width  - 8);
+        panelH      = Math.max(280, this.height - 8);
+        panelX      = (this.width  - panelW) / 2;
+        panelY      = (this.height - panelH) / 2;
+        questAreaY  = panelY + QUEST_TOP;
+        questAreaH  = Math.max(ROW_STRIDE, panelH - QUEST_TOP - PG_H - BT_H);
+        rowsPerPage = Math.max(1, questAreaH / ROW_STRIDE);
+    }
+
+    // =========================================================================
+    //  界面初始化
+    // =========================================================================
+
+    @Override
+    protected void init() {
+        clearWidgets();
+        cardButtons.clear();
+        computeLayout();
+
+        // 限制页码在合法范围内
+        int dSz = progression.getActiveDailyQuests().size();
+        int wSz = progression.getActiveWeeklyQuests().size();
+        dailyPage  = Math.min(dailyPage,  Math.max(0, (dSz  - 1) / rowsPerPage));
+        weeklyPage = Math.min(weeklyPage, Math.max(0, (wSz  - 1) / rowsPerPage));
+
+        // ---- Tab 按钮 ----
+        int tabY = panelY + HDR_H + SUM_H;
+        int tabW = Math.min(148, (panelW - 56) / 2);
+        addRenderableWidget(
+                ModernButton.builder(Component.translatable("sre.pass.day"), btn -> { activeTab = 0; init(); })
+                        .bounds(panelX + 24, tabY, tabW, 22)
+                        .accentColor(activeTab == 0 ? 0xFF3AA6FF : 0xFF2B3A55)
+                        .build());
+        addRenderableWidget(
+                ModernButton.builder(Component.translatable("sre.pass.weekly"), btn -> { activeTab = 1; init(); })
+                        .bounds(panelX + 24 + tabW + 8, tabY, tabW, 22)
+                        .accentColor(activeTab == 1 ? 0xFFFFD060 : 0xFF2B3A55)
+                        .build());
+
+        // ---- 分页按钮 ----
+        int pgY = questAreaY + questAreaH + 4;
+        addRenderableWidget(
+                ModernButton.builder(Component.literal("◀"), btn -> {
+                    if (activeTab == 0) dailyPage  = Math.max(0, dailyPage  - 1);
+                    else                weeklyPage = Math.max(0, weeklyPage - 1);
+                }).bounds(panelX + panelW / 2 - 60, pgY, 48, 20).accentColor(0xFF2B3A55).build());
+        addRenderableWidget(
+                ModernButton.builder(Component.literal("▶"), btn -> {
+                    int total = activeTab == 0
+                            ? progression.getActiveDailyQuests().size()
+                            : progression.getActiveWeeklyQuests().size();
+                    int pages = Math.max(1, (total + rowsPerPage - 1) / rowsPerPage);
+                    if (activeTab == 0) dailyPage  = Math.min(pages - 1, dailyPage  + 1);
+                    else                weeklyPage = Math.min(pages - 1, weeklyPage + 1);
+                }).bounds(panelX + panelW / 2 + 12, pgY, 48, 20).accentColor(0xFF2B3A55).build());
+
+        // ---- 阵营卡按钮 ----
+        int bottomY  = panelY + panelH - 38;
+        int cardBtnW = Math.max(60, Math.min(120, (panelW - 48 - 144 - 24) / 3));
+        cardButtons.add(addRenderableWidget(
+                createCardButton(panelX + 24,                       bottomY, cardBtnW, FactionCardType.KILLER,   0xFFB84141)));
+        cardButtons.add(addRenderableWidget(
+                createCardButton(panelX + 24 + (cardBtnW + 8),     bottomY, cardBtnW, FactionCardType.CIVILIAN, 0xFF4EA5D9)));
+        cardButtons.add(addRenderableWidget(
+                createCardButton(panelX + 24 + (cardBtnW + 8) * 2, bottomY, cardBtnW, FactionCardType.NEUTRAL,  0xFFD9A44E)));
+
+        // ---- 关闭按钮 ----
+        addRenderableWidget(
+                ModernButton.builder(Component.translatable("sre.pass.close"), button -> this.onClose())
+                        .bounds(panelX + panelW - 144, bottomY, 128, 22)
+                        .accentColor(0xFFE8E8F2)
+                        .build());
+    }
+
+    private Button createCardButton(int x, int y, int width, FactionCardType type, int accentColor) {
+        int count = progression.getFactionCards().getOrDefault(type, 0);
+        Component label = Component.translatable("sre.pass.faction." + type.questKey, Component.literal(type.displayName + " x" + count));
+        var btn = ModernButton.builder(label, b -> sendCommand("tmm:pass activate " + type.questKey))
+                .bounds(x, y, width, 22).accentColor(accentColor).build();
+        btn.active = count > 0 || progression.getActiveFactionCard() == type;
+        return btn;
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    // =========================================================================
+    //  渲染
+    // =========================================================================
+
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        super.render(g, mouseX, mouseY, partialTick);
+
+        // ---- 面板背景 ----
+        g.fillGradient(0, 0, width, height, 0xE0080C14, 0xF0121B2E);
+        g.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xD20C1018);
+        g.fill(panelX + 14, panelY + 14,          panelX + panelW - 14, panelY + 16,          0xFF3AA6FF);
+        g.fill(panelX + 14, panelY + panelH - 14, panelX + panelW - 14, panelY + panelH - 12, 0x6648D3FF);
+
+        // ---- 标题栏 ----
+        g.drawString(font, Component.translatable("sre.pass.name"), panelX + 24, panelY + 26, 0xFFF4F7FF, false);
+        g.drawString(font, "Lv." + progression.getLevel()
+                        + "  " + Component.translatable("sre.pass.exp_progress", progression.getExperience(), progression.getExperienceForNextLevel()).getString(),
+                panelX + 24, panelY + 48, 0xFF92B6E5, false);
+        renderProgressBar(g, panelX + 24, panelY + 70, panelW - 48, 12);
+
+        // ---- 统计卡片 ----
+        renderSummaryCards(g, panelX + 24, panelY + HDR_H);
+
+        // ---- 任务列表背景 ----
+        g.fill(panelX + 24, questAreaY, panelX + panelW - 24, questAreaY + questAreaH,
+                activeTab == 0 ? 0x8A111827 : 0x8A11211F);
+
+        // ---- 任务行 ----
+        List<SREPlayerProgressionComponent.PassQuest> quests =
+                activeTab == 0 ? progression.getActiveDailyQuests() : progression.getActiveWeeklyQuests();
+        int curPage = activeTab == 0 ? dailyPage : weeklyPage;
+        int start   = curPage * rowsPerPage;
+        int end     = Math.min(start + rowsPerPage, quests.size());
+        int rowY    = questAreaY + 4;
+        for (int i = start; i < end; i++) {
+            renderQuestRow(g, panelX + 24, rowY, panelW - 48, quests.get(i));
+            rowY += ROW_STRIDE;
+        }
+        if (quests.isEmpty()) {
+            g.drawString(font, Component.translatable("sre.no_quest"), panelX + 24 + 16, questAreaY + 16, 0xFF6A7D99, false);
+        }
+
+        // ---- 分页页码标签 ----
+        int totalPages = Math.max(1, (quests.size() + rowsPerPage - 1) / rowsPerPage);
+        String pgLabel = (curPage + 1) + " / " + totalPages;
+        int pgY = questAreaY + questAreaH + 4;
+        g.drawString(font, pgLabel, panelX + panelW / 2 - font.width(pgLabel) / 2, pgY + 6, 0xFF9BBAD4, false);
+
+        // ---- 底部信息 ----
+        int infoY = panelY + panelH - 62;
+        String activeCard = progression.getActiveFactionCard() == FactionCardType.NONE
+                ? Component.translatable("sre.pass.not_active").getString() : Component.translatable("sre.pass.faction." + progression.getActiveFactionCard().questKey, Component.literal(progression.getActiveFactionCard().displayName)).getString();
+        g.drawString(font, Component.translatable("sre.pass.active_card", activeCard).getString(), panelX + 24, infoY, 0xFFF7D791, false);
+        
+        long dailyRem  = Math.max(0L, progression.getLastQuestRefreshTime()
+                + 24L * 60L * 60L * 1000L - System.currentTimeMillis());
+        long weeklyRem = Math.max(0L, progression.getLastWeeklyRefreshTime()
+                + 7L * 24L * 60L * 60L * 1000L - System.currentTimeMillis());
+        g.drawString(font, Component.translatable("sre.pass.daily_refresh", formatDuration(dailyRem)).getString(),  panelX + 24,            infoY + 14, 0xFF86A3C5, false);
+        g.drawString(font, Component.translatable("sre.pass.weekly_refresh", formatDuration(weeklyRem)).getString(), panelX + panelW / 2 + 8, infoY + 14, 0xFFB09FFF, false);
+    }
+
+    // =========================================================================
+    //  子渲染器
+    // =========================================================================
+
+    private void renderProgressBar(GuiGraphics g, int x, int y, int width, int height) {
+        g.fill(x, y, x + width, y + height, 0x55334955);
+        int filled = (int) (width * (progression.getExperience()
+                / (float) Math.max(1, progression.getExperienceForNextLevel())));
+        g.fill(x, y, x + filled, y + height, 0xFF47C1FF);
+        g.fill(x + filled, y, x + Math.min(width, filled + 20), y + height, 0xAA9BE2FF);
+    }
+
+    private void renderSummaryCards(GuiGraphics g, int startX, int y) {
+        int cardW = (panelW - 72) / 3;
+        renderSummaryCard(g, startX,                  y, cardW, Component.translatable("sre.pass.total_exp").getString(),  String.valueOf(progression.getTotalExperience()),     0xFF61D0FF);
+        renderSummaryCard(g, startX + cardW + 12,     y, cardW, Component.translatable("sre.pass.coin_reward").getString(),  String.valueOf(progression.getClaimedCoinRewards()), 0xFFFFD166);
+        renderSummaryCard(g, startX + cardW * 2 + 24, y, cardW, Component.translatable("sre.pass.loot_count").getString(), String.valueOf(progression.getClaimedLootRewards()), 0xFFCDB4FF);
+    }
+
+    private void renderSummaryCard(GuiGraphics g, int x, int y, int w, String label, String value, int accent) {
+        g.fill(x, y, x + w, y + 48, 0xA5161D2C);
+        g.fill(x, y, x + 4, y + 48, accent);
+        g.drawString(font, label, x + 10, y + 8,  0xFF90A5C1, false);
+        g.drawString(font, value, x + 10, y + 26, 0xFFF5FAFF, false);
+    }
+
+    private void renderQuestRow(GuiGraphics g, int questX, int rowY, int questW,
+            SREPlayerProgressionComponent.PassQuest quest) {
+        int innerX = questX + 12;
+        int innerW = questW - 24;
+        g.fill(innerX, rowY, innerX + innerW, rowY + ROW_H, 0x66192135);
+
+        // 右列：进度比 + 进度条（宽度自适应）
+        int barW   = Math.min(160, Math.max(50, innerW / 3));
+        int barX   = innerX + innerW - barW - 8;
+        String frac = quest.progress + "/" + quest.target;
+        int fracW  = font.width(frac);
+        g.drawString(font, frac, barX - fracW - 6, rowY + 5, 0xFFE8EEF8, false);
+        g.fill(barX, rowY + 18, barX + barW, rowY + 23, 0x55384A66);
+        int barFilled = (int) (barW * (quest.progress / (float) Math.max(1, quest.target)));
+        g.fill(barX, rowY + 18, barX + barFilled, rowY + 23,
+                quest.rewarded ? 0xFF3DE4A8 : 0xFF59A9FF);
+
+        // 左列：标题 / 描述 / 奖励（紧凑格式）
+        int titleColor = quest.rewarded ? 0xFF7CFFC0 : 0xFFF3F7FF;
+        g.drawString(font, quest.title,       innerX + 8, rowY + 5,  titleColor, false);
+        g.drawString(font, quest.description, innerX + 8, rowY + 17, 0xFF8FA7C4, false);
+        String rwd = "+" + quest.rewardExperience + "exp  +" + quest.rewardCoins + "g"
+                + (quest.rewardLoot > 0 ? "  +" + quest.rewardLoot + "L" : "")
+                + (quest.rewardCard != FactionCardType.NONE ? "  " + Component.translatable("sre.pass.faction." + quest.rewardCard.questKey, Component.literal(quest.rewardCard.displayName)).getString() : "");
+        g.drawString(font, rwd, innerX + 8, rowY + 30, 0xFFF7D27A, false);
+    }
+
+    // =========================================================================
+    //  输入处理
+    // =========================================================================
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (scrollY > 0) {
+            if (activeTab == 0) dailyPage  = Math.max(0, dailyPage  - 1);
+            else                weeklyPage = Math.max(0, weeklyPage - 1);
+        } else if (scrollY < 0) {
+            int total = activeTab == 0
+                    ? progression.getActiveDailyQuests().size()
+                    : progression.getActiveWeeklyQuests().size();
+            int pages = Math.max(1, (total + rowsPerPage - 1) / rowsPerPage);
+            if (activeTab == 0) dailyPage  = Math.min(pages - 1, dailyPage  + 1);
+            else                weeklyPage = Math.min(pages - 1, weeklyPage + 1);
+        }
+        return true;
+    }
+
+    // =========================================================================
+    //  工具方法
+    // =========================================================================
+
+    private void sendCommand(String command) {
+        if (minecraft == null || minecraft.player == null || minecraft.player.connection == null) return;
+        minecraft.player.connection.sendCommand(command.startsWith("/") ? command.substring(1) : command);
+    }
+
+    private static String formatDuration(long millis) {
+        Duration d = Duration.ofMillis(millis);
+        return d.toHours() + "h " + d.toMinutesPart() + "m";
+    }
+}

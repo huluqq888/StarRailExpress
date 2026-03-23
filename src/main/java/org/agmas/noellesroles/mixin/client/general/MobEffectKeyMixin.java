@@ -26,7 +26,7 @@ public abstract class MobEffectKeyMixin {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null)
             return false;
-       if (player.hasEffect(ModEffects.SKILL_BANED)){
+       if (player.hasEffect(ModEffects.SKILL_BANED) || player.hasEffect(ModEffects.OTHERWORLD_AURA) || player.hasEffect(ModEffects.GHOST_CURSE)){
            return this.same(NoellesrolesClient.abilityBind);
        }
        if (player.hasEffect(ModEffects.MOVE_BANED) || player.hasEffect(ModEffects.GHOST_CURSE)){

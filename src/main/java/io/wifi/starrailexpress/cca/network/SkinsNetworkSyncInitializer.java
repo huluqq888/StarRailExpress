@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.cca.network;
 
 import io.wifi.starrailexpress.SREConfig;
+import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
 import io.wifi.starrailexpress.cca.SREPlayerSkinsComponent;
 import net.exmo.sre.nametag.NameTagInventoryComponent;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -56,9 +57,10 @@ public class SkinsNetworkSyncInitializer {
     private static void onPlayerJoin(ServerPlayer player) {
         try {
             String NETWORK_HOST = SREConfig.instance().itemSkinSyncServerHost;
-             int NETWORK_PORT = SREConfig.instance().itemSkinSyncServerPort;
+            int NETWORK_PORT = SREConfig.instance().itemSkinSyncServerPort;
             String NETWORK_KEY = SREConfig.instance().itemSkinSyncServerKey;
             SREPlayerSkinsComponent skinsComponent = SREPlayerSkinsComponent.KEY.get(player);
+            SREPlayerProgressionComponent progressionComponent = SREPlayerProgressionComponent.KEY.get(player);
             NameTagInventoryComponent nameTagInventoryComponent = NameTagInventoryComponent.KEY.get(player);
             if (skinsComponent != null) {
                 // 初始化网络同步，连接到TCP服务器
@@ -68,6 +70,11 @@ public class SkinsNetworkSyncInitializer {
                 skinsComponent.pullSkinsFromNetwork();
 
                 logger.info("玩家 {} 的皮肤网络同步已初始化", player.getName().getString());
+            }
+            if (progressionComponent != null && SREConfig.instance().progressionSyncServerEnabled) {
+                progressionComponent.initializeNetworkSync(NETWORK_HOST, NETWORK_PORT, NETWORK_KEY);
+                progressionComponent.tryPullTasksFromNetwork();
+                progressionComponent.sync();
             }
             if (nameTagInventoryComponent != null) {
                 // 同步玩家标签
@@ -86,12 +93,17 @@ public class SkinsNetworkSyncInitializer {
     private static void onPlayerDisconnect(ServerPlayer player) {
         try {
             SREPlayerSkinsComponent skinsComponent = SREPlayerSkinsComponent.KEY.get(player);
+            SREPlayerProgressionComponent progressionComponent = SREPlayerProgressionComponent.KEY.get(player);
             if (skinsComponent != null && skinsComponent.isNetworkSyncEnabled()) {
                 // 异步执行最后一次同步和断开连接
                 skinsComponent.pullSkinsFromNetwork();
                 skinsComponent.disableNetworkSync();
 
                 logger.info("玩家 {} 的皮肤网络同步已断开", player.getName().getString());
+            }
+            if (progressionComponent != null && progressionComponent.isNetworkSyncEnabled()) {
+                progressionComponent.syncToNetwork();
+                progressionComponent.disableNetworkSync();
             }
         } catch (Exception e) {
             logger.error("处理玩家 {} 的皮肤网络同步断开时出错", player.getName().getString(), e);

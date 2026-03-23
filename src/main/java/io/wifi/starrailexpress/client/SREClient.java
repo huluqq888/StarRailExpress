@@ -17,6 +17,7 @@ import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.client.gui.*;
 import io.wifi.starrailexpress.client.gui.screen.MapSelectorScreen;
 import io.wifi.starrailexpress.client.gui.screen.PlayerStatsScreen;
+import io.wifi.starrailexpress.client.gui.screen.ProgressionPassScreen;
 import io.wifi.starrailexpress.client.gui.screen.SkinManagementScreen;
 import io.wifi.starrailexpress.client.gui.screen.WaypointHUD;
 import io.wifi.starrailexpress.client.model.GeneralModelLoadingPlugin;
@@ -471,6 +472,9 @@ public class SREClient implements ClientModInitializer {
             context.client().execute(() -> {
                 context.client().setScreen(new SkinManagementScreen());
             });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(OpenProgressionScreenPayload.ID, (payload, context) -> {
+            context.client().execute(() -> context.client().setScreen(new ProgressionPassScreen()));
         });
         ClientPlayNetworking.registerGlobalReceiver(CloseUiPayload.ID, (payload, context) -> {
 
