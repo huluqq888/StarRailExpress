@@ -488,17 +488,32 @@ public class StarRailMurderGameMode extends GameMode {
             }
             if (selectedRole != null) {
                 int selectedRoleType = PlayerRoleWeightManager.getRoleType(selectedRole);
-                Player selectedPlayer = PlayerRoleAssigner.pickByInverseWeightAndRemove(unassignedPlayers,
-                        selectedRoleType);
-                if (selectedPlayer != null)
+                Player selectedPlayer = pickPlayerWithProgressBias(serverWorld, unassignedPlayers, selectedRoleType);
+                if (selectedPlayer != null) {
+                    unassignedPlayers.remove(selectedPlayer);
                     roleAssignments.put(selectedPlayer, selectedRole);
+                    SREPlayerProgressionComponent.KEY.get(selectedPlayer).onRoleAssigned(selectedRole);
+                }
             }
         }
         for (var up : unassignedPlayers) {
             // 职业不够分配平民
             roleAssignments.put(up, TMMRoles.CIVILIAN);
+            SREPlayerProgressionComponent.KEY.get(up).onRoleAssigned(TMMRoles.CIVILIAN);
         }
         return roleAssignments;
+    }
+
+    private Player pickPlayerWithProgressBias(ServerLevel serverWorld, List<ServerPlayer> unassignedPlayers,
+            int selectedRoleType) {
+        List<ServerPlayer> preferredPlayers = unassignedPlayers.stream()
+                .filter(player -> SREPlayerProgressionComponent.KEY.get(player).prefersRoleType(selectedRoleType))
+                .toList();
+        if (!preferredPlayers.isEmpty()
+                && serverWorld.getRandom().nextFloat() < SREPlayerProgressionComponent.getCardPreferredPickChance()) {
+            return PlayerRoleAssigner.pickByInverseWeight(new ArrayList<>(preferredPlayers), selectedRoleType);
+        }
+        return PlayerRoleAssigner.pickByInverseWeight(unassignedPlayers, selectedRoleType);
     }
 
     public record RoleInstant(UUID uuid, SRERole role) {

@@ -53,6 +53,8 @@ public class SREComponents
                 .end(SREPlayerAFKComponent::new);
         registry.beginRegistration(Player.class, SREPlayerSkinsComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(SREPlayerSkinsComponent::new);
+        registry.beginRegistration(Player.class, SREPlayerProgressionComponent.KEY)
+                .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(SREPlayerProgressionComponent::new);
         registry.beginRegistration(Player.class, SREPlayerNunchuckComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY).end(SREPlayerNunchuckComponent::new);
         registry.beginRegistration(Player.class, NameTagInventoryComponent.KEY)

@@ -227,6 +227,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             io.wifi.starrailexpress.command.ToggleWaypointsCommand.register(dispatcher);
             AFKCommand.register(dispatcher);
             ShowStatsCommand.register(dispatcher);
+            ProgressionCommand.register(dispatcher);
             ShowSelectedMapUICommand.register(dispatcher);
             NetworkStatsCommand.register(dispatcher);
             ReloadMapConfigCommand.register(dispatcher);
@@ -303,6 +304,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(MapVotingResultsPayload.TYPE, MapVotingResultsPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CloseUiPayload.ID, CloseUiPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenSkinScreenPaylod.ID, OpenSkinScreenPaylod.CODEC);
+        PayloadTypeRegistry.playS2C().register(OpenProgressionScreenPayload.ID, OpenProgressionScreenPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(io.wifi.starrailexpress.network.packet.SyncWaypointsPacket.ID,
                 io.wifi.starrailexpress.network.packet.SyncWaypointsPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(

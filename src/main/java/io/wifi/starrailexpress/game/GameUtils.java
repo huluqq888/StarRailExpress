@@ -193,7 +193,6 @@ public class GameUtils {
             if (!chunksToClearEntities.remove(chunk.getPos()))
                 return; // 不在目标列表就跳过，命中则移除
             resetEntities(world);
-            SRE.LOGGER.info("HIT RESET ENTITY");
         });
         ServerTickEvents.START_SERVER_TICK.register(server -> {
             if (!serverTaskQueue.isEmpty()) {
@@ -745,6 +744,7 @@ public class GameUtils {
                     stats.getOrCreateRoleStats(playerRole.identifier()).incrementLossesAsRole();
                 }
             }
+            SREPlayerProgressionComponent.KEY.get(player).onRoundSettled(playerRole, isWinner);
         }
         // --- 结束新增统计数据更新逻辑 (胜利/失败) ---
         // roundEnd.sync();
@@ -784,27 +784,26 @@ public class GameUtils {
 
     public static void resetPlayer(ServerPlayer player) {
         TMMItemUtils.clearItem(player, (item) -> true, -1);
-        SREPlayerMoodComponent.KEY.get(player).init();
-        SREPlayerShopComponent.KEY.get(player).init();
-        SREPlayerPoisonComponent.KEY.get(player).init();
-        SREPlayerPsychoComponent.KEY.get(player).init();
-        SREPlayerNoteComponent.KEY.get(player).init();
-        SREArmorPlayerComponent.KEY.get(player).init();
+        SREPlayerMoodComponent.KEY.get(player).clear();
+        SREPlayerShopComponent.KEY.get(player).clear();
+        SREPlayerPoisonComponent.KEY.get(player).clear();
+        SREPlayerPsychoComponent.KEY.get(player).clear();
+        SREPlayerNoteComponent.KEY.get(player).clear();
+        SREArmorPlayerComponent.KEY.get(player).clear();
         if (!TrainVoicePlugin.isVoiceChatMissing()) {
             TrainVoicePlugin.resetPlayer(player.getUUID());
         }
-
         player.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
-        player.stopSleeping();
+        if (player.isSleeping())
+            player.stopSleeping();
+        player.removeVehicle();
         ExtraSlotComponent.KEY.get(player).clear();
     }
 
     public static void resetPlayerAfterGame(ServerPlayer player) {
         resetPlayer(player);
         ServerPlayNetworking.send(player, new AnnounceEndingPayload());
-
         player.removeVehicle();
-
         AreasWorldComponent.PosWithOrientation spawnPos = AreasWorldComponent.KEY.get(player.level()).getSpawnPos();
         if (spawnPos == null) {
             BlockPos worldSpawnPos = player.serverLevel().getSharedSpawnPos();
@@ -815,6 +814,8 @@ public class GameUtils {
         DimensionTransition teleportTarget = new DimensionTransition(player.serverLevel(), spawnPos.pos, Vec3.ZERO,
                 spawnPos.yaw, spawnPos.pitch, DimensionTransition.DO_NOTHING);
         player.changeDimension(teleportTarget);
+        player.setCamera(player);
+        player.teleportTo(spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z);
     }
 
     public static void resetAllToilets(ServerLevel serverWorld) {
@@ -834,6 +835,16 @@ public class GameUtils {
         }
     }
 
+    public static boolean differentTeam(SRERole role1, SRERole role2){
+        if (role1 == null || role2 == null)return false;
+        if (role1.isVigilanteTeam() && role2.isVigilanteTeam())return false;
+        if (role1.isCanUseKiller() && role2.isCanUseKiller())return false;
+        if (role1.isNeutralForKiller() && role2.isCanUseKiller())return false;
+        if (role1.isCanUseKiller() && role2.isNeutralForKiller())return false;
+        if (role1.isNeutralForKiller() && role2.isNeutralForKiller())return false;
+        if (role1.isInnocent() && role2.isInnocent())return false;
+        return true;
+    }
     public static boolean isPlayerEliminated(Player player) {
         if (isPlayerSplitPersonalityAndSurvive(player) == SPAliveResult.ALIVE)
             return false;
@@ -880,7 +891,8 @@ public class GameUtils {
 
         // Check if victim has a role assigned - if not, skip role-dependent logic
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(victim.level());
-        if (gameWorldComponent.getRole(victim) == null) {
+        SRERole role = gameWorldComponent.getRole(victim);
+        if (role == null) {
             // Player doesn't have a role (game not started or joined mid-game), don't kill
             // them
             return;
@@ -981,8 +993,11 @@ public class GameUtils {
         if (killer instanceof ServerPlayer serverKiller) {
             SREPlayerStatsComponent killerStats = SREPlayerStatsComponent.KEY.get(serverKiller);
             killerStats.incrementTotalKills();
+            SREPlayerProgressionComponent.KEY.get(serverKiller).onPlayerKill();
+
             SRERole killerRole = gameWorldComponent.getRole(serverKiller);
             if (killerRole != null) {
+                if (differentTeam(killerRole, role))
                 canDeath = killerRole.onKill(victim, spawnBody, killer, deathReason);
                 killerStats.getOrCreateRoleStats(killerRole.identifier()).incrementKillsAsRole();
                 // 更新阵营击杀数
@@ -1059,9 +1074,9 @@ public class GameUtils {
                     victim.level().addFreshEntity(body);
 
                     {
-                        if (gameWorldComponent.getRole(victim) != null) {
+                        if (role != null) {
                             final var bodyDeathReasonComponent = BodyDeathReasonComponent.KEY.get(body);
-                            bodyDeathReasonComponent.playerRole = gameWorldComponent.getRole(victim).identifier();
+                            bodyDeathReasonComponent.playerRole = role.identifier();
                             bodyDeathReasonComponent.sync();
                         }
                     }
