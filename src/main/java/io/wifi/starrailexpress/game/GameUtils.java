@@ -762,7 +762,7 @@ public class GameUtils {
         resetEntities(world);
 
         // reset all players
-        for (ServerPlayer player : world.players()) {
+        for (ServerPlayer player : world.getServer().getPlayerList().getPlayers()) {
             resetPlayerAfterGame(player);
         }
 
