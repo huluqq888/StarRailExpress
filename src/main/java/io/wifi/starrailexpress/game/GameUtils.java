@@ -54,7 +54,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -784,18 +783,19 @@ public class GameUtils {
 
     public static void resetPlayer(ServerPlayer player) {
         TMMItemUtils.clearItem(player, (item) -> true, -1);
-        SREPlayerMoodComponent.KEY.get(player).init();
-        SREPlayerShopComponent.KEY.get(player).init();
-        SREPlayerPoisonComponent.KEY.get(player).init();
-        SREPlayerPsychoComponent.KEY.get(player).init();
-        SREPlayerNoteComponent.KEY.get(player).init();
-        SREArmorPlayerComponent.KEY.get(player).init();
+        SREPlayerMoodComponent.KEY.get(player).clear();
+        SREPlayerShopComponent.KEY.get(player).clear();
+        SREPlayerPoisonComponent.KEY.get(player).clear();
+        SREPlayerPsychoComponent.KEY.get(player).clear();
+        SREPlayerNoteComponent.KEY.get(player).clear();
+        SREArmorPlayerComponent.KEY.get(player).clear();
         if (!TrainVoicePlugin.isVoiceChatMissing()) {
             TrainVoicePlugin.resetPlayer(player.getUUID());
         }
-
         player.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
-        player.stopSleeping();
+        if (player.isSleeping())
+            player.stopSleeping();
+        player.removeVehicle();
         ExtraSlotComponent.KEY.get(player).clear();
     }
 
@@ -813,6 +813,7 @@ public class GameUtils {
         DimensionTransition teleportTarget = new DimensionTransition(player.serverLevel(), spawnPos.pos, Vec3.ZERO,
                 spawnPos.yaw, spawnPos.pitch, DimensionTransition.DO_NOTHING);
         player.changeDimension(teleportTarget);
+        player.setCamera(player);
         player.teleportTo(spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z);
     }
 
