@@ -128,7 +128,6 @@ public class SREConfig implements ConfigData {
     public String roundBasedPresetAllRoles = "";
     // 当前已进行的游戏轮数（自动维护，勿手动修改）
     @ConfigEntry.Category(value = "presents")
-    @ConfigEntry.Gui.Excluded
     public int roundBasedCurrentRound = 0;
     // 当前正在使用的预设名称（自动维护，反映当前阶段）
     @ConfigEntry.Category(value = "presents")
