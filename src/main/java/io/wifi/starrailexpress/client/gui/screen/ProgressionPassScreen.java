@@ -131,7 +131,8 @@ public class ProgressionPassScreen extends Screen {
 
     private Button createCardButton(int x, int y, int width, FactionCardType type, int accentColor) {
         int count = progression.getFactionCards().getOrDefault(type, 0);
-        Component label = Component.translatable("sre.pass.faction." + type.questKey, Component.literal(type.displayName + " x" + count));
+        Component label = Component.literal(
+                Component.translatable("sre.pass.faction." + type.questKey).getString() + " x" + count);
         var btn = ModernButton.builder(label, b -> sendCommand("tmm:pass activate " + type.questKey))
                 .bounds(x, y, width, 22).accentColor(accentColor).build();
         btn.active = count > 0 || progression.getActiveFactionCard() == type;
