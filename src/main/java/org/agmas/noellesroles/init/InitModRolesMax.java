@@ -665,8 +665,8 @@ public class InitModRolesMax {
         }
 
         /// TAXED (纳税)
-        // 纳税修饰符只能生成1个，70%概率生成
-        if (random.nextInt(0, 100) < 70) {
+        // 纳税修饰符只能生成1个，20%概率生成
+        if (random.nextInt(0, 100) < 20) {
             StupidExpress.LOGGER.info("Modifier [Taxed] enabled in this round!");
             Harpymodloader.MODIFIER_MAX.put(Noellesroles.id("taxed"), 1);
         } else {
@@ -674,8 +674,8 @@ public class InitModRolesMax {
         }
 
         /// INTROVERTED (内向)
-        // 内向修饰符只能生成1个，70%概率生成
-        if (random.nextInt(0, 100) < 70) {
+        // 内向修饰符只能生成1个，50%概率生成
+        if (random.nextInt(0, 100) < 50) {
             StupidExpress.LOGGER.info("Modifier [Introverted] enabled in this round!");
             Harpymodloader.MODIFIER_MAX.put(Noellesroles.id("introverted"), 1);
         } else {
