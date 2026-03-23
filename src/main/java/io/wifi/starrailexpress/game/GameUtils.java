@@ -193,7 +193,6 @@ public class GameUtils {
             if (!chunksToClearEntities.remove(chunk.getPos()))
                 return; // 不在目标列表就跳过，命中则移除
             resetEntities(world);
-            SRE.LOGGER.info("HIT RESET ENTITY");
         });
         ServerTickEvents.START_SERVER_TICK.register(server -> {
             if (!serverTaskQueue.isEmpty()) {
