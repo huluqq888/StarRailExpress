@@ -223,8 +223,9 @@ public class GameUtilsCommand {
 
                         var world = context.getSource().getLevel();
                         MapResetManager.loadArea(world);
+                        var areas = AreasWorldComponent.KEY.get(world);
                         ServerTaskInfoClasses.OnlySomeBlockResetTask task = new ServerTaskInfoClasses.OnlySomeBlockResetTask(
-                            GameUtils.resetPoints, world, null, 0);
+                            GameUtils.resetPoints, world, null, 0, areas);
                         task.shouldStartGame = false;
                         GameUtils.serverTaskQueue.add(task);
                         context.getSource().sendSuccess(

@@ -179,7 +179,7 @@ public class GameUtils {
             var task = new ServerTaskInfoClasses.AutoTrainResetTask(areas, world, gameMode, time);
             serverTaskQueue.add(task);
         } else {
-            var task = new ServerTaskInfoClasses.OnlySomeBlockResetTask(resetPoints, world, gameMode, time);
+            var task = new ServerTaskInfoClasses.OnlySomeBlockResetTask(resetPoints, world, gameMode, time, areas);
             serverTaskQueue.add(task);
         }
     }

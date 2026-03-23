@@ -232,7 +232,7 @@ public class ServerTaskInfoClasses {
                 // GameUtils.trueStartGame(this.serverWorld, this.gameMode, this.time);
                 var task = new ServerTaskInfoClasses.OnlySomeBlockResetTask(GameUtils.resetPoints,
                         serverWorld,
-                        gameMode, time);
+                        gameMode, time, this.area);
                 GameUtils.serverTaskQueue.addLast(task);
             }
             MapResetManager.saveArea(serverWorld);
@@ -249,15 +249,31 @@ public class ServerTaskInfoClasses {
         public boolean shouldStartGame = true;
         private int time;
         private final int MAX_RESET_PER = 500;
+        BlockPos backupMinPos;
+        BlockPos backupMaxPos;
+        BoundingBox backupTrainBox;
+        BlockPos trainMinPos;
+        BlockPos trainMaxPos;
+        BoundingBox trainBox;
+        BlockPos offsetBlockPos;
 
         public OnlySomeBlockResetTask(ArrayList<BlockPos> points, ServerLevel world, GameMode gameMode,
-                int gameStartTime) {
+                int gameStartTime, AreasWorldComponent areasWorldComponent) {
             this.blocks = new ArrayList<BlockPos>(points);
             this.progress = 0;
             this.totalProgress = this.blocks.size();
             this.world = world;
             this.gameMode = gameMode;
             this.time = gameStartTime;
+            backupMinPos = BlockPos.containing(areasWorldComponent.getResetTemplateArea().getMinPosition());
+            backupMaxPos = BlockPos.containing(areasWorldComponent.getResetTemplateArea().getMaxPosition());
+            backupTrainBox = BoundingBox.fromCorners(backupMinPos, backupMaxPos);
+            trainMinPos = BlockPos.containing(areasWorldComponent.getResetPasteArea().getMinPosition());
+            trainMaxPos = trainMinPos.offset(backupTrainBox.getLength());
+            trainBox = BoundingBox.fromCorners(trainMinPos, trainMaxPos);
+            offsetBlockPos = new BlockPos(
+                    trainBox.minX() - backupTrainBox.minX(), trainBox.minY() - backupTrainBox.minY(),
+                    trainBox.minZ() - backupTrainBox.minZ());
         }
 
         public void resetBlock() {
@@ -265,6 +281,7 @@ public class ServerTaskInfoClasses {
                 SRE.LOGGER.info("RESETING MAP: {}/{}", this.progress, this.totalProgress);
             }
             ServerLevel serverWorld = this.world;
+
             ArrayList<GameUtils.BlockInfo> list3 = new ArrayList<>(); // 仅更新方块状态
             ArrayList<GameUtils.BlockInfo> list2 = new ArrayList<>();
             // ArrayList<GameUtils.BlockInfo> list_Doorlike = new ArrayList<>();
@@ -387,7 +404,8 @@ public class ServerTaskInfoClasses {
             }
 
             for (GameUtils.BlockInfo blockInfo : list4) {
-                serverWorld.setBlock(blockInfo.pos(), Blocks.BARRIER.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+                serverWorld.setBlock(blockInfo.pos(), Blocks.BARRIER.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
                 serverWorld.getLightEngine().checkBlock(blockInfo.pos());
             }
 
@@ -444,9 +462,46 @@ public class ServerTaskInfoClasses {
             return false;
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public void onFinished() {
+            var serverWorld = this.world;
+            if (!serverWorld.hasChunksAt(backupMinPos, backupMaxPos)
+                    || !serverWorld.hasChunksAt(trainMinPos, trainMaxPos)) {
 
+                int backupChunkMinX = backupMinPos.getX() >> 4;
+                int backupChunkMinZ = backupMinPos.getZ() >> 4;
+                int backupChunkMaxX = backupMaxPos.getX() >> 4;
+                int backupChunkMaxZ = backupMaxPos.getZ() >> 4;
+                int trainChunkMinX = trainMinPos.getX() >> 4;
+                int trainChunkMinZ = trainMinPos.getZ() >> 4;
+                int trainChunkMaxX = trainMaxPos.getX() >> 4;
+                int trainChunkMaxZ = trainMaxPos.getZ() >> 4;
+
+                if (SREConfig.instance().verboseTrainResetLogs) {
+                    SRE.LOGGER.info(
+                            "Train reset: Loading chunks - Template: ({}, {}) to ({}, {}), Paste: ({}, {}) to ({}, {})",
+                            backupChunkMinX, backupChunkMinZ, backupChunkMaxX, backupChunkMaxZ,
+                            trainChunkMinX, trainChunkMinZ, trainChunkMaxX, trainChunkMaxZ);
+                }
+
+                // Force load the required chunks
+                for (int x = backupChunkMinX; x <= backupChunkMaxX; x++) {
+                    for (int z = backupChunkMinZ; z <= backupChunkMaxZ; z++) {
+                        serverWorld.getChunk(x, z);
+                    }
+                }
+                for (int x = trainChunkMinX; x <= trainChunkMaxX; x++) {
+                    for (int z = trainChunkMinZ; z <= trainChunkMaxZ; z++) {
+                        serverWorld.getChunk(x, z);
+                    }
+                }
+
+                if (SREConfig.instance().verboseTrainResetLogs) {
+                    SRE.LOGGER.info("Train reset: Chunks loaded, attempting reset.");
+                }
+                // Continue with the reset after loading chunks
+            }
             if (shouldStartGame) {
                 if (SREConfig.instance().verboseTrainResetLogs) {
                     SRE.LOGGER.info("RESETING MAP FINISHED. STARTING THE GAME.");
