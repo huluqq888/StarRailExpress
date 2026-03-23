@@ -744,6 +744,7 @@ public class GameUtils {
                     stats.getOrCreateRoleStats(playerRole.identifier()).incrementLossesAsRole();
                 }
             }
+            SREPlayerProgressionComponent.KEY.get(player).onRoundSettled(playerRole, isWinner);
         }
         // --- 结束新增统计数据更新逻辑 (胜利/失败) ---
         // roundEnd.sync();
@@ -833,6 +834,16 @@ public class GameUtils {
         }
     }
 
+    public static boolean differentTeam(SRERole role1, SRERole role2){
+        if (role1 == null || role2 == null)return false;
+        if (role1.isVigilanteTeam() && role2.isVigilanteTeam())return false;
+        if (role1.isCanUseKiller() && role2.isCanUseKiller())return false;
+        if (role1.isNeutralForKiller() && role2.isCanUseKiller())return false;
+        if (role1.isCanUseKiller() && role2.isNeutralForKiller())return false;
+        if (role1.isNeutralForKiller() && role2.isNeutralForKiller())return false;
+        if (role1.isInnocent() && role2.isInnocent())return false;
+        return true;
+    }
     public static boolean isPlayerEliminated(Player player) {
         if (isPlayerSplitPersonalityAndSurvive(player) == SPAliveResult.ALIVE)
             return false;
@@ -879,7 +890,8 @@ public class GameUtils {
 
         // Check if victim has a role assigned - if not, skip role-dependent logic
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(victim.level());
-        if (gameWorldComponent.getRole(victim) == null) {
+        SRERole role = gameWorldComponent.getRole(victim);
+        if (role == null) {
             // Player doesn't have a role (game not started or joined mid-game), don't kill
             // them
             return;
@@ -980,8 +992,11 @@ public class GameUtils {
         if (killer instanceof ServerPlayer serverKiller) {
             SREPlayerStatsComponent killerStats = SREPlayerStatsComponent.KEY.get(serverKiller);
             killerStats.incrementTotalKills();
+            SREPlayerProgressionComponent.KEY.get(serverKiller).onPlayerKill();
+
             SRERole killerRole = gameWorldComponent.getRole(serverKiller);
             if (killerRole != null) {
+                if (differentTeam(killerRole, role))
                 canDeath = killerRole.onKill(victim, spawnBody, killer, deathReason);
                 killerStats.getOrCreateRoleStats(killerRole.identifier()).incrementKillsAsRole();
                 // 更新阵营击杀数
@@ -1058,9 +1073,9 @@ public class GameUtils {
                     victim.level().addFreshEntity(body);
 
                     {
-                        if (gameWorldComponent.getRole(victim) != null) {
+                        if (role != null) {
                             final var bodyDeathReasonComponent = BodyDeathReasonComponent.KEY.get(body);
-                            bodyDeathReasonComponent.playerRole = gameWorldComponent.getRole(victim).identifier();
+                            bodyDeathReasonComponent.playerRole = role.identifier();
                             bodyDeathReasonComponent.sync();
                         }
                     }

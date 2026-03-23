@@ -14,10 +14,6 @@ public class TMMDatagen implements DataGeneratorEntrypoint {
         DynamicRegistries.register(Registries.LEVEL_STEM, LevelStem.CODEC);
 
         FabricDataGenerator.Pack pack = dataGenerator.createPack();
-        pack.addProvider(TMMModelGen::new);
-        pack.addProvider(TMMBlockTagGen::new);
-        pack.addProvider(TMMItemTagGen::new);
-        pack.addProvider(TMMLangGen::new);
-        pack.addProvider(TMMBlockLootTableGen::new);
+
     }
 }
