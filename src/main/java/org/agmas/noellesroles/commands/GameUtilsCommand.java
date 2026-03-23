@@ -209,7 +209,7 @@ public class GameUtilsCommand {
                       .then(Commands.literal("copy").executes((context) -> {
                         var world = context.getSource().getLevel();
                         var areas = AreasWorldComponent.KEY.get(world);
-                        ServerTaskInfoClasses.AutoTrainResetTask task = new ServerTaskInfoClasses.AutoTrainResetTask(
+                        ServerTaskInfoClasses.FullTrainResetTask task = new ServerTaskInfoClasses.FullTrainResetTask(
                             areas,
                             world, null, 0);
                         task.shouldStartGame = false;

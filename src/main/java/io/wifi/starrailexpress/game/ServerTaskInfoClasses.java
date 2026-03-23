@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Clearable;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LecternBlock;
@@ -51,7 +52,7 @@ public class ServerTaskInfoClasses {
         }
     }
 
-    public static class AutoTrainResetTask extends ServerTaskInfo {
+    public static class FullTrainResetTask extends ServerTaskInfo {
         int progress = 0;
         AreasWorldComponent area;
         int count = 0;
@@ -71,7 +72,7 @@ public class ServerTaskInfoClasses {
         List<BoundingBox> resetChunks; // ← 新增：预计算的分块列表
 
         // ── 构造器 ─────────────────────────────────────────────────────────────
-        public AutoTrainResetTask(AreasWorldComponent areas, ServerLevel world, GameMode gameMode, int gameStartTime) {
+        public FullTrainResetTask(AreasWorldComponent areas, ServerLevel world, GameMode gameMode, int gameStartTime) {
             if (SREConfig.instance().verboseTrainResetLogs) {
                 SRE.LOGGER.info("Resetting train " + areas.mapName);
             }
@@ -176,7 +177,6 @@ public class ServerTaskInfoClasses {
                     }
                 }
             }
-            GameUtils.resetEntities(this.serverWorld);
         }
 
         // ── onTick 不变 ────────────────────────────────────────────────────
@@ -434,7 +434,6 @@ public class ServerTaskInfoClasses {
                 serverWorld.blockUpdated(blockInfo2x.pos(), blockInfo2x.state().getBlock());
                 serverWorld.getLightEngine().checkBlock(blockInfo2x.pos());
             }
-            GameUtils.resetEntities(this.world);
         }
 
         @Override
@@ -466,13 +465,8 @@ public class ServerTaskInfoClasses {
         @Override
         public void onFinished() {
             var serverWorld = this.world;
-            if (!serverWorld.hasChunksAt(backupMinPos, backupMaxPos)
-                    || !serverWorld.hasChunksAt(trainMinPos, trainMaxPos)) {
-
-                int backupChunkMinX = backupMinPos.getX() >> 4;
-                int backupChunkMinZ = backupMinPos.getZ() >> 4;
-                int backupChunkMaxX = backupMaxPos.getX() >> 4;
-                int backupChunkMaxZ = backupMaxPos.getZ() >> 4;
+            GameUtils.chunksToClearEntities.clear();
+            if (!serverWorld.hasChunksAt(trainMinPos, trainMaxPos)) {
                 int trainChunkMinX = trainMinPos.getX() >> 4;
                 int trainChunkMinZ = trainMinPos.getZ() >> 4;
                 int trainChunkMaxX = trainMaxPos.getX() >> 4;
@@ -480,26 +474,20 @@ public class ServerTaskInfoClasses {
 
                 if (SREConfig.instance().verboseTrainResetLogs) {
                     SRE.LOGGER.info(
-                            "Train reset: Loading chunks - Template: ({}, {}) to ({}, {}), Paste: ({}, {}) to ({}, {})",
-                            backupChunkMinX, backupChunkMinZ, backupChunkMaxX, backupChunkMaxZ,
+                            "Train reset: Loading chunks - Paste: ({}, {}) to ({}, {})",
                             trainChunkMinX, trainChunkMinZ, trainChunkMaxX, trainChunkMaxZ);
-                }
-
-                // Force load the required chunks
-                for (int x = backupChunkMinX; x <= backupChunkMaxX; x++) {
-                    for (int z = backupChunkMinZ; z <= backupChunkMaxZ; z++) {
-                        serverWorld.getChunk(x, z);
-                    }
                 }
                 for (int x = trainChunkMinX; x <= trainChunkMaxX; x++) {
                     for (int z = trainChunkMinZ; z <= trainChunkMaxZ; z++) {
                         serverWorld.getChunk(x, z);
+                        GameUtils.chunksToClearEntities.add(new ChunkPos(x, z));
                     }
                 }
 
                 if (SREConfig.instance().verboseTrainResetLogs) {
-                    SRE.LOGGER.info("Train reset: Chunks loaded, attempting reset.");
+                    SRE.LOGGER.info("Train reset: Chunks loaded, attempting clear entities.");
                 }
+
                 // Continue with the reset after loading chunks
             }
             if (shouldStartGame) {

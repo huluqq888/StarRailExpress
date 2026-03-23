@@ -25,6 +25,7 @@ import io.wifi.starrailexpress.network.TriggerScreenEdgeEffectPayload;
 import io.wifi.starrailexpress.network.original.AnnounceEndingPayload;
 import io.wifi.starrailexpress.util.TMMItemUtils;
 import net.exmo.sre.nametag.NameTagInventoryComponent;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.impl.util.log.Log;
@@ -51,6 +52,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -176,7 +178,7 @@ public class GameUtils {
             return;
         }
         if (SREConfig.instance().enableAutoTrainReset) {
-            var task = new ServerTaskInfoClasses.AutoTrainResetTask(areas, world, gameMode, time);
+            var task = new ServerTaskInfoClasses.FullTrainResetTask(areas, world, gameMode, time);
             serverTaskQueue.add(task);
         } else {
             var task = new ServerTaskInfoClasses.OnlySomeBlockResetTask(resetPoints, world, gameMode, time, areas);
@@ -185,6 +187,14 @@ public class GameUtils {
     }
 
     public static void registerEventForServerTickForDoingResetTasks() {
+        ServerChunkEvents.CHUNK_LOAD.register((world, chunk) -> {
+            if (chunksToClearEntities.isEmpty())
+                return;
+            if (!chunksToClearEntities.remove(chunk.getPos()))
+                return; // 不在目标列表就跳过，命中则移除
+            resetEntities(world);
+            SRE.LOGGER.info("HIT RESET ENTITY");
+        });
         ServerTickEvents.START_SERVER_TICK.register(server -> {
             if (!serverTaskQueue.isEmpty()) {
                 // int size = serverTaskQueue.size();
@@ -596,6 +606,7 @@ public class GameUtils {
     }
 
     public static ArrayList<Predicate<Entry<Player, String>>> CustomWinnersPredicates = new ArrayList<>();
+    public static final Set<ChunkPos> chunksToClearEntities = new HashSet<>();
 
     public static void finalizeGame(ServerLevel world) {
         SRE.LOGGER.info("Game Stopped!");

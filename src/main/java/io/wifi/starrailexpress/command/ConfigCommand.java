@@ -1,6 +1,8 @@
 package io.wifi.starrailexpress.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
@@ -19,8 +21,34 @@ public class ConfigCommand {
                 .executes(ConfigCommand::showConfig)
                 .then(Commands.literal("reload")
                         .executes(ConfigCommand::reloadConfig))
+                .then(Commands.literal("auto_present")
+                        .then(Commands.argument("flag", BoolArgumentType.bool())
+                                .executes(ConfigCommand::autoPresent)))
+                .then(Commands.literal("set_round")
+                        .then(Commands.argument("round", IntegerArgumentType.integer(0))
+                                .executes(ConfigCommand::setRound)))
                 .then(Commands.literal("reset")
                         .executes(ConfigCommand::resetConfig)));
+    }
+
+    private static int autoPresent(CommandContext<CommandSourceStack> context) {
+        boolean flag = BoolArgumentType.getBool(context, "flag");
+        CommandSourceStack source = context.getSource();
+        SREConfig.instance().enableRoundBasedAutoPreset = flag;
+        SREConfig.HANDLER.save();
+        source.sendSuccess(() -> Component.literal("Set enableRoundBasedAutoPreset to " + (flag ? "True" : "False")),
+                true);
+        return 1;
+    }
+
+    private static int setRound(CommandContext<CommandSourceStack> context) {
+        int round = IntegerArgumentType.getInteger(context, "round");
+        CommandSourceStack source = context.getSource();
+        SREConfig.instance().roundBasedCurrentRound = round;
+        SREConfig.HANDLER.save();
+        source.sendSuccess(() -> Component.literal("Set roundBasedCurrentRound to " + (round)),
+                true);
+        return 1;
     }
 
     private static int reloadConfig(CommandContext<CommandSourceStack> context) {
@@ -73,64 +101,81 @@ public class ConfigCommand {
         // 商店价格
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.shop_prices.header"), false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.knife", SREConfig.instance().knifePrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.knife",
+                        SREConfig.instance().knifePrice),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.revolver", SREConfig.instance().revolverPrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.revolver",
+                        SREConfig.instance().revolverPrice),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.grenade", SREConfig.instance().grenadePrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.grenade",
+                        SREConfig.instance().grenadePrice),
                 false);
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.shop_prices.psycho_mode",
                 SREConfig.instance().psychoModePrice), false);
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.shop_prices.poison_vial",
                 SREConfig.instance().poisonVialPrice), false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.scorpion", SREConfig.instance().scorpionPrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.scorpion",
+                        SREConfig.instance().scorpionPrice),
                 false);
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.shop_prices.firecracker",
                 SREConfig.instance().firecrackerPrice), false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.lockpick", SREConfig.instance().lockpickPrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.lockpick",
+                        SREConfig.instance().lockpickPrice),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.crowbar", SREConfig.instance().crowbarPrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.crowbar",
+                        SREConfig.instance().crowbarPrice),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.body_bag", SREConfig.instance().bodyBagPrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.body_bag",
+                        SREConfig.instance().bodyBagPrice),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.blackout", SREConfig.instance().blackoutPrice),
+                () -> Component.translatable("commands.sre.config.show.shop_prices.blackout",
+                        SREConfig.instance().blackoutPrice),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.shop_prices.note", SREConfig.instance().notePrice), false);
+                () -> Component.translatable("commands.sre.config.show.shop_prices.note",
+                        SREConfig.instance().notePrice),
+                false);
 
         // 物品冷却时间
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.cooldowns.header"), false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.knife", SREConfig.instance().knifeCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.knife",
+                        SREConfig.instance().knifeCooldown),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.revolver", SREConfig.instance().revolverCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.revolver",
+                        SREConfig.instance().revolverCooldown),
                 false);
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.cooldowns.derringer",
                 SREConfig.instance().derringerCooldown), false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.grenade", SREConfig.instance().grenadeCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.grenade",
+                        SREConfig.instance().grenadeCooldown),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.lockpick", SREConfig.instance().lockpickCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.lockpick",
+                        SREConfig.instance().lockpickCooldown),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.crowbar", SREConfig.instance().crowbarCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.crowbar",
+                        SREConfig.instance().crowbarCooldown),
                 false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.body_bag", SREConfig.instance().bodyBagCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.body_bag",
+                        SREConfig.instance().bodyBagCooldown),
                 false);
         source.sendSuccess(() -> Component.translatable("commands.sre.config.show.cooldowns.psycho_mode",
                 SREConfig.instance().psychoModeCooldown), false);
         source.sendSuccess(
-                () -> Component.translatable("commands.sre.config.show.cooldowns.blackout", SREConfig.instance().blackoutCooldown),
+                () -> Component.translatable("commands.sre.config.show.cooldowns.blackout",
+                        SREConfig.instance().blackoutCooldown),
                 false);
 
         // 游戏设置
