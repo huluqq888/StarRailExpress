@@ -15,9 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class GameTimeFreezeMixin implements AutoSyncedComponent, CommonTickingComponent {
     @Inject(method = "getTime", at = @At("HEAD"), cancellable = true)
     public void getTime(CallbackInfoReturnable<Integer> cir) {
-        if (Minecraft.getInstance().player.hasEffect(ModEffects.TIME_STOP)){
-            cir.setReturnValue(TimeStopEffect.freezeStatedTime);
-            cir.cancel();
-        }
+        if (Minecraft.getInstance() != null && Minecraft.getInstance().player != null)
+            if (Minecraft.getInstance().player.hasEffect(ModEffects.TIME_STOP)) {
+                cir.setReturnValue(TimeStopEffect.freezeStatedTime);
+                cir.cancel();
+            }
     }
 }

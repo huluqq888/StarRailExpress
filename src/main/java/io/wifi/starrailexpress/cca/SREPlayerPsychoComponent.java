@@ -68,7 +68,7 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
     public void clientTick() {
         if (!checkIsGameRunning()) {
             if (this.psychoTicks > 0)
-                this.psychoTicks = 0;
+                this.psychoTicks = -1;
             return;
         }
 
@@ -78,7 +78,7 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         if (SREClient.gameComponent.isRole(this.player, ModRoles.EXECUTIONER)) {
             if (this.player.getMainHandItem().is(TMMItems.REVOLVER))
                 return;
-            if (GameUtils.isPlayerAliveAndSurvival(player)) {
+            if (GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player)) {
                 for (int i = 0; i < 9; i++) {
                     if (!this.player.getInventory().getItem(i).is(TMMItems.REVOLVER))
                         continue;
@@ -89,7 +89,7 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         } else {
             if (this.player.getMainHandItem().is(TMMItems.BAT))
                 return;
-            if (GameUtils.isPlayerAliveAndSurvival(player)) {
+            if (GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player)) {
                 for (int i = 0; i < 9; i++) {
                     if (!this.player.getInventory().getItem(i).is(TMMItems.BAT))
                         continue;
@@ -104,6 +104,7 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
     public void serverTick() {
         if (!checkIsGameRunning()) {
             if (this.psychoTicks > 0) {
+                SRE.LOGGER.info("stop");
                 this.stopPsycho();
                 this.psychoTicks = 0;
             }

@@ -13,8 +13,8 @@ import org.ladysnake.cca.api.v3.component.tick.CommonTickingComponent;
 public class SREGameTimeComponent implements AutoSyncedComponent, CommonTickingComponent {
     public static final ComponentKey<SREGameTimeComponent> KEY = ComponentRegistry.getOrCreate(SRE.id("time"), SREGameTimeComponent.class);
     public final Level world;
-    public int resetTime;
-    public int time;
+    public int resetTime = 0;
+    public int time = 0;
 
     public SREGameTimeComponent(Level world) {
         this.world = world;
