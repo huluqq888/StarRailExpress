@@ -105,8 +105,9 @@ public class SREClient implements ClientModInitializer {
     public static boolean hideLocalMainHandItemInLayer = false;
     public static boolean hideLocalOffHandItemInLayer = false;
     public static final Map<UUID, PlayerInfo> PLAYER_ENTRIES_CACHE = new HashMap<>();
-    private static ItemStack prevMainHandStack = ItemStack.EMPTY;
-    private static ItemStack prevOffHandStack = ItemStack.EMPTY;
+    private static ItemStack prevMainHandSnapshot = ItemStack.EMPTY;
+    private static ItemStack prevOffHandSnapshot = ItemStack.EMPTY;
+    private static int prevSelectedHotbarSlot = -1;
 
     public static KeyMapping instinctKeybind;
     public static KeyMapping statsKeybind; // 新增统计面板热键
@@ -359,17 +360,22 @@ public class SREClient implements ClientModInitializer {
             FrameAnimationRenderer.setInWorld(client != null && client.level != null);
             LocalPlayer player = client.player;
             if (player == null) {
-                prevMainHandStack = ItemStack.EMPTY;
-                prevOffHandStack = ItemStack.EMPTY;
+                prevMainHandSnapshot = ItemStack.EMPTY;
+                prevOffHandSnapshot = ItemStack.EMPTY;
+                prevSelectedHotbarSlot = -1;
                 hideLocalMainHandItemInLayer = false;
                 hideLocalOffHandItemInLayer = false;
             } else {
                 ItemStack mainHand = player.getMainHandItem();
                 ItemStack offHand = player.getOffhandItem();
-                if (!ItemStack.isSameItemSameComponents(mainHand, prevMainHandStack)
-                        || !ItemStack.isSameItemSameComponents(offHand, prevOffHandStack)) {
-                    prevMainHandStack = mainHand.copy();
-                    prevOffHandStack = offHand.copy();
+                int selectedHotbarSlot = player.getInventory().selected;
+                boolean mainHandChanged = selectedHotbarSlot != prevSelectedHotbarSlot
+                        || !ItemStack.isSameItemSameComponents(mainHand, prevMainHandSnapshot);
+                boolean offHandChanged = !ItemStack.isSameItemSameComponents(offHand, prevOffHandSnapshot);
+                if (mainHandChanged || offHandChanged) {
+                    prevMainHandSnapshot = mainHand.copy();
+                    prevOffHandSnapshot = offHand.copy();
+                    prevSelectedHotbarSlot = selectedHotbarSlot;
                     ClientHeldItemSwitchEvent.EVENT.invoker().onSwitch(player, mainHand, offHand);
                 }
             }
@@ -739,8 +745,8 @@ public class SREClient implements ClientModInitializer {
         return null;
     }
 
-    private static boolean isHandHiddenByEvent(LocalPlayer player, ItemStack stack, boolean mainHand) {
-        ItemStack eventRes = AllowItemShowInHand.EVENT.invoker().allowShowInHand(player, stack, mainHand);
+    private static boolean isHandHiddenByEvent(LocalPlayer player, ItemStack stack, boolean isMainHand) {
+        ItemStack eventRes = AllowItemShowInHand.EVENT.invoker().allowShowInHand(player, stack, isMainHand);
         return eventRes != null && eventRes.isEmpty();
     }
 }
