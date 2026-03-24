@@ -375,14 +375,15 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         // this.lockedToSupporters = nbtCompound.getBoolean("LockedToSupporters");
         // this.enableWeights = nbtCompound.getBoolean("EnableWeights");
         this.canJump = nbtCompound.contains("canJump") ? nbtCompound.getBoolean("canJump") : false;
-        this.haveOutsideSounds = nbtCompound.contains("haveOutsideSounds") ? nbtCompound.getBoolean("haveOutsideSounds") : false;
+        this.haveOutsideSounds = nbtCompound.contains("haveOutsideSounds") ? nbtCompound.getBoolean("haveOutsideSounds")
+                : false;
         // this.syncRole = nbtCompound.getBoolean("SyncRole");
         // if (!syncRole) {
         if (nbtCompound.contains("GameMode"))
             this.gameMode = SREGameModes.GAME_MODES.get(ResourceLocation.parse(nbtCompound.getString("GameMode")));
         else
             this.gameMode = null;
-        this.gameStatus = GameStatus.valueOf(nbtCompound.getString("GameStatus"));
+        this.gameStatus = GameStatus.values()[(nbtCompound.getInt("GameStatus"))];
 
         this.fade = nbtCompound.getInt("Fade");
         this.psychosActive = nbtCompound.getInt("PsychosActive");
@@ -419,7 +420,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         // if (!this.syncRole) {
         if (this.gameMode != null)
             nbtCompound.putString("GameMode", this.gameMode.identifier.toString());
-        nbtCompound.putString("GameStatus", this.gameStatus.toString());
+        nbtCompound.putInt("GameStatus", this.gameStatus.ordinal());
 
         nbtCompound.putInt("Fade", fade);
         nbtCompound.putInt("PsychosActive", psychosActive);

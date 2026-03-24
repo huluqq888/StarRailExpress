@@ -1,9 +1,8 @@
 package io.wifi.starrailexpress.cca;
 
 import com.mojang.authlib.GameProfile;
-import io.wifi.starrailexpress.api.TMMRoles;
-import io.wifi.starrailexpress.client.gui.RoleAnnouncementTexts;
 import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.game.GameUtils.WinStatus;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -57,24 +56,7 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
     public void setRoundEndData(@NotNull List<ServerPlayer> players, GameUtils.WinStatus winStatus) {
         this.players.clear();
         for (ServerPlayer player : players) {
-            RoleAnnouncementTexts.RoleAnnouncementText role = RoleAnnouncementTexts.BLANK;
-            SREGameWorldComponent game = SREGameWorldComponent.KEY.get(this.world);
-            if (game.canUseKillerFeatures(player)) {
-                role = RoleAnnouncementTexts.getRoleAnnouncementText(TMMRoles.KILLER.identifier());
-            } else if (game.isRole(player, TMMRoles.VIGILANTE)) {
-                role = RoleAnnouncementTexts.getRoleAnnouncementText(TMMRoles.VIGILANTE.identifier());
-            } else {
-                // 尝试获取玩家的实际角色
-                // io.wifi.starrailexpress.api.Role actualRole = game.getRole(player);
-                // if (actualRole != null) {
-                // role =
-                // RoleAnnouncementTexts.getRoleAnnouncementText(actualRole.identifier());
-                // } else {
-                // 默认为平民
-                role = RoleAnnouncementTexts.CIVILIAN;
-                // }
-            }
-            this.players.add(new RoundEndData(player.getGameProfile(), role,
+            this.players.add(new RoundEndData(player.getGameProfile(),
                     !io.wifi.starrailexpress.game.GameUtils.isPlayerAliveAndSurvival(player), false));
         }
         this.winStatus = winStatus;
@@ -128,7 +110,6 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
             String winner_subtitle = tag.getString("winner_subtitle");
             try {
                 this.CustomWinnerSubtitle = Component.Serializer.fromJson(winner_subtitle, registryLookup);
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -144,11 +125,7 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
         for (RoundEndData detail : this.players) {
             if (!detail.player.getId().equals(uuid))
                 continue;
-            return switch (this.winStatus) {
-                case KILLERS -> detail.role == RoleAnnouncementTexts.KILLER;
-                case PASSENGERS, TIME -> detail.role != RoleAnnouncementTexts.KILLER;
-                default -> false;
-            };
+            return detail.hasWin;
         }
         return false;
     }
@@ -163,34 +140,35 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
         // clist.add(NbtUtils.createUUID(detail));
         tag.put("players", list);
         // tag.put("winners", clist);
-        if (CustomWinnerID == null) {
-            tag.putString("winner_id", "");
-        } else {
-            tag.putString("winner_id", CustomWinnerID);
-        }
-        if (CustomWinnerTitle != null) {
-            try {
-                tag.putString("winner_title", Component.Serializer.toJson(CustomWinnerTitle, registryLookup));
-            } catch (Exception e) {
-                e.printStackTrace();
-                tag.putString("winner_title", "[\"ERROR! " + e.getMessage() + "\"]");
+        if (winStatus.equals(WinStatus.CUSTOM) || winStatus.equals(WinStatus.CUSTOM_COMPONENT)) {
+            if (CustomWinnerID == null) {
+                tag.putString("winner_id", "");
+            } else {
+                tag.putString("winner_id", CustomWinnerID);
             }
-        }
-        if (CustomWinnerSubtitle != null) {
-            try {
-                tag.putString("winner_subtitle", Component.Serializer.toJson(CustomWinnerSubtitle, registryLookup));
-            } catch (Exception e) {
-                e.printStackTrace();
-                tag.putString("winner_subtitle", "[\"ERROR! " + e.getMessage() + "\"]");
+            if (CustomWinnerTitle != null) {
+                try {
+                    tag.putString("winner_title", Component.Serializer.toJson(CustomWinnerTitle, registryLookup));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    tag.putString("winner_title", "[\"ERROR! " + e.getMessage() + "\"]");
+                }
             }
+            if (CustomWinnerSubtitle != null) {
+                try {
+                    tag.putString("winner_subtitle", Component.Serializer.toJson(CustomWinnerSubtitle, registryLookup));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    tag.putString("winner_subtitle", "[\"ERROR! " + e.getMessage() + "\"]");
+                }
+            }
+            tag.putInt("winner_color", CustomWinnerColor);
         }
-        tag.putInt("winner_color", CustomWinnerColor);
         tag.putInt("winstatus", this.winStatus.ordinal());
     }
 
     public class RoundEndData {
         public GameProfile player;
-        public RoleAnnouncementTexts.RoleAnnouncementText role;
         public boolean wasDead;
         public boolean hasWin;
 
@@ -202,10 +180,6 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
             return this.wasDead;
         }
 
-        public RoleAnnouncementTexts.RoleAnnouncementText role() {
-            return this.role;
-        }
-
         public GameProfile player() {
             return this.player;
         }
@@ -215,17 +189,15 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
             return this;
         }
 
-        public RoundEndData(GameProfile player, RoleAnnouncementTexts.RoleAnnouncementText role, boolean wasDead,
+        public RoundEndData(GameProfile player, boolean wasDead,
                 boolean hasWin) {
             this.player = player;
-            this.role = role;
             this.wasDead = wasDead;
             this.hasWin = hasWin;
         }
 
         public RoundEndData(@NotNull CompoundTag tag) {
             this(new GameProfile(tag.getUUID("uuid"), tag.getString("name")),
-                    RoleAnnouncementTexts.getFromName((tag.getString("role"))),
                     tag.getBoolean("wasDead"),
                     tag.getBoolean("hasWin"));
         }
@@ -234,7 +206,6 @@ public class SREGameRoundEndComponent implements AutoSyncedComponent {
             CompoundTag tag = new CompoundTag();
             tag.putUUID("uuid", this.player.getId());
             tag.putString("name", this.player.getName());
-            tag.putString("role", this.role != null ? this.role.getId().getPath() : "blank"); // 存储角色名称
             tag.putBoolean("wasDead", this.wasDead);
             tag.putBoolean("hasWin", this.hasWin);
             return tag;

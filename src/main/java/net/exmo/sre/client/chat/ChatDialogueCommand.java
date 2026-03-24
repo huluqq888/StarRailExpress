@@ -19,16 +19,17 @@ import java.util.Collection;
  * <p>
  * 用法：
  * <ul>
- *   <li>{@code /sre:chat open <dialogueId> <players>} — 对指定玩家打开对话</li>
- *   <li>{@code /sre:chat open <dialogueId> <players> <entity>} — 打开对话 + Camera 聚焦到实体</li>
- *   <li>{@code /sre:chat reload} — 重新加载对话配置文件</li>
- *   <li>{@code /sre:chat list} — 列出所有已加载的对话 ID</li>
+ * <li>{@code /sre:chat open <dialogueId> <players>} — 对指定玩家打开对话</li>
+ * <li>{@code /sre:chat open <dialogueId> <players> <entity>} — 打开对话 + Camera
+ * 聚焦到实体</li>
+ * <li>{@code /sre:chat reload} — 重新加载对话配置文件</li>
+ * <li>{@code /sre:chat list} — 列出所有已加载的对话 ID</li>
  * </ul>
  */
 public class ChatDialogueCommand {
 
-    private static final SuggestionProvider<CommandSourceStack> SUGGEST_DIALOGUES =
-            (ctx, builder) -> SharedSuggestionProvider.suggest(
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_DIALOGUES = (ctx,
+            builder) -> SharedSuggestionProvider.suggest(
                     ChatDialogueManager.getInstance(ctx.getSource().getServer()).getAll().keySet(),
                     builder);
 
@@ -45,7 +46,8 @@ public class ChatDialogueCommand {
                                                 // /sre:chat open <id> <players> <entity>
                                                 .then(Commands.argument("focusEntity", EntityArgument.entity())
                                                         .executes(ctx -> {
-                                                            Entity entity = EntityArgument.getEntity(ctx, "focusEntity");
+                                                            Entity entity = EntityArgument.getEntity(ctx,
+                                                                    "focusEntity");
                                                             return executeOpen(ctx, entity.getId());
                                                         })))))
                         .then(Commands.literal("reload")
@@ -82,7 +84,7 @@ public class ChatDialogueCommand {
                 () -> Component.literal("[SRE-Chat] Opened dialogue '" + dialogueId
                         + "' for " + players.size() + " player(s)")
                         .withStyle(s -> s.withColor(0x55FF55)),
-                true);
+                false);
         return players.size();
     }
 

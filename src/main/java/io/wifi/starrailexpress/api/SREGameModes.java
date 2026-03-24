@@ -10,8 +10,8 @@ import java.util.HashMap;
 public class SREGameModes {
     public static final HashMap<ResourceLocation, GameMode> GAME_MODES = new HashMap<>();
 
-    public static final ResourceLocation MURDER_ID = SRE.id("murder");
-    public static final ResourceLocation DISCOVERY_ID = SRE.id("discovery");
+    public static final ResourceLocation MURDER_ID = SRE.shortId("murder");
+    public static final ResourceLocation DISCOVERY_ID = SRE.shortId("discovery");
     public static final ResourceLocation LOOSE_ENDS_ID = SRE.watheId("loose_ends");
 
     public static final GameMode MURDER = registerGameMode(MURDER_ID, new StarRailMurderGameMode(MURDER_ID));

@@ -192,7 +192,7 @@ public class RoundTextRenderer {
                     context.pose().pushPose();
                     context.pose().scale(2f, 2f, 1f);
 
-                    if (entry.role() == null)
+                    if (entry.player == null)
                         continue;
 
                     final var role1 = lastRole.get(entry.player().getId());
