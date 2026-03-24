@@ -104,7 +104,6 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
     public void serverTick() {
         if (!checkIsGameRunning()) {
             if (this.psychoTicks > 0) {
-                SRE.LOGGER.info("stop");
                 this.stopPsycho();
                 this.psychoTicks = 0;
             }
