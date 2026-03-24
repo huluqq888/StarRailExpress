@@ -529,7 +529,6 @@ public class InitModRolesMax {
                     Harpymodloader.setRoleMaximum(ModRoles.SEA_KING_ID, 1);
                 } else {
                     Harpymodloader.setRoleMaximum(ModRoles.SEA_KING_ID, 0);
-                    Harpymodloader.setRoleMaximum(ModRoles.DIVER_ID, 0);
                     Harpymodloader.setRoleMaximum(ModRoles.WATER_GHOST_ID, 0);
                 }
             }
