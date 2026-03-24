@@ -1066,6 +1066,8 @@
   "message.noellesroles.ghost.last_stand": "An unseen force turned the hour hand!",
   "gui.noellesroles.candlebearer.progress": "Candle progress: %s/%s",
   "gui.noellesroles.candlebearer.charges": "Invisibility charges: %s/%s",
+  "gui.noellesroles.candlebearer.living_cooldown": "Living dedication cooldown: %s seconds",
+  "gui.noellesroles.candlebearer.living_ready": "Living dedication: Ready",
   "gui.noellesroles.candlebearer.invisible": "Invisible, %s seconds remaining",
   "gui.noellesroles.candlebearer.ready": "Invisibility: %s",
   "message.noellesroles.candlebearer.target_not_alive": "Target is not alive",
