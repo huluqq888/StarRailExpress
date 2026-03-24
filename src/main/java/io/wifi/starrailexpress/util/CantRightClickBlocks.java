@@ -46,6 +46,7 @@ public class CantRightClickBlocks {
             Blocks.RESPAWN_ANCHOR,
             Blocks.ENDER_CHEST,
             Blocks.SHULKER_BOX,
+            Blocks.FLOWER_POT,
             // 更多需要限制的方块...
             Blocks.CHEST,
             Blocks.TRAPPED_CHEST,
