@@ -372,11 +372,11 @@ public class ModItems {
             new DogskinPlasterItem(new Item.Properties().stacksTo(1)),
             "dogskin_plaster");
 
-        /**
-         * 维生素
-         * - 一次性道具
-         * - 对目标使用后使其获得san值恢复
-         */
+    /**
+     * 维生素
+     * - 一次性道具
+     * - 对目标使用后使其获得san值恢复
+     */
     public static final Item ALCHEMIST_BUFF_POTION = register(
             new AlchemistBuffPotionItem(new Item.Properties().stacksTo(1)),
             "alchemist_buff_potion");

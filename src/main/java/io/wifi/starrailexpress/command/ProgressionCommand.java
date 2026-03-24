@@ -25,14 +25,16 @@ public class ProgressionCommand {
                 .executes(context -> open(context.getSource(), null))
                 .then(Commands.argument("player", GameProfileArgument.gameProfile())
                         .requires(source -> source.hasPermission(2))
-                        .executes(context -> open(context.getSource(), GameProfileArgument.getGameProfiles(context, "player"))))
+                        .executes(context -> open(context.getSource(),
+                                GameProfileArgument.getGameProfiles(context, "player"))))
                 .then(Commands.literal("refresh")
                         .requires(source -> source.hasPermission(2))
                         .executes(context -> refresh(context.getSource(), context.getSource().getPlayerOrException()))
                         .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                 .executes(context -> refresh(context.getSource(),
-                                        getSinglePlayer(context.getSource(), GameProfileArgument.getGameProfiles(context,
-                                                "player")))))
+                                        getSinglePlayer(context.getSource(),
+                                                GameProfileArgument.getGameProfiles(context,
+                                                        "player")))))
                         .then(Commands.literal("weekly")
                                 .executes(context -> refreshWeekly(context.getSource(),
                                         context.getSource().getPlayerOrException()))
@@ -44,8 +46,9 @@ public class ProgressionCommand {
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                 .executes(context -> sync(context.getSource(),
-                                        getSinglePlayer(context.getSource(), GameProfileArgument.getGameProfiles(context,
-                                                "player"))))))
+                                        getSinglePlayer(context.getSource(),
+                                                GameProfileArgument.getGameProfiles(context,
+                                                        "player"))))))
                 .then(Commands.literal("activate")
                         .then(Commands.argument("faction", StringArgumentType.word())
                                 .executes(context -> activate(context.getSource(),
@@ -57,8 +60,9 @@ public class ProgressionCommand {
                                 .then(Commands.argument("faction", StringArgumentType.word())
                                         .then(Commands.argument("count", IntegerArgumentType.integer(1))
                                                 .executes(context -> giveCard(context.getSource(),
-                                                        getSinglePlayer(context.getSource(), GameProfileArgument.getGameProfiles(
-                                                                context, "player")),
+                                                        getSinglePlayer(context.getSource(),
+                                                                GameProfileArgument.getGameProfiles(
+                                                                        context, "player")),
                                                         StringArgumentType.getString(context, "faction"),
                                                         IntegerArgumentType.getInteger(context, "count")))))))
                 .then(Commands.literal("xp")
@@ -67,15 +71,17 @@ public class ProgressionCommand {
                                 .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(0))
                                                 .executes(context -> setXp(context.getSource(),
-                                                        getSinglePlayer(context.getSource(), GameProfileArgument.getGameProfiles(
-                                                                context, "player")),
+                                                        getSinglePlayer(context.getSource(),
+                                                                GameProfileArgument.getGameProfiles(
+                                                                        context, "player")),
                                                         IntegerArgumentType.getInteger(context, "amount"))))))
                         .then(Commands.literal("add")
                                 .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                                 .executes(context -> addXp(context.getSource(),
-                                                        getSinglePlayer(context.getSource(), GameProfileArgument.getGameProfiles(
-                                                                context, "player")),
+                                                        getSinglePlayer(context.getSource(),
+                                                                GameProfileArgument.getGameProfiles(
+                                                                        context, "player")),
                                                         IntegerArgumentType.getInteger(context, "amount"))))))));
     }
 
@@ -95,9 +101,12 @@ public class ProgressionCommand {
             ServerPlayer target = source.getServer().getPlayerList().getPlayer(profile.getId());
             if (target != null) {
                 openScreen(target);
-                source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.open.other", profile.getName()), false);
+                source.sendSuccess(
+                        () -> Component.translatable("cmd.stupid_express.progression.open.other", profile.getName()),
+                        false);
             } else {
-                source.sendFailure(Component.translatable("cmd.stupid_express.progression.open.offline", profile.getName()));
+                source.sendFailure(
+                        Component.translatable("cmd.stupid_express.progression.open.offline", profile.getName()));
             }
         }
         return 1;
@@ -110,7 +119,8 @@ public class ProgressionCommand {
         }
         SREPlayerProgressionComponent component = SREPlayerProgressionComponent.KEY.get(player);
         component.forceRefreshTasks();
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.refresh.success", player.getName().getString()), true);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.refresh.success",
+                player.getName().getString()), true);
         return 1;
     }
 
@@ -121,7 +131,8 @@ public class ProgressionCommand {
         }
         SREPlayerProgressionComponent component = SREPlayerProgressionComponent.KEY.get(player);
         component.forceRefreshWeeklyTasks();
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.refresh.weekly.success", player.getName().getString()), true);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.refresh.weekly.success",
+                player.getName().getString()), true);
         return 1;
     }
 
@@ -135,7 +146,8 @@ public class ProgressionCommand {
         if (!pulled) {
             component.forceRefreshTasks();
         }
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.sync.success", player.getName().getString()), true);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.sync.success",
+                player.getName().getString()), true);
         return 1;
     }
 
@@ -146,7 +158,8 @@ public class ProgressionCommand {
             source.sendFailure(Component.translatable("cmd.stupid_express.progression.activate.failed", faction));
             return 0;
         }
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.activate.success", type.displayName), false);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.activate.success",
+                Component.translatable(type.displayName)), false);
         return 1;
     }
 
@@ -161,7 +174,8 @@ public class ProgressionCommand {
             return 0;
         }
         SREPlayerProgressionComponent.KEY.get(player).addFactionCard(type, count);
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.givecard.success", player.getName().getString(), count, type.displayName), true);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.givecard.success",
+                player.getName().getString(), count, Component.translatable(type.displayName)), true);
         return 1;
     }
 
@@ -171,7 +185,8 @@ public class ProgressionCommand {
             return 0;
         }
         SREPlayerProgressionComponent.KEY.get(player).setTotalExperienceValue(amount);
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.xp.set", player.getName().getString(), amount), true);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.xp.set",
+                player.getName().getString(), amount), true);
         return 1;
     }
 
@@ -181,7 +196,8 @@ public class ProgressionCommand {
             return 0;
         }
         SREPlayerProgressionComponent.KEY.get(player).grantExperience(amount, "控制台奖励");
-        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.xp.add", amount, player.getName().getString()), true);
+        source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.xp.add", amount,
+                player.getName().getString()), true);
         return 1;
     }
 

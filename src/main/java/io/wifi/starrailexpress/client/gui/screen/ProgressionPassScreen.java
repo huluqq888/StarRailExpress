@@ -224,7 +224,7 @@ public class ProgressionPassScreen extends Screen {
         // ---- 底部信息 ----
         int infoY = panelY + panelH - 62;
         String activeCard = progression.getActiveFactionCard() == FactionCardType.NONE
-                ? Component.translatable("sre.pass.not_active").getString() : Component.translatable("sre.pass.faction." + progression.getActiveFactionCard().questKey, Component.literal(progression.getActiveFactionCard().displayName)).getString();
+                ? Component.translatable("sre.pass.not_active").getString() : Component.translatable("sre.pass.faction." + progression.getActiveFactionCard().questKey, Component.translatable(progression.getActiveFactionCard().displayName)).getString();
         g.drawString(font, Component.translatable("sre.pass.active_card", activeCard).getString(), panelX + 24, infoY, applyAlpha(0xFFF7D791, animAlpha), false);
         
         long dailyRem  = Math.max(0L, progression.getLastQuestRefreshTime()
@@ -290,7 +290,7 @@ public class ProgressionPassScreen extends Screen {
         g.drawString(font, quest.description, innerX + 8, rowY + 13, applyAlpha(0xFF8FA7C4, animAlpha), false);
         String rwd = "+" + quest.rewardExperience + "exp  +" + quest.rewardCoins + "g"
                 + (quest.rewardLoot > 0 ? "  +" + quest.rewardLoot + "L" : "")
-                + (quest.rewardCard != FactionCardType.NONE ? "  " + Component.translatable("sre.pass.faction." + quest.rewardCard.questKey, Component.literal(quest.rewardCard.displayName)).getString() : "");
+                + (quest.rewardCard != FactionCardType.NONE ? "  " + Component.translatable("sre.pass.faction." + quest.rewardCard.questKey, Component.translatable(quest.rewardCard.displayName)).getString() : "");
         g.drawString(font, rwd, innerX + 8, rowY + 23, applyAlpha(0xFFF7D27A, animAlpha), false);
     }
 

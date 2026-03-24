@@ -364,7 +364,6 @@ public class SREPlayerProgressionComponent implements AutoSyncedComponent, Serve
             if (taskJson == null || taskJson.isBlank()) {
                 return false;
             }
-            @SuppressWarnings("unchecked")
             Map<String, Object> networkTaskMap = GSON.fromJson(taskJson, STRING_MAP_TYPE);
             if (networkTaskMap == null || networkTaskMap.isEmpty()) {
                 return false;
@@ -373,7 +372,6 @@ public class SREPlayerProgressionComponent implements AutoSyncedComponent, Serve
 
             String progressJson = syncRequests.getValue(this.player.getUUID(), NETWORK_DATA_KEY);
             if (progressJson != null && !progressJson.isBlank()) {
-                @SuppressWarnings("unchecked")
                 Map<String, Object> progressMap = GSON.fromJson(progressJson, STRING_MAP_TYPE);
                 if (progressMap != null) {
                     applyNetworkProgress(progressMap);
@@ -1058,10 +1056,10 @@ public class SREPlayerProgressionComponent implements AutoSyncedComponent, Serve
     }
 
     public enum FactionCardType {
-        NONE("未激活", "none"),
-        KILLER("杀手阵营卡", "killer"),
-        CIVILIAN("平民阵营卡", "civilian"),
-        NEUTRAL("中立阵营卡", "neutral");
+        NONE("sre.pass.not_active", "none"),
+        KILLER("sre.pass.faction.killer", "killer"),
+        CIVILIAN("sre.pass.faction.civilian", "civilian"),
+        NEUTRAL("sre.pass.faction.neutral", "neutral");
 
         public final String displayName;
         public final String questKey;
