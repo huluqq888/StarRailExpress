@@ -315,14 +315,27 @@ public class ClientHudRenderer {
       Component progressText = Component.translatable("gui.noellesroles.candlebearer.progress",
           component.successfulCandles,
           component.requiredCandles).withStyle(ChatFormatting.GOLD);
-      context.drawString(font, progressText, x - font.width(progressText), y - font.lineHeight * 3 - 8,
+        context.drawString(font, progressText, x - font.width(progressText), y - font.lineHeight * 4 - 10,
           Color.WHITE.getRGB());
 
       Component chargeText = Component.translatable("gui.noellesroles.candlebearer.charges",
           component.invisibilityCharges,
           CandleBearerPlayerComponent.MAX_INVISIBILITY_CHARGES).withStyle(ChatFormatting.YELLOW);
-      context.drawString(font, chargeText, x - font.width(chargeText), y - font.lineHeight * 2 - 6,
+        context.drawString(font, chargeText, x - font.width(chargeText), y - font.lineHeight * 3 - 8,
           Color.WHITE.getRGB());
+
+        Component livingCandleText;
+        int livingCandleColor;
+        if (component.livingCandleCooldownTicks > 0) {
+        livingCandleText = Component.translatable("gui.noellesroles.candlebearer.living_cooldown",
+          (component.livingCandleCooldownTicks + 19) / 20);
+        livingCandleColor = 0xFFAA00;
+        } else {
+        livingCandleText = Component.translatable("gui.noellesroles.candlebearer.living_ready");
+        livingCandleColor = 0x55FF55;
+        }
+        context.drawString(font, livingCandleText, x - font.width(livingCandleText), y - font.lineHeight * 2 - 6,
+          livingCandleColor);
 
       Component stateText;
       int stateColor;
