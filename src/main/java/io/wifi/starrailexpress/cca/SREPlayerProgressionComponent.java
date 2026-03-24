@@ -358,11 +358,11 @@ public class SREPlayerProgressionComponent implements AutoSyncedComponent, Serve
         if (!(this.player instanceof ServerPlayer serverPlayer)) {
             return;
         }
-        if (this.syncPending) {
-            flushPendingSync();
-        }
         if (serverPlayer.serverLevel().getGameTime() % 20L != 0L) {
             return;
+        }
+        if (this.syncPending) {
+            flushPendingSync();
         }
         long now = System.currentTimeMillis();
         // 每日任务自动刷新
@@ -813,9 +813,7 @@ public class SREPlayerProgressionComponent implements AutoSyncedComponent, Serve
         this.syncDirtyMask |= dirtyMask;
         if (this.player instanceof ServerPlayer) {
             this.syncPending = true;
-            return;
         }
-        flushPendingSync();
     }
 
     private void flushPendingSync() {
