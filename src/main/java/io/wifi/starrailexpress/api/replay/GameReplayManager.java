@@ -541,30 +541,23 @@ public class GameReplayManager {
     }
   }
 
-  public void showReplayToPlayer(ServerPlayer player) {
-    if (player == null)
-      return;
+  public Component generateReplay() {
     GameReplayData replayData = currentReplayData;
     if (replayData == null) {
       replayData = loadReplay();
     }
     if (replayData == null) {
-      sendSystemMessage(player, Component.translatable("sre.replay.error.no_data").withStyle(ChatFormatting.RED));
-      return;
+      return Component.translatable("sre.replay.error.no_data").withStyle(ChatFormatting.RED);
     }
     // Clear previous messages
-    for (int i = 0; i < 50; i++) {
-      sendSystemMessage(player, Component.nullToEmpty(""));
-    }
-    // Send game statistics
-    sendSystemMessage(player,
-        Component.translatable("sre.replay.header").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD));
+    MutableComponent text = Component.literal("\n".repeat(50));
+    text.append(Component.translatable("sre.replay.header").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD))
+        .append("\n");
     Integer playerCount = replayData.getPlayerCount();
-    sendSystemMessage(player,
-        Component.translatable("sre.replay.player_count", playerCount != null ? playerCount : 0)
-            .withStyle(ChatFormatting.WHITE));
+    text.append(Component.translatable("sre.replay.player_count", playerCount != null ? playerCount : 0)
+        .withStyle(ChatFormatting.WHITE)).append("\n");
 
-    sendSystemMessage(player, Component.literal("---").withStyle(ChatFormatting.GRAY));
+    text.append(Component.literal("---").withStyle(ChatFormatting.GRAY)).append("\n");
 
     Map<UUID, String> playerRoles = replayData.getPlayerRoles();
     if (playerRoles != null && !playerRoles.isEmpty()) {
@@ -617,82 +610,83 @@ public class GameReplayManager {
 
       // 显示平民
       if (!aliveCivilians.isEmpty() || !deadCivilians.isEmpty()) {
-        sendSystemMessage(player,
-            Component.translatable("sre.replay.civilians").withStyle(ChatFormatting.BLUE));
+        text.append(
+            Component.translatable("sre.replay.civilians").withStyle(ChatFormatting.BLUE)).append("\n");
         if (!aliveCivilians.isEmpty()) {
           MutableComponent aliveCivText = ReplayDisplayUtils.buildTeamPlayerRolesWithDeathStatus(this,
               aliveCivilians, playerRoles, "", true);
           if (aliveCivText != null) {
-            sendSystemMessage(player, aliveCivText);
+            text.append(aliveCivText).append("\n");
           }
         }
         if (!deadCivilians.isEmpty()) {
           MutableComponent deadCivText = ReplayDisplayUtils.buildTeamPlayerRolesWithDeathStatus(this,
               deadCivilians, playerRoles, "", false);
           if (deadCivText != null) {
-            sendSystemMessage(player, deadCivText);
+            text.append(deadCivText).append("\n");
           }
         }
       }
 
       // 显示中立
       if (!aliveNeutrals.isEmpty() || !deadNeutrals.isEmpty()) {
-        sendSystemMessage(player,
-            Component.translatable("sre.replay.neutrals").withStyle(ChatFormatting.YELLOW));
+        text.append(
+            Component.translatable("sre.replay.neutrals").withStyle(ChatFormatting.YELLOW)).append("\n");
         if (!aliveNeutrals.isEmpty()) {
           MutableComponent aliveNeutText = ReplayDisplayUtils.buildTeamPlayerRolesWithDeathStatus(this,
               aliveNeutrals, playerRoles, "", true);
           if (aliveNeutText != null) {
-            sendSystemMessage(player, aliveNeutText);
+            text.append(aliveNeutText).append("\n");
           }
         }
         if (!deadNeutrals.isEmpty()) {
           MutableComponent deadNeutText = ReplayDisplayUtils.buildTeamPlayerRolesWithDeathStatus(this,
               deadNeutrals, playerRoles, "", false);
           if (deadNeutText != null) {
-            sendSystemMessage(player, deadNeutText);
+            text.append(deadNeutText).append("\n");
           }
         }
       }
       // 显示杀手
       if (!aliveKillers.isEmpty() || !deadKillers.isEmpty()) {
-        sendSystemMessage(player,
-            Component.translatable("sre.replay.killers").withStyle(ChatFormatting.DARK_RED));
+        text.append(
+            Component.translatable("sre.replay.killers").withStyle(ChatFormatting.DARK_RED)).append("\n");
         if (!aliveKillers.isEmpty()) {
           MutableComponent aliveKillText = ReplayDisplayUtils.buildTeamPlayerRolesWithDeathStatus(this,
               aliveKillers, playerRoles, "", true);
           if (aliveKillText != null) {
-            sendSystemMessage(player, aliveKillText);
+            text.append(aliveKillText).append("\n");
           }
         }
         if (!deadKillers.isEmpty()) {
           MutableComponent deadKillText = ReplayDisplayUtils.buildTeamPlayerRolesWithDeathStatus(this,
               deadKillers, playerRoles, "", false);
           if (deadKillText != null) {
-            sendSystemMessage(player, deadKillText);
+            text.append(deadKillText).append("\n");
           }
         }
       }
     }
-
-    sendSystemMessage(player, Component.literal("---").withStyle(ChatFormatting.GRAY));
+    text.append(Component.literal("---").withStyle(ChatFormatting.GRAY)).append("\n");
 
     // Send winning information
     String winningTeam = replayData.getWinningTeam();
     if (winningTeam != null) {
-      sendSystemMessage(player,
+      text.append(
           Component
               .translatable("sre.replay.winning_team",
                   replayData.getWinningTitle()
                       .withStyle(ChatFormatting.GOLD))
-              .withStyle(ChatFormatting.WHITE));
+              .withStyle(ChatFormatting.WHITE))
+          .append("\n");
     }
 
-    sendSystemMessage(player, Component.literal("---").withStyle(ChatFormatting.GRAY));
+    text.append(Component.literal("---").withStyle(ChatFormatting.GRAY)).append("\n");
 
     // Send timeline
-    sendSystemMessage(player,
-        Component.translatable("sre.replay.timeline").withStyle(ChatFormatting.BOLD, ChatFormatting.WHITE));
+    text.append(
+        Component.translatable("sre.replay.timeline").withStyle(ChatFormatting.BOLD, ChatFormatting.WHITE))
+        .append("\n");
 
     long gameStartTime = ReplayDisplayUtils.findGameStartTime(replayData);
     List<GameReplayData.ReplayEvent> timeline = replayData.getTimeline();
@@ -715,17 +709,15 @@ public class GameReplayManager {
           SRE.LOGGER.error("Error converting replay event to text: ", e);
         }
         if (eventText != null) {
-          sendSystemMessage(player, Component.literal(timePrefix).append(eventText));
+          text.append(Component.literal(timePrefix).append(eventText)).append("\n");
         } else {
-          // 不再显示无法显示的消息
-          // sendSystemMessage(player,
-          // Component.nullToEmpty(timePrefix).append(Component.translatable("sre.replay.event.null")));
         }
       }
     }
 
-    sendSystemMessage(player, Component.literal("---").withStyle(ChatFormatting.GRAY));
-    sendSystemMessage(player, Component.translatable("sre.replay.footer").withStyle(ChatFormatting.GRAY));
+    text.append(Component.literal("---").withStyle(ChatFormatting.GRAY)).append("\n");
+    text.append(Component.translatable("sre.replay.footer").withStyle(ChatFormatting.GRAY));
+    return text;
   }
 
   private List<UUID> getDeadPlayers(GameReplayData replayData) {

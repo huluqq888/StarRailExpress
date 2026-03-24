@@ -383,10 +383,18 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
             this.gameMode = SREGameModes.GAME_MODES.get(ResourceLocation.parse(nbtCompound.getString("GameMode")));
         else
             this.gameMode = null;
-        this.gameStatus = GameStatus.values()[(nbtCompound.getInt("GameStatus"))];
-
-        this.fade = nbtCompound.getInt("Fade");
-        this.psychosActive = nbtCompound.getInt("PsychosActive");
+        if (nbtCompound.contains("GameStatus"))
+            this.gameStatus = GameStatus.values()[(nbtCompound.getInt("GameStatus"))];
+        else
+            this.gameStatus = null;
+        if (nbtCompound.contains("Fade"))
+            this.fade = nbtCompound.getInt("Fade");
+        else
+            this.fade = 0;
+        if (nbtCompound.contains("PsychosActive"))
+            this.psychosActive = nbtCompound.getInt("PsychosActive");
+        else
+            this.psychosActive = 0;
         this.isSkillAvailable = nbtCompound.contains("isSkillAvailable") ? nbtCompound.getBoolean("isSkillAvailable")
                 : false;
         // this.backfireChance = nbtCompound.getFloat("BackfireChance");
@@ -408,6 +416,9 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
 
     @Override
     public void writeToNbt(@NotNull CompoundTag nbtCompound, HolderLookup.Provider wrapperLookup) {
+        if (gameStatus == GameStatus.INACTIVE) {
+            return;
+        }
         // nbtCompound.putBoolean("LockedToSupporters", lockedToSupporters);
         // nbtCompound.putBoolean("EnableWeights", enableWeights);
         // nbtCompound.putBoolean("SyncRole", syncRole);
@@ -421,19 +432,10 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         if (this.gameMode != null)
             nbtCompound.putString("GameMode", this.gameMode.identifier.toString());
         nbtCompound.putInt("GameStatus", this.gameStatus.ordinal());
-
-        nbtCompound.putInt("Fade", fade);
+        // nbtCompound.putInt("Fade", fade);
         nbtCompound.putInt("PsychosActive", psychosActive);
         if (this.looseEndWinner != null)
             nbtCompound.putUUID("LooseEndWinner", this.looseEndWinner);
-
-        // nbtCompound.putString("LastWinStatus", this.lastWinStatus.toString());
-        // nbtCompound.putFloat("BackfireChance", backfireChance);
-        // }
-        // else {
-
-        // }
-
     }
 
     public ListTag nbtFromUuidList(List<UUID> list) {

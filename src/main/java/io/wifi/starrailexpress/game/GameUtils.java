@@ -6,6 +6,7 @@ import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.*;
 import io.wifi.starrailexpress.api.replay.GameReplayData;
+import io.wifi.starrailexpress.api.replay.GameReplayManager;
 import io.wifi.starrailexpress.block.*;
 import io.wifi.starrailexpress.block_entity.BeveragePlateBlockEntity;
 import io.wifi.starrailexpress.block_entity.SmallDoorBlockEntity;
@@ -628,7 +629,7 @@ public class GameUtils {
 
         // --- 新增统计数据更新逻辑 (胜利/失败) ---
         GameUtils.WinStatus winStatus = roundEnd.getWinStatus();
-        SREWorldBlackoutComponent.KEY.get(world).reset();
+        // SREWorldBlackoutComponent.KEY.get(world).reset();
         // 修复4: 检查是否为恋人胜利
         boolean isLoversWin = winStatus == WinStatus.LOVERS;
 
@@ -749,8 +750,9 @@ public class GameUtils {
         // --- 结束新增统计数据更新逻辑 (胜利/失败) ---
         // roundEnd.sync();
         // Show replay to all players
+        Component text = SRE.REPLAY_MANAGER.generateReplay();
         for (ServerPlayer player : world.players()) {
-            SRE.REPLAY_MANAGER.showReplayToPlayer(player);
+            GameReplayManager.sendSystemMessage(player, text);
         }
 
         SREWorldBlackoutComponent.KEY.get(world).reset();
@@ -835,16 +837,24 @@ public class GameUtils {
         }
     }
 
-    public static boolean differentTeam(SRERole role1, SRERole role2){
-        if (role1 == null || role2 == null)return false;
-        if (role1.isVigilanteTeam() && role2.isVigilanteTeam())return false;
-        if (role1.isCanUseKiller() && role2.isCanUseKiller())return false;
-        if (role1.isNeutralForKiller() && role2.isCanUseKiller())return false;
-        if (role1.isCanUseKiller() && role2.isNeutralForKiller())return false;
-        if (role1.isNeutralForKiller() && role2.isNeutralForKiller())return false;
-        if (role1.isInnocent() && role2.isInnocent())return false;
+    public static boolean differentTeam(SRERole role1, SRERole role2) {
+        if (role1 == null || role2 == null)
+            return false;
+        if (role1.isVigilanteTeam() && role2.isVigilanteTeam())
+            return false;
+        if (role1.isCanUseKiller() && role2.isCanUseKiller())
+            return false;
+        if (role1.isNeutralForKiller() && role2.isCanUseKiller())
+            return false;
+        if (role1.isCanUseKiller() && role2.isNeutralForKiller())
+            return false;
+        if (role1.isNeutralForKiller() && role2.isNeutralForKiller())
+            return false;
+        if (role1.isInnocent() && role2.isInnocent())
+            return false;
         return true;
     }
+
     public static boolean isPlayerEliminated(Player player) {
         if (isPlayerSplitPersonalityAndSurvive(player) == SPAliveResult.ALIVE)
             return false;
@@ -998,7 +1008,7 @@ public class GameUtils {
             SRERole killerRole = gameWorldComponent.getRole(serverKiller);
             if (killerRole != null) {
                 if (differentTeam(killerRole, role))
-                canDeath = killerRole.onKill(victim, spawnBody, killer, deathReason);
+                    canDeath = killerRole.onKill(victim, spawnBody, killer, deathReason);
                 killerStats.getOrCreateRoleStats(killerRole.identifier()).incrementKillsAsRole();
                 // 更新阵营击杀数
                 if (killerRole.isVigilanteTeam()) {
