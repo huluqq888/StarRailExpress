@@ -16,11 +16,14 @@ import io.wifi.ConfigCompact.ConfigClassHandler;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.ConfigHolder;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -65,7 +68,7 @@ public class ConfigCommand {
     // 添加自定义 ID 到 Set
 
     String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
-    ConfigClassHandler.nameToClassMap.keySet().stream()
+    ConfigClassHandler.configNameToClassMap.keySet().stream()
         .filter(id -> id.toLowerCase(Locale.ROOT).startsWith(remaining))
         .forEach(suggestions::add);
     // 最后批量建议
@@ -83,7 +86,7 @@ public class ConfigCommand {
   private static CompletableFuture<Suggestions> suggestConfigEntry(CommandContext<CommandSourceStack> context,
       SuggestionsBuilder builder) throws CommandSyntaxException {
     String configName = StringArgumentType.getString(context, "config");
-    Class<?> configClazz = ConfigClassHandler.nameToClassMap.get(configName);
+    Class<?> configClazz = ConfigClassHandler.configNameToClassMap.get(configName);
     if (configClazz == null) {
       return builder.buildFuture();
     }
@@ -94,12 +97,15 @@ public class ConfigCommand {
       target = ConfigClassHandler.instance(tt);
     } catch (Exception e) {
       throw createSimpleSyntaxException(e);
+
     }
     HashSet<String> entries = new HashSet<>();
     for (Field field : configClazz.getDeclaredFields()) {
+      if (Modifier.isStatic(field.getModifiers())) {
+        continue; // 跳过静态字段
+      }
       if (field.canAccess(target)) {
         try {
-          field.setAccessible(true);
           entries.add(field.getName());
         } catch (Exception e) {
         }
@@ -113,7 +119,7 @@ public class ConfigCommand {
 
   private static int viewConfigEntry(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
     String configName = StringArgumentType.getString(context, "config");
-    Class<?> configClazz = ConfigClassHandler.nameToClassMap.get(configName);
+    Class<?> configClazz = ConfigClassHandler.configNameToClassMap.get(configName);
     String entryName = StringArgumentType.getString(context, "entry");
     if (configClazz == null) {
       throw createSimpleSyntaxException(new Exception("Config not found: " + configName));
@@ -124,17 +130,21 @@ public class ConfigCommand {
       var tt = (Class<ConfigData>) configClazz;
       target = ConfigClassHandler.instance(tt);
     } catch (Exception e) {
-      throw createSimpleSyntaxException(e);
+      throw createSimpleSyntaxException(new Exception("Cannot find entry " + entryName));
     }
     Field field;
     try {
       field = configClazz.getDeclaredField(entryName);
 
-      if (!field.canAccess(target)) {
+      if (!field.canAccess(target) || Modifier.isStatic(field.getModifiers())) {
         throw createSimpleSyntaxException(new Exception("Cannot access field " + entryName + "!"));
       }
       var content = field.get(target);
-      context.getSource().sendSuccess(() -> Component.translatable("Value of '%s':%s", entryName, gson.toJson(content)),
+      context.getSource().sendSuccess(
+          () -> Component
+              .translatable("Value of '%s': %s", entryName,
+                  Component.literal(gson.toJson(content)).withStyle(ChatFormatting.WHITE))
+              .withStyle(ChatFormatting.GREEN),
           false);
     } catch (Exception e) {
       throw createSimpleSyntaxException(e);
@@ -144,17 +154,19 @@ public class ConfigCommand {
 
   private static int changeConfigEntry(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
     String configName = StringArgumentType.getString(context, "config");
-    Class<?> configClazz = ConfigClassHandler.nameToClassMap.get(configName);
+    Class<?> configClazz = ConfigClassHandler.configNameToClassMap.get(configName);
     String entryName = StringArgumentType.getString(context, "entry");
     String value = StringArgumentType.getString(context, "value");
     if (configClazz == null) {
       throw createSimpleSyntaxException(new Exception("Config not found: " + configName));
     }
     Object target = null;
+    ConfigHolder<ConfigData> handler = null;
     try {
       @SuppressWarnings("unchecked")
       var tt = (Class<ConfigData>) configClazz;
-      target = ConfigClassHandler.instance(tt);
+      handler = ConfigClassHandler.handler(tt);
+      target = handler.getConfig();
     } catch (Exception e) {
       throw createSimpleSyntaxException(e);
     }
@@ -162,7 +174,7 @@ public class ConfigCommand {
     try {
       field = configClazz.getDeclaredField(entryName);
 
-      if (!field.canAccess(target)) {
+      if (!field.canAccess(target) || Modifier.isStatic(field.getModifiers())) {
         throw createSimpleSyntaxException(new Exception("Cannot access field " + entryName + "!"));
       }
       Class<?> fieldType = field.getType();
@@ -170,6 +182,7 @@ public class ConfigCommand {
       field.set(target, trueValue);
       context.getSource().sendSuccess(() -> Component.translatable("Set value of '%s' to: %s", entryName, value),
           true);
+      handler.save();
     } catch (Exception e) {
       throw createSimpleSyntaxException(e);
     }

@@ -8,6 +8,7 @@ import io.wifi.ConfigCompact.network.SyncConfigPayload;
 import io.wifi.starrailexpress.SRE;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.ConfigHolder;
 import me.shedaniel.autoconfig.ConfigManager;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.EnvType;
@@ -25,6 +26,7 @@ public class ConfigClassHandler<T extends ConfigData> {
     private final Class<T> type; // 保存 T 的 Class
     public static final Gson gson = new Gson();
     public static final HashMap<String, Class<?>> nameToClassMap = new HashMap<>();
+    public static final HashMap<String, Class<?>> configNameToClassMap = new HashMap<>();
 
     @Environment(EnvType.CLIENT)
     public static class GuiGenerator<T extends ConfigData> {
@@ -46,6 +48,8 @@ public class ConfigClassHandler<T extends ConfigData> {
         this.type = type;
         nameToClassMap.put(type.getName(), type);
         this.register();
+        var handler = getHandler();
+        configNameToClassMap.put(handler.getDefinition().name(), type);
     }
 
     @Environment(EnvType.CLIENT)
@@ -184,6 +188,17 @@ public class ConfigClassHandler<T extends ConfigData> {
         }
     }
 
+    public ConfigManager<T> getHandler() {
+        try {
+            var config = ((ConfigManager<T>) AutoConfig
+                    .getConfigHolder(type));
+            return config;
+        } catch (ClassCastException e) {
+            // 理论上不会发生，除非 cloth-config 换了实现
+            throw new RuntimeException("Failed to reload config", e);
+        }
+    }
+
     public void reset() {
         try {
             var config = ((ConfigManager<T>) AutoConfig
@@ -204,6 +219,10 @@ public class ConfigClassHandler<T extends ConfigData> {
             // 理论上不会发生，除非 cloth-config 换了实现
             throw new RuntimeException("Failed to reload config", e);
         }
+    }
+
+    public static <T extends ConfigData> ConfigHolder<T> handler(Class<T> clazz) {
+        return AutoConfig.getConfigHolder(clazz);
     }
 
     public static <T extends ConfigData> T instance(Class<T> clazz) {
