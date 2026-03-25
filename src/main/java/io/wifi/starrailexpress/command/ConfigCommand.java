@@ -171,9 +171,9 @@ public class ConfigCommand {
           () -> Component
               .translatable("Value of '%s': %s\n(Desc: %s)", entryName,
                   Component.literal(str_content).withStyle(ChatFormatting.WHITE).withStyle(style -> style
-                      .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, str_content))
+                      .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, str_content))
                       .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                          Component.literal("Click here to fill into the chat box.").withStyle(ChatFormatting.AQUA)))),
+                          Component.literal("Click to copy").withStyle(ChatFormatting.AQUA)))),
                   getConfigDescription(configName, entryName).withStyle(ChatFormatting.GRAY))
               .withStyle(ChatFormatting.GREEN),
           false);
