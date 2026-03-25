@@ -30,7 +30,6 @@ public abstract class PhantomHudMixin {
         }
         if (SREClient.isPlayerSpectator())
             return;
-                .get(Minecraft.getInstance().player.level());
         SREAbilityPlayerComponent abilityPlayerComponent = (SREAbilityPlayerComponent) SREAbilityPlayerComponent.KEY
                 .get(Minecraft.getInstance().player);
         if (SREClient.isRole(ModRoles.PHANTOM)) {

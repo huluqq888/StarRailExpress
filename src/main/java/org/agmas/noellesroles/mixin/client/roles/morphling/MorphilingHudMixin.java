@@ -28,7 +28,6 @@ public abstract class MorphilingHudMixin {
         }
         if (SREClient.isPlayerSpectator())
             return;
-                .get(Minecraft.getInstance().player.level());
 
         if (SREClient.isRole(ModRoles.MORPHLING)) {
             final var morphComp = MorphlingPlayerComponent.KEY.get(Minecraft.getInstance().player);

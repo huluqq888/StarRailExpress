@@ -72,8 +72,6 @@ public abstract class BroadcasterHudMixin {
             }
 
         }
-
-                .get(Minecraft.getInstance().player.level());
         if (SREClient.isRole(ModRoles.BROADCASTER)) {
             int drawY = context.guiHeight();
 
