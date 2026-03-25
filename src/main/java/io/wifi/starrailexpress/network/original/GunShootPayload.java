@@ -87,7 +87,7 @@ public record GunShootPayload(int target) implements CustomPacketPayload {
                 }
                 backfire = IsShootBackFire.EVENT.invoker().isShootBackFire(player, target);
                 boolean shouldDropRevolver = game.isInnocent(target) && !player.isCreative()
-                        && mainHandStack.is(TMMItemTags.GUNS);
+                        && mainHandStack.is(TMMItemTags.GUNS) && !mainHandStack.is(TMMItems.DERRINGER);
                 var dropresult = AllowShootRevolverDrop.EVENT.invoker().allowDrop(player, target);
                 if (dropresult.equals(AllowShootRevolverDrop.ShouldDropResult.FALSE)) {
                     shouldDropRevolver = false;

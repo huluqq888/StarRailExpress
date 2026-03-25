@@ -537,7 +537,7 @@ public class ModPacketsReciever {
 
     ServerPlayNetworking.registerGlobalReceiver(ModPackets.ABILITY_PACKET, (payload, context) -> {
       AbilityHandler.handler(payload, context);
-      ConfigWorldComponent.KEY.get(context.player().level()).onPlayerUsedSkill(context.player());
+      ConfigWorldComponent.onPlayerUsedSkill(context.player());
     });
     ServerPlayNetworking.registerGlobalReceiver(AbilityWithTargetC2SPacket.ID, (payload, context) -> {
       AbilityHandler.handlerWithTarget(payload, context);
@@ -664,7 +664,7 @@ public class ModPacketsReciever {
     ServerPlayNetworking.registerGlobalReceiver(ModPackets.WATER_GHOST_SKILL_PACKET,
         (payload, context) -> {
           org.agmas.noellesroles.packet.WaterGhostUseSkillC2SPacket.handle(payload, context);
-          ConfigWorldComponent.KEY.get(context.player().level()).onPlayerUsedSkill(context.player());
+          ConfigWorldComponent.onPlayerUsedSkill(context.player());
         });
   }
 

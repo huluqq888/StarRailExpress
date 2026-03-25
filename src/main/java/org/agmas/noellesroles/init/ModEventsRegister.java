@@ -457,6 +457,21 @@ public class ModEventsRegister {
     private static boolean isEnabled = false;
 
     public static void registerEvents() {
+        OnPlayerUsedSkill.EVENT.register((player) -> {
+            NoellesRolesConfig config = NoellesRolesConfig.HANDLER.instance();
+            if (!config.skillEchoEventEnabled) {
+                return;
+            }
+            SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(player.level());
+            if (!gameWorld.isRunning()) {
+                return;
+            }
+            SRERole role = gameWorld.getRole(player);
+            if (role == null) {
+                return;
+            }
+            ConfigWorldComponent.KEY.get(player.level()).announceSkillEchoForRole(role);
+        });
         AllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
             if (killer != null) {
                 SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(victim.level());
@@ -988,7 +1003,7 @@ public class ModEventsRegister {
                 if (playerEntity.level() instanceof ServerLevel level) {
                     for (var e : level.getAllEntities()) {
                         if (e instanceof ThrownTrident te)
-                            if (te.getOwner().getUUID().equals(playerEntity.getUUID())){
+                            if (te.getOwner().getUUID().equals(playerEntity.getUUID())) {
                                 playerEntity.drop(TMMItems.REVOLVER.getDefaultInstance(), false);
                                 te.discard();
                             }

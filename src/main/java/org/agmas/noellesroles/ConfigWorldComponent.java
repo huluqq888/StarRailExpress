@@ -2,6 +2,7 @@ package org.agmas.noellesroles;
 
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.event.OnPlayerUsedSkill;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
@@ -89,20 +90,8 @@ public class ConfigWorldComponent implements AutoSyncedComponent, ServerTickingC
         processSkillEchoRandomBroadcast();
     }
 
-    public void onPlayerUsedSkill(ServerPlayer player) {
-        NoellesRolesConfig config = NoellesRolesConfig.HANDLER.instance();
-        if (!config.skillEchoEventEnabled) {
-            return;
-        }
-        SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(player.level());
-        if (!gameWorld.isRunning()) {
-            return;
-        }
-        SRERole role = gameWorld.getRole(player);
-        if (role == null) {
-            return;
-        }
-        announceSkillEchoForRole(role);
+    public static void onPlayerUsedSkill(ServerPlayer player) {
+        OnPlayerUsedSkill.EVENT.invoker().onPlayerUsedSkill(player);
     }
 
     private void processSkillEchoRandomBroadcast() {
@@ -142,7 +131,7 @@ public class ConfigWorldComponent implements AutoSyncedComponent, ServerTickingC
     }
 
     private List<SRERole> collectUnannouncedAliveRoles(net.minecraft.server.level.ServerLevel serverLevel,
-                                                       SREGameWorldComponent gameWorld) {
+            SREGameWorldComponent gameWorld) {
         List<SRERole> roles = new ArrayList<>();
         Set<String> roleKeys = new HashSet<>();
         for (ServerPlayer serverPlayer : serverLevel.getServer().getPlayerList().getPlayers()) {
@@ -161,7 +150,7 @@ public class ConfigWorldComponent implements AutoSyncedComponent, ServerTickingC
         return roles;
     }
 
-    private void announceSkillEchoForRole(SRERole role) {
+    public void announceSkillEchoForRole(SRERole role) {
         if (!(world instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
             return;
         }

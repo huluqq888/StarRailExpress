@@ -10,8 +10,8 @@ public class ConfigCommand {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             var configCommand = Commands.literal("noellesroles")
+                    .requires(source -> source.hasPermission(2)) // 需要OP权限
                     .then(Commands.literal("config")
-                            .requires(source -> source.hasPermission(2)) // 需要OP权限
                             .then(Commands.literal("reload")
                                     .executes(context -> {
                                         NoellesRolesConfig.HANDLER.load();
@@ -36,9 +36,9 @@ public class ConfigCommand {
                                                 String statusText = value ? "Enabled" : "Disabled";
                                                 context.getSource().sendSystemMessage(
                                                         Component
-                                                         .literal("Innocent Punishment " + statusText
-                                                                         + " (accidentalKillPunishment = " + value + ")")
-                                                                 .withStyle(net.minecraft.ChatFormatting.GREEN));
+                                                                .literal("Innocent Punishment " + statusText
+                                                                        + " (accidentalKillPunishment = " + value + ")")
+                                                                .withStyle(net.minecraft.ChatFormatting.GREEN));
                                                 return 1;
                                             })))
                             .then(Commands.literal("skillEchoEvent")
