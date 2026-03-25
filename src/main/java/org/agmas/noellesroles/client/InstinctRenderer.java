@@ -27,6 +27,7 @@ import org.agmas.noellesroles.utils.RoleUtils;
 import pro.fazeclan.river.stupid_express.StupidExpress;
 import pro.fazeclan.river.stupid_express.constants.SEModifiers;
 import pro.fazeclan.river.stupid_express.constants.SERoles;
+import pro.fazeclan.river.stupid_express.modifier.lovers.cca.LoversComponent;
 import pro.fazeclan.river.stupid_express.modifier.split_personality.cca.SplitPersonalityComponent;
 import pro.fazeclan.river.stupid_express.role.arsonist.cca.DousedPlayerComponent;
 
@@ -35,6 +36,25 @@ import java.util.HashMap;
 
 public class InstinctRenderer {
     public static void registerInstinctEvents() {
+        // 恋人
+        OnGetInstinctHighlight.EVENT.register((target, hasInstinct) -> {
+            if (Minecraft.getInstance() == null)
+                return -1;
+            var self = Minecraft.getInstance().player;
+            if (!GameUtils.isPlayerAliveAndSurvival(self))
+                return -1;
+            if (self == null)
+                return -1;
+            if (!(target instanceof Player))
+                return -1;
+            if (!WorldModifierComponent.KEY.get(self.level()).isModifier(self, SEModifiers.LOVERS))
+                return -1;
+            var lc = LoversComponent.KEY.get(self);
+            if (lc.getLover().equals(target.getUUID())) {
+                return SEModifiers.LOVERS.color();
+            }
+            return -1;
+        });
         // 明星
         OnGetInstinctHighlight.EVENT.register((target, hasInstinct) -> {
             if (Minecraft.getInstance() == null)
@@ -364,7 +384,8 @@ public class InstinctRenderer {
                 if (SREClient.gameComponent.isRole(self, ModRoles.CHEF)) {
                     // LoggerFactory.getLogger("renderer").info("glowTick {}",
                     // bartenderPlayerComponent.glowTicks);
-                    int t = FoodDrinkGlowComponent.KEY.get(self).glowTicks.getOrDefault(target.getScoreboardName(), new HashMap<>())
+                    int t = FoodDrinkGlowComponent.KEY.get(self).glowTicks
+                            .getOrDefault(target.getScoreboardName(), new HashMap<>())
                             .getOrDefault(1, 0);
                     if (t > 0) {
                         return (Color.GREEN.getRGB());
@@ -379,7 +400,8 @@ public class InstinctRenderer {
                     if (armorPlayerComponent.getArmor() > 0) {
                         return (Color.BLUE.getRGB());
                     }
-                    int t = FoodDrinkGlowComponent.KEY.get(self).glowTicks.getOrDefault(target.getScoreboardName(), new HashMap<>())
+                    int t = FoodDrinkGlowComponent.KEY.get(self).glowTicks
+                            .getOrDefault(target.getScoreboardName(), new HashMap<>())
                             .getOrDefault(0, 0);
                     if (t > 0) {
                         return (Color.GREEN.getRGB());
