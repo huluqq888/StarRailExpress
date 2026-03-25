@@ -1,7 +1,6 @@
 package org.agmas.noellesroles.mixin.client.roles.admirer;
 
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;

@@ -1,8 +1,6 @@
 package org.agmas.noellesroles.mixin.client.roles;
 
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
-import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -36,8 +34,7 @@ public abstract class SingerHudMixin {
         if (SREClient.isPlayerSpectator()) return;
 
         // 检查玩家是否是歌手
-        SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(client.level);
-        if (!gameWorld.isRole(client.player, ModRoles.SINGER))
+        if (!SREClient.isRole(ModRoles.SINGER))
             return;
         // 检查玩家是否存活
         if (!SREClient.isPlayerAliveAndInSurvival())

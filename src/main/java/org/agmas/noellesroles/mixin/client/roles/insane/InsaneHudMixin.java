@@ -1,7 +1,6 @@
 package org.agmas.noellesroles.mixin.client.roles.insane;
 
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -30,9 +29,7 @@ public abstract class InsaneHudMixin {
         }
         if (SREClient.isPlayerSpectator())
             return;
-        SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
-                .get(Minecraft.getInstance().player.level());
-        if (gameWorldComponent.isRole(Minecraft.getInstance().player,
+        if (SREClient.isRole(
                 ModRoles.THE_INSANE_DAMNED_PARANOID_KILLER_OF_DOOM_DEATH_DESTRUCTION_AND_WAFFLES)) {
 
             final var insaneKillerPlayerComponent = InsaneKillerPlayerComponent.KEY.get(Minecraft.getInstance().player);

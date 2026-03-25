@@ -109,6 +109,8 @@ public class SREClient implements ClientModInitializer {
     private static boolean cachedKiller;
     private static boolean cachedUseTrainHud;
     private static boolean cachedCanRenderChatHud = true;
+    private static boolean cachedShowDebugHud;
+    private static boolean cachedRenderVanillaHud;
     public static boolean hideLocalMainHandItemInLayer = false;
     public static boolean hideLocalOffHandItemInLayer = false;
     public static final Map<UUID, PlayerInfo> PLAYER_ENTRIES_CACHE = new HashMap<>();
@@ -693,6 +695,11 @@ public class SREClient implements ClientModInitializer {
         return cachedKiller;
     }
 
+    public static boolean isRole(SRERole role) {
+        final var player = Minecraft.getInstance().player;
+        return player != null && gameComponent != null && gameComponent.isRole(player, role);
+    }
+
     public static boolean isPlayerSpectator() {
         return cachedPlayerSpectator;
     }
@@ -703,6 +710,14 @@ public class SREClient implements ClientModInitializer {
 
     public static boolean canRenderChatHud() {
         return cachedCanRenderChatHud;
+    }
+
+    public static boolean shouldShowDebugHud() {
+        return cachedShowDebugHud;
+    }
+
+    public static boolean shouldRenderVanillaHud() {
+        return cachedRenderVanillaHud;
     }
 
     public static int getInstinctHighlight(Entity target) {
@@ -777,6 +792,8 @@ public class SREClient implements ClientModInitializer {
         cachedPlayerSpectator = player != null && player.isSpectator();
         cachedUseTrainHud = !isInLobby && trainComponent != null && trainComponent.hasHud();
         cachedKiller = gameComponent != null && gameComponent.canUseKillerFeatures(player);
+        cachedShowDebugHud = isInLobby || (cachedPlayerCreative);
+        cachedRenderVanillaHud = isInLobby || !cachedPlayerAliveAndInSurvival;
 
         boolean canRender = true;
         if (player != null && !isInLobby) {

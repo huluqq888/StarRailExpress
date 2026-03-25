@@ -2,7 +2,6 @@ package org.agmas.noellesroles.mixin.client.roles.seaking;
 
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -31,7 +30,7 @@ public class SeaKingHudMixin {
         if (SREClient.gameComponent == null) {
             return;
         }
-        if (!SREClient.gameComponent.isRole(player, ModRoles.SEA_KING)) {
+        if (!SREClient.isRole(ModRoles.SEA_KING)) {
             return;
         }
         if (!SREClient.isPlayerAliveAndInSurvival()) {

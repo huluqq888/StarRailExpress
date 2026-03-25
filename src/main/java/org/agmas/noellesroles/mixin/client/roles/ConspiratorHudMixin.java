@@ -1,6 +1,5 @@
 package org.agmas.noellesroles.mixin.client.roles;
 
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.client.gui.RoleNameRenderer;
 import net.minecraft.ChatFormatting;
@@ -30,8 +29,7 @@ public class ConspiratorHudMixin {
         if (client.player == null) return;
         if (SREClient.isPlayerSpectator()) return;
         
-        SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(client.player.level());
-        if (!gameWorld.isRole(client.player, ModRoles.CONSPIRATOR)) return;
+        if (!SREClient.isRole(ModRoles.CONSPIRATOR)) return;
         if (!SREClient.isPlayerAliveAndInSurvival()) return;
         
         ConspiratorPlayerComponent component = ConspiratorPlayerComponent.KEY.get(client.player);

@@ -2,7 +2,6 @@ package org.agmas.noellesroles.mixin.client.roles.recaller;
 
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -30,11 +29,10 @@ public abstract class RecallerHudMixin {
         }
         if (SREClient.isPlayerSpectator())
             return;
-        SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY.get(Minecraft.getInstance().player.level());
         SREAbilityPlayerComponent abilityPlayerComponent = (SREAbilityPlayerComponent) SREAbilityPlayerComponent.KEY.get(Minecraft.getInstance().player);
         RecallerPlayerComponent recallerPlayerComponent = RecallerPlayerComponent.KEY.get(Minecraft.getInstance().player);
         SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(Minecraft.getInstance().player);
-        if (gameWorldComponent.isRole(Minecraft.getInstance().player, ModRoles.RECALLER)) {
+        if (SREClient.isRole(ModRoles.RECALLER)) {
             int drawY = context.guiHeight();
 
 

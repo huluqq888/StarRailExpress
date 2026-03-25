@@ -2,7 +2,6 @@ package org.agmas.noellesroles.mixin.client.roles.vulture;
 
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -28,9 +27,8 @@ public abstract class VultureHudMixin {
         }
         if (SREClient.isPlayerSpectator())
             return;
-        SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY.get(Minecraft.getInstance().player.level());
         SREAbilityPlayerComponent abilityPlayerComponent = (SREAbilityPlayerComponent) SREAbilityPlayerComponent.KEY.get(Minecraft.getInstance().player);
-        if (gameWorldComponent.isRole(Minecraft.getInstance().player, ModRoles.VULTURE)) {
+        if (SREClient.isRole(ModRoles.VULTURE)) {
             VulturePlayerComponent vulturePlayerComponent = VulturePlayerComponent.KEY.get(Minecraft.getInstance().player);
             int drawY = context.guiHeight();
 

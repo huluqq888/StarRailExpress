@@ -42,7 +42,7 @@ public abstract class ExecutionerHudMixin {
 
         // 检查是否是Executioner角色且存活
         if (Minecraft.getInstance().player != null
-                && gameWorldComponent.isRole(Minecraft.getInstance().player, ModRoles.EXECUTIONER)
+                && SREClient.isRole(ModRoles.EXECUTIONER)
                 && SREClient.isPlayerAliveAndInSurvival()) {
             // 检查是否已经转变为杀手
             if (!gameWorldComponent.getRole(Minecraft.getInstance().player).canUseKiller()) {

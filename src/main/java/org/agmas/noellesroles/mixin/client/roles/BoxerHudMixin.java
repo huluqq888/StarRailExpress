@@ -1,8 +1,6 @@
 package org.agmas.noellesroles.mixin.client.roles;
 
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
-import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -35,8 +33,7 @@ public class BoxerHudMixin {
         if (SREClient.isPlayerSpectator()) return;
         
         // 检查是否是拳击手
-        SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(client.level);
-        if (!gameWorld.isRole(client.player, ModRoles.BOXER)) return;
+        if (!SREClient.isRole(ModRoles.BOXER)) return;
         
         // 检查玩家是否存活
         if (!SREClient.isPlayerAliveAndInSurvival()) return;

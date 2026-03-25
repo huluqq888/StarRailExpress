@@ -1,8 +1,6 @@
 package org.agmas.noellesroles.mixin.client.roles.dio;
 
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
-import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -40,8 +38,7 @@ public class DIOHudMixin {
             return;
 
         // 检查是否是迪奥
-        SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(client.level);
-        if (!gameWorld.isRole(client.player, ModRoles.DIO))
+        if (!SREClient.isRole(ModRoles.DIO))
             return;
 
         // 检查玩家是否存活

@@ -1,7 +1,6 @@
 package org.agmas.noellesroles.mixin.client.roles;
 
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -37,8 +36,7 @@ public abstract class StarHudMixin {
         if (client.player == null || client.level == null) return;
         if (SREClient.isPlayerSpectator()) return;
         // 检查玩家是否是明星
-        SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(client.level);
-        if (!gameWorld.isRole(client.player, ModRoles.SUPERSTAR)) return;
+        if (!SREClient.isRole(ModRoles.SUPERSTAR)) return;
         
         // 获取明星组件
         SuperStarPlayerComponent starComp = ModComponents.STAR.get(client.player);
