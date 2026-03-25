@@ -401,7 +401,7 @@ public class ModPacketsReciever {
               // ModdedRoleAssigned.EVENT.invoker().assignModdedRole(player,
               // first);
               RoleUtils.changeRole(player, first);
-              // 继承变成杀手之前的40%金币
+              // 继承变成杀手之前的40%金币 + 100 金币
               playerShopComponent.setBalance((int) ((float) originalBalance * 0.4));
               playerShopComponent.addToBalance(100);
 
