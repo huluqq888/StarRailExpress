@@ -397,7 +397,7 @@ public class ModItems {
      * 绳索
      * - 2点耐久
      * - 右键：将前方直线距离12格内你瞄准的玩家拉到自己身前
-     * - 使用后进入5秒冷却并消耗1点耐久
+     * - 每次右键后进入3秒冷却，成功拉取且非创造模式时进入5秒冷却并消耗1点耐久
      */
     public static final Item ROPE = register(
             new RopeItem(new Item.Properties().stacksTo(1).durability(2)),

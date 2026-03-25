@@ -78,7 +78,7 @@ public class BanditRevolverItem extends SkinableItem {
 
             var10000 = false;
             return var10000;
-        }, (double) 15.0F);
+        }, (double) 20.0F);
     }
 
     // TODO: 不显示皮肤

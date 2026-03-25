@@ -26,12 +26,13 @@ import java.util.List;
  * <p>
  * - 2点耐久
  * - 右键：将前方直线距离12格内你瞄准的玩家拉到自己身前
- * - 使用后进入5秒冷却并消耗1点耐久
+ * - 每次右键后进入3秒冷却，成功拉取且非创造模式时进入5秒冷却并消耗1点耐久
  * </p>
  */
 public class RopeItem extends Item implements AdventureUsable {
     private static final int MAX_DURABILITY = 2;
-    private static final int COOLDOWN = 5 * 20; // 5秒
+     private static final int COOLDOWN = 3 * 20; // 每次右键3秒
+     private static final int SUCCESS_COOLDOWN = 5 * 20; // 成功拉取且非创造模式5秒
     private static final int MAX_DISTANCE = 12; // 最大距离12格
     private static final int TARGET_IMMUNITY_DURATION = 10 * 20; // 被拉取后10秒免疫
     
@@ -68,6 +69,10 @@ public class RopeItem extends Item implements AdventureUsable {
             return InteractionResultHolder.fail(stack);
         }
 
+        if (!world.isClientSide) {
+            player.getCooldowns().addCooldown(this, COOLDOWN);
+        }
+
         // 查找前方直线距离12格内你瞄准的玩家
         Player target = findTargetedPlayerInView(world, player);
 
@@ -88,9 +93,9 @@ public class RopeItem extends Item implements AdventureUsable {
                         BuiltInRegistries.ITEM.getKey(this));
             }
 
-            // 添加冷却和消耗耐久
+            // 成功拉取后，非创造模式恢复为原有的5秒冷却并消耗耐久
             if (!player.isCreative()) {
-                player.getCooldowns().addCooldown(this, COOLDOWN);
+                player.getCooldowns().addCooldown(this, SUCCESS_COOLDOWN);
                 stack.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
             }
 
