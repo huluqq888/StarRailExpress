@@ -7,8 +7,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import org.agmas.noellesroles.component.MaChenXuPlayerComponent;
 import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.utils.RoleUtils;
-import pro.fazeclan.river.stupid_express.constants.SERoles;
 
 /**
  * 布袋鬼（诡舍·缚灵）事件处理器
@@ -43,7 +41,7 @@ public class MaChenXuEventHandler {
                 if (compc.otherworldActive) {
                     return false;
                 }
-                RoleUtils.changeRole(victim, SERoles.AMNESIAC);
+                // RoleUtils.changeRole(victim, SERoles.AMNESIAC);
 
 
             }
