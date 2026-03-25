@@ -313,7 +313,7 @@ public class ModPacketsReciever {
       if (player.getMainHandItem().is(ModItems.THROWING_KNIFE)) {
         ItemCooldowns cooldowns1 = player.getCooldowns();
         Map<Item, ItemCooldowns.CooldownInstance> cooldowns = cooldowns1.cooldowns;
-        if (GameUtils.isPlayerAliveAndSurvival( player)&&cooldowns1.isOnCooldown(ModItems.THROWING_KNIFE)
+        if (GameUtils.isPlayerAliveAndSurvival(player) && cooldowns1.isOnCooldown(ModItems.THROWING_KNIFE)
             && cooldowns.get(ModItems.THROWING_KNIFE).endTime - cooldowns1.tickCount <= 20)
           return;
         player.getMainHandItem().shrink(1);
@@ -333,11 +333,11 @@ public class ModPacketsReciever {
         });
 
       }
-      if (player.getMainHandItem().getItem() instanceof StalkerKnifeItem stalkerKnifeItem){
+      if (player.getMainHandItem().getItem() instanceof StalkerKnifeItem stalkerKnifeItem) {
         if (SREGameWorldComponent.KEY.get(player.level()).isRole(player.getUUID(), ModRoles.STALKER)) {
           StalkerPlayerComponent stalkerPlayerComponent = StalkerPlayerComponent.KEY.get(player);
-          if (stalkerPlayerComponent.phase ==3 && !stalkerPlayerComponent.isDashOnCooldown()){
-            if (stalkerKnifeItem.tryDashAttack(player, player.getMainHandItem(), player.serverLevel())){
+          if (stalkerPlayerComponent.phase == 3 && !stalkerPlayerComponent.isDashOnCooldown()) {
+            if (stalkerKnifeItem.tryDashAttack(player, player.getMainHandItem(), player.serverLevel())) {
               stalkerPlayerComponent.dashCooldown = 60;
             }
           }
@@ -403,6 +403,7 @@ public class ModPacketsReciever {
               RoleUtils.changeRole(player, first);
               // 继承变成杀手之前的40%金币
               playerShopComponent.setBalance((int) ((float) originalBalance * 0.4));
+              playerShopComponent.addToBalance(100);
 
               // 播放全场音效
               player.level().playSound(null, player.blockPosition(),
