@@ -37,9 +37,7 @@ public class StalkerHudMixin {
             return;
         if (SREClient.isPlayerSpectator())
             return;
-        if (SREClient.gameComponent == null)
-            return;
-        var role = SREClient.gameComponent.getRole(client.player);
+        var role = SREClient.getCachedPlayerRole();
         if (role == null)
             return;
         if (!role.identifier().getPath().equals(ModRoles.STALKER.identifier().getPath())) {
