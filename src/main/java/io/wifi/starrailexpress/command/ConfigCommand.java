@@ -20,7 +20,10 @@ import me.shedaniel.autoconfig.ConfigHolder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -85,6 +88,7 @@ public class ConfigCommand {
 
   private static CompletableFuture<Suggestions> suggestConfigEntry(CommandContext<CommandSourceStack> context,
       SuggestionsBuilder builder) throws CommandSyntaxException {
+    String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
     String configName = StringArgumentType.getString(context, "config");
     Class<?> configClazz = ConfigClassHandler.configNameToClassMap.get(configName);
     if (configClazz == null) {
@@ -106,15 +110,36 @@ public class ConfigCommand {
       }
       if (field.canAccess(target)) {
         try {
-          entries.add(field.getName());
+          String fieldName = field.getName();
+          if (fieldName.toLowerCase().startsWith(remaining))
+            entries.add(fieldName);
         } catch (Exception e) {
         }
       }
     }
     entries.forEach((s) -> {
-      builder.suggest(s);
+      builder.suggest(s, getConfigDescription(configName, s));
     });
     return builder.buildFuture();
+  }
+
+  private static MutableComponent getConfigDescription(String configName, String entryName) {
+    String baseId = "text.autoconfig." + configName + ".option." + entryName;
+    var base = Component.translatable(baseId);
+    if (Language.getInstance().has(baseId + ".@Tooltip")) {
+      base.withStyle(style -> style
+          .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(baseId + ".@Tooltip"))));
+    } else if (Language.getInstance().has(baseId + ".@Tooltip[0]")) {
+      var hover = Component.translatable(baseId + ".@Tooltip[0]");
+      int idx = 1;
+      while (Language.getInstance().has(baseId + ".@Tooltip[" + idx + "]")) {
+        hover.append(Component.translatable(baseId + ".@Tooltip[" + idx + "]"));
+        idx++;
+      }
+      base.withStyle(style -> style
+          .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hover)));
+    }
+    return base;
   }
 
   private static int viewConfigEntry(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -142,8 +167,9 @@ public class ConfigCommand {
       var content = field.get(target);
       context.getSource().sendSuccess(
           () -> Component
-              .translatable("Value of '%s': %s", entryName,
-                  Component.literal(gson.toJson(content)).withStyle(ChatFormatting.WHITE))
+              .translatable("Value of '%s': %s\n(Desc: %s)", entryName,
+                  Component.literal(gson.toJson(content)).withStyle(ChatFormatting.WHITE),
+                  getConfigDescription(configName, entryName).withStyle(ChatFormatting.GRAY))
               .withStyle(ChatFormatting.GREEN),
           false);
     } catch (Exception e) {
@@ -180,7 +206,9 @@ public class ConfigCommand {
       Class<?> fieldType = field.getType();
       Object trueValue = gson.fromJson(value, fieldType);
       field.set(target, trueValue);
-      context.getSource().sendSuccess(() -> Component.translatable("Set value of '%s' to: %s", entryName, value),
+      context.getSource().sendSuccess(
+          () -> Component.translatable("Set value of '%s' to: %s\n(Desc: %s)", entryName, value,
+              getConfigDescription(configName, entryName)),
           true);
       handler.save();
     } catch (Exception e) {
