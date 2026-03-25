@@ -42,8 +42,6 @@ public class MaChenXuEventHandler {
                     return false;
                 }
                 // RoleUtils.changeRole(victim, SERoles.AMNESIAC);
-
-
             }
             return true;
         });

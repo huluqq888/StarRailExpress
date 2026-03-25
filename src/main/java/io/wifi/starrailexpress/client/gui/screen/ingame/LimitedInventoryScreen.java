@@ -117,7 +117,7 @@ public class LimitedInventoryScreen extends LimitedHandledScreen<InventoryMenu> 
         }
         for (int i = 0; i < displayAbleEntries.size(); i++) {
             var t = displayAbleEntries.get(i);
-            this.addRenderableWidget(new StoreItemWidget(this, x + apart * i, y, t, i));
+            this.addRenderableWidget(new StoreItemWidget(this, x + apart * i, y, t, t.index));
         }
     }
 
