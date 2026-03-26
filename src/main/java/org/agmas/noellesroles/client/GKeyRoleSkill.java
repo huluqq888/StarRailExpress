@@ -8,7 +8,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import org.agmas.noellesroles.client.screen.BroadcasterScreen;
 import org.agmas.noellesroles.client.screen.TelegrapherScreen;
@@ -25,7 +24,6 @@ import java.util.Map;
 public final class GKeyRoleSkill {
     private static final Map<ResourceLocation, GKeyRoleSkill> REGISTERED_SKILLS = new HashMap<>();
 
-    private final SRERole role;
     private final boolean beforeRhapsody;
     private final Handler handler;
 
@@ -33,8 +31,7 @@ public final class GKeyRoleSkill {
         registerDefaults();
     }
 
-    private GKeyRoleSkill(SRERole role, boolean beforeRhapsody, Handler handler) {
-        this.role = role;
+    private GKeyRoleSkill(boolean beforeRhapsody, Handler handler) {
         this.beforeRhapsody = beforeRhapsody;
         this.handler = handler;
     }
@@ -43,7 +40,7 @@ public final class GKeyRoleSkill {
         if (role == null || handler == null) {
             return;
         }
-        REGISTERED_SKILLS.put(role.identifier(), new GKeyRoleSkill(role, beforeRhapsody, handler));
+        REGISTERED_SKILLS.put(role.identifier(), new GKeyRoleSkill(beforeRhapsody, handler));
     }
 
     public static boolean trigger(Minecraft client, SREGameWorldComponent gameWorldComponent, boolean beforeRhapsody) {
@@ -56,9 +53,6 @@ public final class GKeyRoleSkill {
         }
         GKeyRoleSkill skill = REGISTERED_SKILLS.get(role.identifier());
         if (skill == null || skill.beforeRhapsody != beforeRhapsody) {
-            return false;
-        }
-        if (skill.role == null || !skill.role.identifier().equals(role.identifier())) {
             return false;
         }
         return skill.handler.handle(client, gameWorldComponent);
@@ -102,9 +96,6 @@ public final class GKeyRoleSkill {
                 return true;
             }
             ClientPlayNetworking.send(new AbilityC2SPacket());
-            if (!client.player.getSlot(103).get().is(ModItems.NIGHT_VISION_GLASSES)) {
-                client.player.removeEffect(MobEffects.NIGHT_VISION);
-            }
             return true;
         });
         register(ModRoles.NOISEMAKER, true, (client, gameWorld) -> {
