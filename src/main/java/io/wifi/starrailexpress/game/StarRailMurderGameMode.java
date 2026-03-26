@@ -196,10 +196,6 @@ public class StarRailMurderGameMode extends GameMode {
         Collections.shuffle(allModifiers);
 
         for (var mod : allModifiers) {
-            // jeb_ modifier has an independent 50% spawn chance each round.
-            if (mod.equals(SEModifiers.JEB_) && !serverWorld.getRandom().nextBoolean()) {
-                continue;
-            }
 
             int playersAssigned = 0;
             int specificDesiredRoleCount = desiredModifierCount;
