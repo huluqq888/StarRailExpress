@@ -60,6 +60,10 @@ public final class RoleSkill {
         if (player == null) {
             return;
         }
+        if (role == null) {
+            ConfigWorldComponent.onPlayerUsedSkill(player);
+            return;
+        }
         afterUse(player, role);
         ConfigWorldComponent.onPlayerUsedSkill(player);
     }
