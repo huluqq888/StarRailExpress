@@ -416,7 +416,7 @@ public class StarRailMurderGameMode extends GameMode {
         for (var p : players) {
             var manager = PlayerRoleWeightManager.playerWeights.get(p.getUUID());
             if (manager != null) {
-                if (manager.getStreakCount() >= random.nextInt(6, 13)) {
+                if (manager.getStreakCount() >= random.nextInt(5, 7)) {
                     int highestWeightType = manager.getHighestWeightType();
                     if (highestWeightType == manager.getLastAssignedFactionGroup())
                         continue;
@@ -520,7 +520,7 @@ public class StarRailMurderGameMode extends GameMode {
 
     private Player pickPlayerWithProgressBias(ServerLevel serverWorld, List<ServerPlayer> unassignedPlayers,
             int selectedRoleType) {
-        List<ServerPlayer> preferredPlayers = unassignedPlayers.stream()
+        /** List<ServerPlayer> preferredPlayers = unassignedPlayers.stream()
                 .filter(player -> SREPlayerProgressionComponent.KEY.get(player).prefersRoleType(selectedRoleType))
                 .toList();
         if (!preferredPlayers.isEmpty()
@@ -530,7 +530,7 @@ public class StarRailMurderGameMode extends GameMode {
                 SREPlayerProgressionComponent.KEY.get(p).activeFactionCard = FactionCardType.NONE;
             }
             return players;
-        }
+        } **/
         return PlayerRoleAssigner.pickByInverseWeight(unassignedPlayers, selectedRoleType);
     }
 
