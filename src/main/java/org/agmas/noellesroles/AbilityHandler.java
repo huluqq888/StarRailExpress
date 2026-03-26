@@ -6,7 +6,6 @@ import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.Context;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,14 +18,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
+
+import java.util.UUID;
+
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.config.NoellesRolesConfig;
 import org.agmas.noellesroles.effects.TimeStopEffect;
 import org.agmas.noellesroles.entity.WheelchairEntity;
 import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.init.ModItems;
-import org.agmas.noellesroles.packet.AbilityC2SPacket;
-import org.agmas.noellesroles.packet.AbilityWithTargetC2SPacket;
 import org.agmas.noellesroles.packet.ProblemScreenOpenC2SPacket;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.roles.commander.CommanderHandler;
@@ -39,14 +39,13 @@ import org.agmas.noellesroles.utils.RoleUtils;
 
 public class AbilityHandler {
 
-    public static void handler(AbilityC2SPacket payload, Context context) {
+    public static void handler(ServerPlayer player) {
         // 通用技能服务端处理
 
         SREAbilityPlayerComponent abilityPlayerComponent = (SREAbilityPlayerComponent) SREAbilityPlayerComponent.KEY
-                .get(context.player());
+                .get(player);
         SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
-                .get(context.player().level());
-        final ServerPlayer player = context.player();
+                .get(player.level());
         if (player.hasEffect(ModEffects.TIME_STOP) && !TimeStopEffect.canMovePlayers.contains(player.getUUID())) {
             return;
         }
@@ -70,14 +69,14 @@ public class AbilityHandler {
                 player.displayClientMessage(
                         Component.translatable("hud.hoan_meirin.ability_activated").withStyle(ChatFormatting.GREEN),
                         true);
-                context.player().addEffect(new MobEffectInstance(MobEffects.LEVITATION,
+                player.addEffect(new MobEffectInstance(MobEffects.LEVITATION,
                         10 * 20, 1, true, false,
                         true));
             }
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.MAID_SAKUYA)) {
+        if (gameWorldComponent.isRole(player, ModRoles.MAID_SAKUYA)) {
             if (abilityPlayerComponent.cooldown > 0 || player.getCooldowns().isOnCooldown(Items.CLOCK)) {
-                context.player().displayClientMessage(Component.translatable(
+                player.displayClientMessage(Component.translatable(
                         "tip.noellesroles.cooldown", abilityPlayerComponent.cooldown / 20)
                         .withStyle(ChatFormatting.RED), true);
             } else {
@@ -89,9 +88,9 @@ public class AbilityHandler {
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.JOJO)) {
+        if (gameWorldComponent.isRole(player, ModRoles.JOJO)) {
             if (abilityPlayerComponent.cooldown > 0 || player.getCooldowns().isOnCooldown(Items.CLOCK)) {
-                context.player().displayClientMessage(Component.translatable(
+                player.displayClientMessage(Component.translatable(
                         "tip.noellesroles.cooldown", abilityPlayerComponent.cooldown / 20)
                         .withStyle(ChatFormatting.RED), true);
             } else {
@@ -103,14 +102,14 @@ public class AbilityHandler {
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.DIO)) {
+        if (gameWorldComponent.isRole(player, ModRoles.DIO)) {
 
             DIOPlayerComponent.KEY.get(player).tryActivateTimeStop();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.WIND_YAOSE)) {
+        if (gameWorldComponent.isRole(player, ModRoles.WIND_YAOSE)) {
             if (abilityPlayerComponent.cooldown > 0) {
-                context.player().displayClientMessage(Component.translatable(
+                player.displayClientMessage(Component.translatable(
                         "tip.noellesroles.cooldown", abilityPlayerComponent.cooldown / 20)
                         .withStyle(ChatFormatting.RED), true);
             } else {
@@ -125,9 +124,9 @@ public class AbilityHandler {
             return;
         }
 
-        if (gameWorldComponent.isRole(context.player(), ModRoles.CLEANER)) {
+        if (gameWorldComponent.isRole(player, ModRoles.CLEANER)) {
             if (abilityPlayerComponent.cooldown > 0) {
-                context.player().displayClientMessage(Component.translatable(
+                player.displayClientMessage(Component.translatable(
                         "message.noellesroles.cleaner.cooldown", abilityPlayerComponent.cooldown / 20)
                         .withStyle(ChatFormatting.RED), true);
             } else {
@@ -139,38 +138,38 @@ public class AbilityHandler {
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.5F,
                         1.0F + player.level().random.nextFloat() * 0.1F - 0.05F);
-                context.player().displayClientMessage(Component.translatable(
+                player.displayClientMessage(Component.translatable(
                         "message.noellesroles.cleaner.cleanned", items.size())
                         .withStyle(ChatFormatting.GOLD), true);
                 abilityPlayerComponent.setCooldown(20 * 90);
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.GLITCH_ROBOT)) {
-            if (!RoleUtils.isPlayerHasFreeSlot(context.player())) {
-                context.player().displayClientMessage(
+        if (gameWorldComponent.isRole(player, ModRoles.GLITCH_ROBOT)) {
+            if (!RoleUtils.isPlayerHasFreeSlot(player)) {
+                player.displayClientMessage(
                         Component.translatable("message.hotbar.full").withStyle(ChatFormatting.RED), true);
                 return;
             }
-            if (!context.player().getSlot(103).get().is(ModItems.NIGHT_VISION_GLASSES)) {
-                context.player().displayClientMessage(
+            if (!player.getSlot(103).get().is(ModItems.NIGHT_VISION_GLASSES)) {
+                player.displayClientMessage(
                         Component.translatable("info.glitch_robot.noglasses_on_head").withStyle(ChatFormatting.RED),
                         true);
                 return;
             }
-            RoleUtils.insertStackInFreeSlot(context.player(), context.player().getSlot(103).get().copy());
-            // RoleUtils.removeStackItem(context.player(), 103);
-            context.player().getInventory().armor.set(3, ItemStack.EMPTY);
-            context.player().displayClientMessage(
+            RoleUtils.insertStackInFreeSlot(player, player.getSlot(103).get().copy());
+            // RoleUtils.removeStackItem(player, 103);
+            player.getInventory().armor.set(3, ItemStack.EMPTY);
+            player.displayClientMessage(
                     Component.translatable("info.glitch_robot.take_off_glasses.success")
                             .withStyle(ChatFormatting.GREEN),
                     true);
-            context.player().removeEffect(MobEffects.NIGHT_VISION);
+            player.removeEffect(MobEffects.NIGHT_VISION);
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.DIVER)) {
-            if (!RoleUtils.isPlayerHasFreeSlot(context.player())) {
-                context.player().displayClientMessage(
+        if (gameWorldComponent.isRole(player, ModRoles.DIVER)) {
+            if (!RoleUtils.isPlayerHasFreeSlot(player)) {
+                player.displayClientMessage(
                         Component.translatable("message.hotbar.full").withStyle(ChatFormatting.RED), true);
                 return;
             }
@@ -178,41 +177,41 @@ public class AbilityHandler {
             boolean removedAny = false;
 
             // 检查并移除头盔
-            ItemStack headItem = context.player().getSlot(103).get();
+            ItemStack headItem = player.getSlot(103).get();
             if (!headItem.isEmpty()) {
-                RoleUtils.insertStackInFreeSlot(context.player(), headItem.copy());
-                context.player().getInventory().armor.set(3, ItemStack.EMPTY);
+                RoleUtils.insertStackInFreeSlot(player, headItem.copy());
+                player.getInventory().armor.set(3, ItemStack.EMPTY);
                 removedAny = true;
             }
 
             // 检查并移除靴子
-            ItemStack feetItem = context.player().getSlot(100).get();
+            ItemStack feetItem = player.getSlot(100).get();
             if (!feetItem.isEmpty()) {
-                RoleUtils.insertStackInFreeSlot(context.player(), feetItem.copy());
-                context.player().getInventory().armor.set(0, ItemStack.EMPTY);
+                RoleUtils.insertStackInFreeSlot(player, feetItem.copy());
+                player.getInventory().armor.set(0, ItemStack.EMPTY);
                 removedAny = true;
             }
 
             if (removedAny) {
-                context.player().displayClientMessage(
+                player.displayClientMessage(
                         Component.translatable("info.diver.remove_equipment.success")
                                 .withStyle(ChatFormatting.GREEN),
                         true);
-                context.player().removeEffect(MobEffects.WATER_BREATHING);
-                context.player().removeEffect(MobEffects.DOLPHINS_GRACE);
+                player.removeEffect(MobEffects.WATER_BREATHING);
+                player.removeEffect(MobEffects.DOLPHINS_GRACE);
             } else {
-                context.player().displayClientMessage(
+                player.displayClientMessage(
                         Component.translatable("info.diver.no_equipment")
                                 .withStyle(ChatFormatting.RED),
                         true);
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.MA_CHEN_XU)) {
-            MaChenXuPlayerComponent.KEY.get(context.player()).tryActiveAbility();
+        if (gameWorldComponent.isRole(player, ModRoles.MA_CHEN_XU)) {
+            MaChenXuPlayerComponent.KEY.get(player).tryActiveAbility();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.WATCHER)) {
+        if (gameWorldComponent.isRole(player, ModRoles.WATCHER)) {
             var watcher = WatcherPlayerComponent.KEY.get(player);
             if (watcher.getCooldown() > 0) {
                 player.displayClientMessage(Component.translatable(
@@ -222,20 +221,20 @@ public class AbilityHandler {
             watcher.toggleStance();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.COMMANDER)) {
-            CommanderHandler.tryActiveAbility(context.player());
+        if (gameWorldComponent.isRole(player, ModRoles.COMMANDER)) {
+            CommanderHandler.tryActiveAbility(player);
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.ATTENDANT)) {
+        if (gameWorldComponent.isRole(player, ModRoles.ATTENDANT)) {
             if (abilityPlayerComponent.cooldown > 0) {
-                context.player().displayClientMessage(Component.translatable(
+                player.displayClientMessage(Component.translatable(
                         "message.noellesroles.attendant.cooldown", abilityPlayerComponent.cooldown / 20)
                         .withStyle(ChatFormatting.RED), true);
                 return;
             }
-            if (!context.player().isCreative())
+            if (!player.isCreative())
                 abilityPlayerComponent.setCooldown(60 * 20);
-            AttendantHandler.openLight(context.player());
+            AttendantHandler.openLight(player);
             return;
         }
         if (gameWorldComponent.isRole(player, ModRoles.EXAMPLER)) {
@@ -245,7 +244,7 @@ public class AbilityHandler {
                         true);
                 return;
             } else {
-                SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(context.player());
+                SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(player);
                 if (playerShopComponent.balance < 300) {
                     player.displayClientMessage(
                             Component.translatable("message.noellesroles.insufficient_funds_money", 300)
@@ -262,38 +261,38 @@ public class AbilityHandler {
                 });
             }
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.BOMBER)) {
-            BomberPlayerComponent bomberPlayerComponent = ModComponents.BOMBER.get(context.player());
+        if (gameWorldComponent.isRole(player, ModRoles.BOMBER)) {
+            BomberPlayerComponent bomberPlayerComponent = ModComponents.BOMBER.get(player);
             bomberPlayerComponent.buyBomb();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.NOISEMAKER)) {
-            NoiseMakerPlayerComponent noiseMakerPlayerComponent = ModComponents.NOISEMAKER.get(context.player());
+        if (gameWorldComponent.isRole(player, ModRoles.NOISEMAKER)) {
+            NoiseMakerPlayerComponent noiseMakerPlayerComponent = ModComponents.NOISEMAKER.get(player);
             noiseMakerPlayerComponent.useAbility();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.GHOST)) {
+        if (gameWorldComponent.isRole(player, ModRoles.GHOST)) {
             org.agmas.noellesroles.roles.ghost.GhostPlayerComponent ghostPlayerComponent = org.agmas.noellesroles.roles.ghost.GhostPlayerComponent.KEY
-                    .get(context.player());
+                    .get(player);
             ghostPlayerComponent.useAbility();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.CANDLE_BEARER)) {
+        if (gameWorldComponent.isRole(player, ModRoles.CANDLE_BEARER)) {
             CandleBearerPlayerComponent candleBearerPlayerComponent = CandleBearerPlayerComponent.KEY
-                    .get(context.player());
+                    .get(player);
             candleBearerPlayerComponent.useAbility();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.BLOOD_FEUDIST)) {
-            BloodFeudistPlayerComponent bfComponent = ModComponents.BLOOD_FEUDIST.get(context.player());
+        if (gameWorldComponent.isRole(player, ModRoles.BLOOD_FEUDIST)) {
+            BloodFeudistPlayerComponent bfComponent = ModComponents.BLOOD_FEUDIST.get(player);
             bfComponent.toggleEffects();
             return;
         }
 
-        if (gameWorldComponent.isRole(context.player(), ModRoles.RECALLER)
+        if (gameWorldComponent.isRole(player, ModRoles.RECALLER)
                 && abilityPlayerComponent.cooldown <= 0) {
-            RecallerPlayerComponent recallerPlayerComponent = RecallerPlayerComponent.KEY.get(context.player());
-            SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(context.player());
+            RecallerPlayerComponent recallerPlayerComponent = RecallerPlayerComponent.KEY.get(player);
+            SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(player);
             if (!recallerPlayerComponent.placed) {
                 abilityPlayerComponent.cooldown = GameConstants.getInTicks(0,
                         NoellesRolesConfig.HANDLER.instance().recallerMarkCooldown);
@@ -307,7 +306,7 @@ public class AbilityHandler {
             }
 
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.OLDMAN)) {
+        if (gameWorldComponent.isRole(player, ModRoles.OLDMAN)) {
             if (player.getVehicle() != null && player.getVehicle() instanceof WheelchairEntity we) {
                 if (player.getCooldowns().isOnCooldown(ModItems.WHEELCHAIR)) {
                     return;
@@ -324,19 +323,19 @@ public class AbilityHandler {
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.PHANTOM)) {
+        if (gameWorldComponent.isRole(player, ModRoles.PHANTOM)) {
             if (abilityPlayerComponent.cooldown <= 0) {
-                context.player().addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,
+                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,
                         NoellesRolesConfig.HANDLER.instance().phantomInvisibilityDuration * 20, 0, true, false,
                         true));
                 abilityPlayerComponent.cooldown = GameConstants.getInTicks(0,
                         NoellesRolesConfig.HANDLER.instance().phantomInvisibilityCooldown);
             } else {
-                var effectINVISIBILITY = context.player().getEffect(MobEffects.INVISIBILITY);
+                var effectINVISIBILITY = player.getEffect(MobEffects.INVISIBILITY);
                 if (effectINVISIBILITY != null) {
                     if (effectINVISIBILITY.getDuration() > 0) {
-                        context.player().removeEffect(MobEffects.INVISIBILITY);
-                        context.player().displayClientMessage(
+                        player.removeEffect(MobEffects.INVISIBILITY);
+                        player.displayClientMessage(
                                 Component.translatable("tip.phantom.exited").withStyle(ChatFormatting.YELLOW),
                                 true);
                     }
@@ -344,8 +343,8 @@ public class AbilityHandler {
             }
 
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.NIAN_SHOU)) {
-            var sender = context.player();
+        if (gameWorldComponent.isRole(player, ModRoles.NIAN_SHOU)) {
+            var sender = player;
 
             NianShouPlayerComponent nianShouComponent = NianShouPlayerComponent.KEY.get(sender);
 
@@ -406,11 +405,11 @@ public class AbilityHandler {
                         true);
             }
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.THIEF)) {
-            ThiefPlayerComponent thiefComponent = ThiefPlayerComponent.KEY.get(context.player());
+        if (gameWorldComponent.isRole(player, ModRoles.THIEF)) {
+            ThiefPlayerComponent thiefComponent = ThiefPlayerComponent.KEY.get(player);
 
             // 检查玩家是否在蹲下
-            if (context.player().isShiftKeyDown()) {
+            if (player.isShiftKeyDown()) {
                 // 蹲下按技能键：切换模式
                 thiefComponent.toggleMode();
             } else {
@@ -419,17 +418,17 @@ public class AbilityHandler {
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.CLOCKMAKER)) {
-            ClockmakerPlayerComponent clockmakerComponent = ModComponents.CLOCKMAKER.get(context.player());
+        if (gameWorldComponent.isRole(player, ModRoles.CLOCKMAKER)) {
+            ClockmakerPlayerComponent clockmakerComponent = ModComponents.CLOCKMAKER.get(player);
             clockmakerComponent.useSkill();
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.ACCOUNTANT)) {
+        if (gameWorldComponent.isRole(player, ModRoles.ACCOUNTANT)) {
             org.agmas.noellesroles.component.AccountantPlayerComponent accountantComponent = org.agmas.noellesroles.component.AccountantPlayerComponent.KEY
-                    .get(context.player());
+                    .get(player);
 
             // 检查玩家是否在蹲下
-            if (context.player().isShiftKeyDown()) {
+            if (player.isShiftKeyDown()) {
                 // 蹲下按技能键：切换模式
                 accountantComponent.toggleMode();
             } else {
@@ -438,12 +437,12 @@ public class AbilityHandler {
             }
             return;
         }
-        if (gameWorldComponent.isRole(context.player(), ModRoles.ALCHEMIST)) {
+        if (gameWorldComponent.isRole(player, ModRoles.ALCHEMIST)) {
             org.agmas.noellesroles.component.AlchemistPlayerComponent alchemistComponent = org.agmas.noellesroles.component.AlchemistPlayerComponent.KEY
-                    .get(context.player());
+                    .get(player);
 
             // 检查玩家是否在蹲下
-            if (context.player().isShiftKeyDown()) {
+            if (player.isShiftKeyDown()) {
                 // 蹲下按技能键：切换药剂
                 alchemistComponent.switchPotion();
             } else {
@@ -453,7 +452,7 @@ public class AbilityHandler {
             return;
         }
 
-        if (gameWorldComponent.isRole(context.player(), ModRoles.SEA_KING)) {
+        if (gameWorldComponent.isRole(player, ModRoles.SEA_KING)) {
             if (abilityPlayerComponent.cooldown > 0) {
                 player.displayClientMessage(
                         Component.translatable("message.noellesroles.sea_king.cooldown",
@@ -503,22 +502,21 @@ public class AbilityHandler {
         }
     }
 
-    public static void handlerWithTarget(AbilityWithTargetC2SPacket payload, Context context) {
+    public static void handlerWithTarget(ServerPlayer player, UUID targetUUID) {
         SREAbilityPlayerComponent abilityPlayerComponent = (SREAbilityPlayerComponent) SREAbilityPlayerComponent.KEY
-                .get(context.player());
+                .get(player);
 
         SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY
-                .get(context.player());
+                .get(player);
         SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
-                .get(context.player().level());
-        final ServerPlayer player = context.player();
+                .get(player.level());
         if (player.hasEffect(ModEffects.TIME_STOP) && !TimeStopEffect.canMovePlayers.contains(player.getUUID())) {
             return;
         }
         if (player.hasEffect(ModEffects.SKILL_BANED)) {
             return;
         }
-        var targetPlayer = player.level().getPlayerByUUID(payload.target());
+        var targetPlayer = player.level().getPlayerByUUID(targetUUID);
 
         if (gameWorldComponent.isRole(player, ModRoles.EXAMPLER)) {
             if (abilityPlayerComponent.cooldown > 0) {

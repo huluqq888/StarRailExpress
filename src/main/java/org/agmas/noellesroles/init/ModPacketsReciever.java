@@ -34,7 +34,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
-import org.agmas.noellesroles.AbilityHandler;
 import org.agmas.noellesroles.ConfigWorldComponent;
 import org.agmas.noellesroles.ModDataComponentTypes;
 import org.agmas.noellesroles.Noellesroles;
@@ -60,20 +59,6 @@ import org.agmas.noellesroles.utils.RoleUtils;
 import java.util.*;
 
 public class ModPacketsReciever {
-  private static SRERole beginRoleSkillUse(ServerPlayer player) {
-    var gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
-    SRERole role = gameWorldComponent.getRole(player);
-    if (!RoleSkill.beforeUse(player, role)) {
-      return null;
-    }
-    return role;
-  }
-
-  private static void endRoleSkillUse(ServerPlayer player, SRERole role) {
-    RoleSkill.afterUse(player, role);
-    ConfigWorldComponent.onPlayerUsedSkill(player);
-  }
-
   public static void registerPackets() {
     ServerPlayNetworking.registerGlobalReceiver(VendingMachinesBuyC2SPacket.TYPE, (payload, context) -> {
       context.server().execute(() -> {
@@ -550,51 +535,29 @@ public class ModPacketsReciever {
         });
 
     ServerPlayNetworking.registerGlobalReceiver(ModPackets.ABILITY_PACKET, (payload, context) -> {
-      SRERole role = beginRoleSkillUse(context.player());
-      if (role == null) {
-        return;
-      }
-      try {
-        AbilityHandler.handler(payload, context);
-      } finally {
-        endRoleSkillUse(context.player(), role);
-      }
+      RoleSkill.beginUse(context.player());
     });
     ServerPlayNetworking.registerGlobalReceiver(AbilityWithTargetC2SPacket.ID, (payload, context) -> {
-      SRERole role = beginRoleSkillUse(context.player());
-      if (role == null) {
-        return;
-      }
-      try {
-        AbilityHandler.handlerWithTarget(payload, context);
-      } finally {
-        endRoleSkillUse(context.player(), role);
-      }
+      RoleSkill.beginUseWithTarget(context.player(), payload.target());
     });
     ServerPlayNetworking.registerGlobalReceiver(ModPackets.INSANE_KILLER_ABILITY_PACKET, (payload, context) -> {
       ServerPlayer player = (ServerPlayer) context.player();
-      SRERole role = beginRoleSkillUse(player);
-      if (role == null) {
-        return;
-      }
       var gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
       if (!gameWorldComponent.isSkillAvailable) {
         player.displayClientMessage(
             Component.translatable("message.tip.skill_disabled").withStyle(ChatFormatting.RED), true);
         return;
       }
+      RoleSkill.beforeUse(player, ModRoles.THE_INSANE_DAMNED_PARANOID_KILLER_OF_DOOM_DEATH_DESTRUCTION_AND_WAFFLES);
       InsaneKillerPlayerComponent component = InsaneKillerPlayerComponent.KEY.get(player);
 
       // 检查冷却
       if (component.cooldown > 0 && !component.isActive)
         return;
 
-      try {
-        component.toggleAbility();
-        component.sync();
-      } finally {
-        endRoleSkillUse(player, role);
-      }
+      component.toggleAbility();
+      component.sync();
+      RoleSkill.afterUse(player, ModRoles.THE_INSANE_DAMNED_PARANOID_KILLER_OF_DOOM_DEATH_DESTRUCTION_AND_WAFFLES);
     });
     ServerPlayNetworking.registerGlobalReceiver(RecorderC2SPacket.TYPE, RecorderC2SPacket::handle);
 
