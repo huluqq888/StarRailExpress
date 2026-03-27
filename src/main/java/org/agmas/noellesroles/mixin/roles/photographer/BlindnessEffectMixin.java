@@ -16,12 +16,11 @@ public class BlindnessEffectMixin {
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableDepthTest()V",shift = At.Shift.BEFORE), cancellable = true)
     public void render(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         final var player = Minecraft.getInstance().player;
+        if (player == null) {
+            return;
+        }
         if (player.hasEffect(MobEffects.UNLUCK)){
             guiGraphics.fill(0,0, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight(), 0xFF000000);
-        }
-        if (player.hasEffect(MobEffects.WEAVING)){
-            //屏幕变红（30%透明度）
-            guiGraphics.fill(0,0, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight(), 0x4DFF0000);
         }
         if (player.hasEffect(MobEffects.RAID_OMEN)) {
             // 试炼之兆效果 - 屏幕变黑（仿照低san值时的效果）并添加渐进渐出

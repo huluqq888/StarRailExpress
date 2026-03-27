@@ -19,6 +19,7 @@ import net.minecraft.util.Mth;
 import org.agmas.noellesroles.init.ModEffects;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import pro.fazeclan.river.stupid_express.client.StupidExpressClient;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -268,6 +269,57 @@ public class SansRenderer {
                 return true;
             });
         });
+
+        m_post.addSinglePassEntry("crazy", pass -> processPlayer(mc.player, cap -> {
+            float weavingStrength = StupidExpressClient.getWeavingShaderStrength();
+            if (weavingStrength <= 0.001f) {
+                return false;
+            }
+
+            var effect = pass.getEffect();
+            if (effect == null) {
+                return false;
+            }
+
+            float gameTime = m_post.getTime() / 20.0f;
+
+            var timeUniform = effect.safeGetUniform("Time");
+            if (timeUniform != null) {
+                timeUniform.set(gameTime);
+            }
+
+            var gameTimeUniform = effect.safeGetUniform("GameTime");
+            if (gameTimeUniform != null) {
+                gameTimeUniform.set(gameTime);
+            }
+
+            var intensityUniform = effect.safeGetUniform("Intensity");
+            if (intensityUniform != null) {
+                intensityUniform.set(weavingStrength);
+            }
+
+            var distortionUniform = effect.safeGetUniform("DistortionStrength");
+            if (distortionUniform != null) {
+                distortionUniform.set(0.03f + weavingStrength * 0.14f);
+            }
+
+            var chromaticUniform = effect.safeGetUniform("ChromaticAberration");
+            if (chromaticUniform != null) {
+                chromaticUniform.set(0.003f + weavingStrength * 0.02f);
+            }
+
+            var flickerUniform = effect.safeGetUniform("FlickerSpeed");
+            if (flickerUniform != null) {
+                flickerUniform.set(4.0f + weavingStrength * 10.0f);
+            }
+
+            var scanlineUniform = effect.safeGetUniform("ScanlineStrength");
+            if (scanlineUniform != null) {
+                scanlineUniform.set(0.05f + weavingStrength * 0.25f);
+            }
+
+            return true;
+        }));
 
         // 添加模糊效果后处理
         // m_post.addSinglePassEntry("blur", pass -> {

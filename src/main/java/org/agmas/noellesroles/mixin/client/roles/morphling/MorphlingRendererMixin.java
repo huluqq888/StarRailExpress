@@ -31,9 +31,9 @@ import java.util.UUID;
 public abstract class MorphlingRendererMixin {
 
     @Shadow public abstract ResourceLocation getTextureLocation(AbstractClientPlayer abstractClientPlayerEntity);
-    
 
-    
+
+
     @Unique
     private static final ThreadLocal<Boolean> isInMorphingCall = ThreadLocal.withInitial(() -> false);
 
@@ -65,7 +65,7 @@ public abstract class MorphlingRendererMixin {
         if (isInMorphingCall.get()) {
             return;
         }
-        
+
         try {
             isInMorphingCall.set(true);
 
@@ -104,7 +104,7 @@ public abstract class MorphlingRendererMixin {
                 }
             }
 
-            
+
             final var morphlingPlayerComponent = MorphlingPlayerComponent.KEY.get(abstractClientPlayerEntity);
             if (morphlingPlayerComponent != null && morphlingPlayerComponent.getMorphTicks() > 0 ) {
                 final var disguise = (MorphlingPlayerComponent.KEY.get(abstractClientPlayerEntity)).disguise;
@@ -131,7 +131,7 @@ public abstract class MorphlingRendererMixin {
             isInMorphingCall.set(false);
         }
     }
-    
+
     @WrapOperation(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;getSkin()Lnet/minecraft/client/resources/PlayerSkin;"))
     PlayerSkin renderArm(AbstractClientPlayer instance, Operation<PlayerSkin> original) {
         // 检查双重人格组件 - 如果玩家不是活跃人格，则返回主人格的皮肤

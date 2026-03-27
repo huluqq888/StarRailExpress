@@ -13,10 +13,12 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -29,6 +31,9 @@ import pro.fazeclan.river.stupid_express.modifier.split_personality.cca.SplitPer
 import pro.fazeclan.river.stupid_express.network.SplitBackCamera;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -37,7 +42,31 @@ public class StupidExpressClient implements ClientModInitializer {
     public static Player target;
     public static PlayerBodyEntity targetBody;
 
+    public static boolean isSplitPerson = false;
     static boolean isUsedRefugee = false;
+
+    private static final Random WEAVING_RANDOM = new Random();
+    private static final Map<BlockPos, BlockState> WEAVING_ORIGINAL_BLOCKS = new LinkedHashMap<>();
+    private static final List<Map.Entry<BlockPos, BlockState>> WEAVING_RESTORE_QUEUE = new ArrayList<>();
+
+    private static final int WEAVING_NORMAL_XZ_RADIUS = 10;
+    private static final int WEAVING_START_XZ_RADIUS = 22;
+    private static final int WEAVING_MIN_Y = -2;
+    private static final int WEAVING_MAX_Y = 8;
+    private static final int WEAVING_RESTORE_PER_TICK = 120;
+    private static final float WEAVING_START_WART_CHANCE = 0.32f;
+    private static final float WEAVING_START_NETHERRACK_CHANCE = 0.42f;
+    private static final float WEAVING_NORMAL_WART_CHANCE = 0.15f;
+    private static final float WEAVING_NORMAL_NETHERRACK_CHANCE = 0.20f;
+    private static final float WEAVING_SHADER_FADE_IN_SPEED = 0.08f;
+    private static final float WEAVING_SHADER_FADE_OUT_SPEED = 0.025f;
+
+    private static boolean weavingActiveLastTick = false;
+    private static float weavingShaderStrength = 0.0f;
+
+    public static float getWeavingShaderStrength() {
+        return weavingShaderStrength;
+    }
 
     @Override
     public void onInitializeClient() {
@@ -81,43 +110,47 @@ public class StupidExpressClient implements ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             LocalPlayer player = client.player;
             if (player != null) {
-                if (player.hasEffect(MobEffects.WEAVING)) {
+                var component = SplitPersonalityComponent.KEY.get(player);
+
+                // 如果是旁观者（非活跃人格），完全隐藏其渲染
+                if (component != null && component.getMainPersonality() != null && !component.isCurrentlyActive()) {
+                    AbstractClientPlayer mainPlayer = (AbstractClientPlayer) player.level().getPlayerByUUID(component.getMainPersonality());
+
+                    // 只在主人格存在时隐藏旁观者
+                    if (mainPlayer != null && mainPlayer != player) {
+                        isSplitPerson = true;
+
+                    }else isSplitPerson = false;
+                }else isSplitPerson = false;
+                boolean weavingActive = player.hasEffect(MobEffects.WEAVING);
+                if (weavingActive) {
                     isUsedRefugee = true;
-                    // 获取玩家当前位置
                     BlockPos playerPos = player.blockPosition();
                     Level level = client.level;
 
-                    // 计时器，确保每秒只执行一次
-                    if (client.level.getGameTime() % (20) == 0) { // 20 ticks = 1 second
-                        // 随机数生成器
-                        Random random = new Random();
-
-                        // 在5x5x5范围内遍历所有方块
-                        for (int x = -10; x <= 10; x++) {
-                            for (int y = -2; y <= 8; y++) {
-                                for (int z = -10; z <= 10; z++) {
-                                    BlockPos targetPos = playerPos.offset(x, y, z);
-
-                                    // 检查方块是否为完整方块（非空气且不透明）
-                                    if (!level.getBlockState(targetPos).isAir()
-                                            && level.getBlockState(targetPos).isSolidRender(level, targetPos)) {
-                                        float rand = random.nextFloat();
-                                        // 10%概率替换为下界疣块
-                                        if (rand < 0.15f) {
-                                            level.setBlock(targetPos, Blocks.NETHER_WART_BLOCK.defaultBlockState(), 3);
-                                        }
-                                        // 5%概率替换为下界岩
-                                        else if (rand < 0.20f) {
-                                            level.setBlock(targetPos, Blocks.NETHERRACK.defaultBlockState(), 3);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    if (!weavingActiveLastTick) {
+                        applyWeavingPollution(level, playerPos, WEAVING_START_XZ_RADIUS,
+                                WEAVING_START_WART_CHANCE,
+                                WEAVING_START_NETHERRACK_CHANCE);
                     }
+
+                    if (client.level.getGameTime() % 20 == 0) {
+                        applyWeavingPollution(level, playerPos, WEAVING_NORMAL_XZ_RADIUS,
+                                WEAVING_NORMAL_WART_CHANCE,
+                                WEAVING_NORMAL_NETHERRACK_CHANCE);
+                    }
+
+                    weavingShaderStrength = Math.min(1.0f, weavingShaderStrength + WEAVING_SHADER_FADE_IN_SPEED);
                 } else {
+                    if (weavingActiveLastTick) {
+                        beginWeavingRestore();
+                    }
+                    tickWeavingRestore(client.level);
+                    weavingShaderStrength = Math.max(0.0f, weavingShaderStrength - WEAVING_SHADER_FADE_OUT_SPEED);
 
                 }
+
+                weavingActiveLastTick = weavingActive;
             }
         });
 
@@ -195,5 +228,59 @@ public class StupidExpressClient implements ClientModInitializer {
 
     private static void registerInventoryEvents() {
 
+    }
+
+    private static void applyWeavingPollution(Level level, BlockPos playerPos, int xzRadius,
+            float wartChance, float netherrackChance) {
+        for (int x = -xzRadius; x <= xzRadius; x++) {
+            for (int y = WEAVING_MIN_Y; y <= WEAVING_MAX_Y; y++) {
+                for (int z = -xzRadius; z <= xzRadius; z++) {
+                    BlockPos targetPos = playerPos.offset(x, y, z);
+                    BlockState state = level.getBlockState(targetPos);
+                    if (state.isAir() || !state.isSolidRender(level, targetPos)) {
+                        continue;
+                    }
+
+                    float rand = WEAVING_RANDOM.nextFloat();
+                    BlockState replacement = null;
+                    if (rand < wartChance) {
+                        replacement = Blocks.NETHER_WART_BLOCK.defaultBlockState();
+                    } else if (rand < netherrackChance) {
+                        replacement = Blocks.NETHERRACK.defaultBlockState();
+                    }
+
+                    if (replacement == null || state.is(replacement.getBlock())) {
+                        continue;
+                    }
+
+                    WEAVING_ORIGINAL_BLOCKS.putIfAbsent(targetPos.immutable(), state);
+                    level.setBlock(targetPos, replacement, 3);
+                }
+            }
+        }
+    }
+
+    private static void beginWeavingRestore() {
+        if (WEAVING_ORIGINAL_BLOCKS.isEmpty()) {
+            return;
+        }
+        WEAVING_RESTORE_QUEUE.clear();
+        WEAVING_RESTORE_QUEUE.addAll(WEAVING_ORIGINAL_BLOCKS.entrySet());
+    }
+
+    private static void tickWeavingRestore(Level level) {
+        if (level == null || WEAVING_RESTORE_QUEUE.isEmpty()) {
+            if (WEAVING_RESTORE_QUEUE.isEmpty()) {
+                WEAVING_ORIGINAL_BLOCKS.clear();
+            }
+            return;
+        }
+
+        int restoreCount = Math.min(WEAVING_RESTORE_PER_TICK, WEAVING_RESTORE_QUEUE.size());
+        for (int i = 0; i < restoreCount; i++) {
+            Map.Entry<BlockPos, BlockState> entry = WEAVING_RESTORE_QUEUE.remove(WEAVING_RESTORE_QUEUE.size() - 1);
+            level.setBlock(entry.getKey(), entry.getValue(), 3);
+            WEAVING_ORIGINAL_BLOCKS.remove(entry.getKey());
+        }
     }
 }

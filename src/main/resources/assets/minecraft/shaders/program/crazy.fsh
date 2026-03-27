@@ -1,7 +1,6 @@
 #version 150
 
 uniform sampler2D DiffuseSampler;
-uniform vec2 ScreenSize;
 uniform float Time;
 uniform float GameTime;
 uniform float Intensity;

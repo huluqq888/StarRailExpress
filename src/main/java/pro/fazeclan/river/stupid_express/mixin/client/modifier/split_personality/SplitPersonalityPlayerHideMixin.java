@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import pro.fazeclan.river.stupid_express.client.StupidExpressClient;
 import pro.fazeclan.river.stupid_express.modifier.split_personality.cca.SplitPersonalityComponent;
 
 /**
@@ -23,17 +24,9 @@ public abstract class SplitPersonalityPlayerHideMixin {
             cancellable = true
     )
     void preventSplitPersonalityObserverRender(AbstractClientPlayer player, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, CallbackInfo ci) {
-        var component = SplitPersonalityComponent.KEY.get(player);
-        
-        // 如果是旁观者（非活跃人格），完全隐藏其渲染
-        if (component != null && component.getMainPersonality() != null && !component.isCurrentlyActive()) {
-            AbstractClientPlayer mainPlayer = (AbstractClientPlayer) player.level().getPlayerByUUID(component.getMainPersonality());
-            
-            // 只在主人格存在时隐藏旁观者
-            if (mainPlayer != null && mainPlayer != player) {
-                ci.cancel();
-                return;
-            }
+        if (StupidExpressClient.isSplitPerson){
+            ci.cancel();
+            return;
         }
     }
 }
