@@ -37,7 +37,7 @@ public class InitModRolesMax {
             };
             String nextPreset;
             if (selectedInfo!=null) {
-                nextPreset = selectedInfo.presentName;
+                nextPreset = selectedInfo.presetName;
             } else {
                 nextPreset = sreConfig.roundBasedPresetAllRoles;
                 sreConfig.enableRoundBasedAutoPreset = false;

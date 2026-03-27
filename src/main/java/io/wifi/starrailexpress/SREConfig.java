@@ -105,27 +105,28 @@ public class SREConfig implements ConfigData {
 
     public static class AutoPresetInfo {
         public int advanceCount = 0;
-        public String presentName = null;
+        public String presetName = null;
 
         public AutoPresetInfo(){
         }
 
         public AutoPresetInfo(String present, int advanceCount) {
             this.advanceCount = advanceCount;
-            this.presentName = present;
+            this.presetName = present;
         }
     }
 
-    // 按游戏轮数自动切换预设配置
-    @ConfigEntry.Category(value = "presents")
-    @Tooltip
-    public ArrayList<AutoPresetInfo> roundBasedPreset = getDefaultAutoPresetInfos();
     
     @ConfigEntry.Category(value = "presents")
     @Tooltip(count = 2)
     public boolean enableRoundBasedAutoPreset = true;
-    @Tooltip(count = 3)
+    
+    // 按游戏轮数自动切换预设配置
     @ConfigEntry.Category(value = "presents")
+    @Tooltip
+    public ArrayList<AutoPresetInfo> roundBasedPreset = getDefaultAutoPresetInfos();
+    @ConfigEntry.Category(value = "presents")
+    @Tooltip(count = 3)
     public String roundBasedPresetAllRoles = "";
     // 当前已进行的游戏轮数（自动维护，勿手动修改）
     @ConfigEntry.Category(value = "presents")
