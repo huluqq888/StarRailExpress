@@ -105,7 +105,7 @@ public class SREConfig implements ConfigData {
 
     public static class AutoPresetInfo {
         public int advanceCount = 0;
-        public String presetName = null;
+        public String presetName = "";
 
         public AutoPresetInfo(){
         }
