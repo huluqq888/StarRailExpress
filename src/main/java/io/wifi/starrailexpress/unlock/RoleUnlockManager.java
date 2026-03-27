@@ -128,13 +128,7 @@ public class RoleUnlockManager {
     }
 
     /** 配置开关：关闭时视为所有职业已解锁。 */
-    public boolean isRoleUnlockEnabled() {
-        try {
-            return StupidExpressConfig.getInstance().rolesSection.roleUnlockSection.enableRoleUnlockSystem;
-        } catch (Exception ignored) {
-            return true;
-        }
-    }
+
 
     // ─── 核心判断 ────────────────────────────────────────────────────────────
 
@@ -146,9 +140,7 @@ public class RoleUnlockManager {
      * </ul>
      */
     public boolean isRoleUnlocked(ResourceLocation roleId) {
-        if (!isRoleUnlockEnabled()) {
-            return true;
-        }
+
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             // 客户端使用同步来的缓存
             if (clientForceUnlocked.contains(roleId.toString())) return true;

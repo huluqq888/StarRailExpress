@@ -458,7 +458,6 @@ public class ModEventsRegister {
 
     public static void registerEvents() {
         OnPlayerUsedSkill.EVENT.register((player) -> {
-            if (Math.random()<=0.6)return;
             NoellesRolesConfig config = NoellesRolesConfig.HANDLER.instance();
             if (!config.skillEchoEventEnabled) {
                 return false;

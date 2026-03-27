@@ -26,25 +26,6 @@ public class StupidExpressConfig implements ConfigData {
         @CollapsibleObject
         public ArsonistSection arsonistSection = new ArsonistSection();
 
-        @CollapsibleObject
-        public RoleUnlockSection roleUnlockSection = new RoleUnlockSection();
-
-        public static class RoleUnlockSection {
-            /** 是否启用职业解锁系统（关闭后所有职业直接可用） */
-            public boolean enableRoleUnlockSystem = false;
-            /** 是否在读取存档时自动解锁下方基础职业列表 */
-            public boolean unlockBasicRolesAtStart = true;
-            /** 默认解锁的基础职业 ID 列表（namespace:path） */
-            public List<String> basicDefaultUnlockedRoles = new ArrayList<>(List.of(
-                    "noellesroles:baka",
-                    "noellesroles:jester",
-                    "noellesroles:conductor",
-                    "noellesroles:doctor",
-                    "noellesroles:locksmith",
-                    "noellesroles:pachuri"
-            ));
-        }
-
         public static class ArsonistSection {
             public boolean arsonistKeepsGameGoing = true;
         }
