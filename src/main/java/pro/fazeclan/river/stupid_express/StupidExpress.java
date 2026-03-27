@@ -61,7 +61,7 @@ public class StupidExpress implements ModInitializer {
                 || (removeNonThisRoundRoles && Harpymodloader.ROLE_MAX.getOrDefault(r.identifier(), 1) <= 0)
                 || r.getOccupiedRoleCount() > 1
                 // 未解锁的职业强制从职业池中移除
-                || !RoleUnlockManager.getInstance().isRoleUnlocked(r.identifier()));
+                || RoleUnlockManager.getInstance().isRoleUnlockEnabled() &&!RoleUnlockManager.getInstance().isRoleUnlocked(r.identifier()));
         return clone;
     }
 
