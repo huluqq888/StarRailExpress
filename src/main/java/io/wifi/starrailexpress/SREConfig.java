@@ -104,8 +104,11 @@ public class SREConfig implements ConfigData {
     // public String autoPresetName = "";
 
     public static class AutoPresetInfo {
-        public int advanceCount;
-        public String presentName;
+        public int advanceCount = 0;
+        public String presentName = null;
+
+        public AutoPresetInfo(){
+        }
 
         public AutoPresetInfo(String present, int advanceCount) {
             this.advanceCount = advanceCount;
@@ -116,7 +119,7 @@ public class SREConfig implements ConfigData {
     // 按游戏轮数自动切换预设配置
     @ConfigEntry.Category(value = "presents")
     @Tooltip
-    public ArrayList<AutoPresetInfo> roundBasedPreset = new ArrayList<>();
+    public ArrayList<AutoPresetInfo> roundBasedPreset = getDefaultAutoPresetInfos();
     
     @ConfigEntry.Category(value = "presents")
     @Tooltip(count = 2)
@@ -204,9 +207,11 @@ public class SREConfig implements ConfigData {
     public static SREConfig instance() {
         return HANDLER.instance();
     }
-    public SREConfig(){
-        this.roundBasedPreset.add(new AutoPresetInfo("low_level", 3));
-        this.roundBasedPreset.add(new AutoPresetInfo("medium_level", 5));
-        this.roundBasedPreset.add(new AutoPresetInfo("high_level", 5));
+    public ArrayList<AutoPresetInfo> getDefaultAutoPresetInfos(){
+        ArrayList<AutoPresetInfo> arr = new ArrayList<>();
+        arr.add(new AutoPresetInfo("low_level", 3));
+        arr.add(new AutoPresetInfo("medium_level", 5));
+        arr.add(new AutoPresetInfo("high_level", 5));
+        return arr;
     }
 }
