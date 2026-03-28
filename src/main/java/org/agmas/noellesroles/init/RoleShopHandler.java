@@ -46,6 +46,7 @@ import org.agmas.noellesroles.repack.HSRItems;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.roles.executioner.ShootingFrenzyPlayerComponent;
 import org.agmas.noellesroles.roles.framing.FramingShopEntry;
+import org.agmas.noellesroles.utils.MCItemsUtils;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.NotNull;
 import pro.fazeclan.river.stupid_express.constants.SERoles;
@@ -1505,7 +1506,12 @@ public class RoleShopHandler {
     });
 
     // 闪光弹 - 100金币
-    BANDIT_SHOP.add(new ShopEntry(ModItems.FLASH_GRENADE.getDefaultInstance(), 100, ShopEntry.Type.TOOL));
+    BANDIT_SHOP.add(new ShopEntry(ModItems.FLASH_GRENADE.getDefaultInstance(), 30, ShopEntry.Type.TOOL){
+      @Override
+      public boolean canBuy(@NotNull Player player) {
+        return !MCItemsUtils.hasItemB(player, ModItems.FLASH_GRENADE);
+      }
+    });
 
     // 诱饵弹 - 50金币
     BANDIT_SHOP.add(new ShopEntry(ModItems.DECOY_GRENADE.getDefaultInstance(), 50, ShopEntry.Type.TOOL));
