@@ -597,11 +597,12 @@ public class GameUtils {
         // Don't set game status to ACTIVE here - it will be set after roles are
         // assigned in initializeGame()
         // Create a copy of entities to avoid concurrent modification issues
-        // List<net.minecraft.world.entity.Entity> entitiesToDiscard = new ArrayList<>();
+        // List<net.minecraft.world.entity.Entity> entitiesToDiscard = new
+        // ArrayList<>();
         // serverWorld.getAllEntities().forEach(entity -> {
-        //     if (entity instanceof ItemEntity) {
-        //         entitiesToDiscard.add(entity);
-        //     }
+        // if (entity instanceof ItemEntity) {
+        // entitiesToDiscard.add(entity);
+        // }
         // });
         // entitiesToDiscard.forEach(net.minecraft.world.entity.Entity::discard);
 
@@ -634,7 +635,7 @@ public class GameUtils {
         world.setDayTime(Level.TICKS_PER_DAY / 2);
         world.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false, world.getServer());
         gameComponent.getGameMode().finalizeGame(world, gameComponent);
-        
+
         OnGameEnd.EVENT.invoker().onGameEnd(world, gameComponent);
         SRE.REPLAY_MANAGER.finalizeReplay(roundEnd.getWinStatus(), roundEnd);
 
@@ -827,7 +828,8 @@ public class GameUtils {
             spawnPos = new AreasWorldComponent.PosWithOrientation(spawnPosVec3, worldSpawnAngle, 0);
         }
         player.setCamera(player);
-        player.teleportTo(player.getServer().overworld(),spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z, player.getYRot(),player.getXRot());
+        player.teleportTo(player.getServer().overworld(), spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z,
+                player.getYRot(), player.getXRot());
     }
 
     public static boolean differentTeam(SRERole role1, SRERole role2) {
