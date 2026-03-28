@@ -161,9 +161,8 @@ public class ConfigWorldComponent implements AutoSyncedComponent, ServerTickingC
         skillEchoAnnouncedRoles.add(roleKey);
 
         String rolePath = role.getIdentifier() != null ? role.getIdentifier().getPath() : "unknown";
-        Component roleName = Component.translatableWithFallback(
-                SKILL_ECHO_ROLE_TRANSLATION_PREFIX + rolePath,
-                rolePath);
+        Component roleName = Component.translatable(
+                "announcement.star.role."+rolePath);
         Component message = Component.translatable("message.noellesroles.skill_echo.heard", roleName)
                 .withStyle(ChatFormatting.GOLD);
 
