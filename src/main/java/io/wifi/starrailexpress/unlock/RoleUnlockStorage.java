@@ -22,7 +22,7 @@ public class RoleUnlockStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RoleUnlockStorage.class);
     private static final RoleUnlockStorage INSTANCE = new RoleUnlockStorage();
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new Gson();
 
     private final Path dataFile;
 
