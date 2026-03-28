@@ -188,7 +188,6 @@
     "voicechat": "*",
     "architectury": "*",
     "exposure_polaroid": "*",
-    "exposure": "*",
-    "sodium": "*"
+    "exposure": "*"
   }
 }
