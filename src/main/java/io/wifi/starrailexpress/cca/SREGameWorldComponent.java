@@ -465,7 +465,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         // }
 
         {
-            if (this.isRunning()) {
+            if (this.gameStatus == GameStatus.ACTIVE) {
                 for (ServerPlayer player : serverWorld.players()) {
                     if (!GameUtils.isPlayerAliveAndSurvival(player) && isBound()
                             && !GameUtils.isPlayerCreative(player)) {
@@ -502,7 +502,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
                     }
                 }
                 if (gameMode == null) {
-                    gameStatus = GameStatus.STOPPING;
+                    GameUtils.stopGame(serverWorld);
                     return;
                 }
 

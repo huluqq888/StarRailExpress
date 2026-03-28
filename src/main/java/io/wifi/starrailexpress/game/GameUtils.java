@@ -55,7 +55,6 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
@@ -827,11 +826,8 @@ public class GameUtils {
             var spawnPosVec3 = new Vec3(worldSpawnPos.getX(), worldSpawnPos.getY(), worldSpawnPos.getZ());
             spawnPos = new AreasWorldComponent.PosWithOrientation(spawnPosVec3, worldSpawnAngle, 0);
         }
-        DimensionTransition teleportTarget = new DimensionTransition(player.serverLevel(), spawnPos.pos, Vec3.ZERO,
-                spawnPos.yaw, spawnPos.pitch, DimensionTransition.DO_NOTHING);
-        player.changeDimension(teleportTarget);
         player.setCamera(player);
-        player.teleportTo(spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z);
+        player.teleportTo(player.getServer().overworld(),spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z, player.getYRot(),player.getXRot());
     }
 
     public static boolean differentTeam(SRERole role1, SRERole role2) {
