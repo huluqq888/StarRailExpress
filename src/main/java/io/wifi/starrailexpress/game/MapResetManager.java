@@ -98,6 +98,10 @@ public class MapResetManager {
             return;
         Path mapConfigPath = Paths.get(world.getServer().getWorldPath(LevelResource.ROOT).toString(),
                 "map_reset_point_caches", mapName + ".cache.json");
+        File dir = mapConfigPath.getParent().toFile();
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
         File mapConfigFile = mapConfigPath.toFile();
         try {
             FileWriter writer = new FileWriter(mapConfigFile);

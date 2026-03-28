@@ -84,6 +84,10 @@ public class MapScannerManager {
             return;
         Path mapConfigPath = Paths.get(world.getServer().getWorldPath(LevelResource.ROOT).toString(),
                 "map_scanner_caches", mapName + ".cache.json");
+        File dir = mapConfigPath.getParent().toFile();
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
         File mapConfigFile = mapConfigPath.toFile();
         try {
             FileWriter writer = new FileWriter(mapConfigFile);
