@@ -263,6 +263,14 @@ public class InitModRolesMax {
             }
             final int players_count = serverLevel.getServer().getPlayerCount();
             initModifiersCount(players_count);
+            
+            // 获取地图是否可跳跃
+            boolean canJumpMap = false;
+            var areas = io.wifi.starrailexpress.cca.AreasWorldComponent.KEY.get(serverLevel);
+            if (areas != null) {
+                canJumpMap = areas.canJump;
+            }
+            
             {
                 // 杀手中立
                 var neutralRoles = new ArrayList<SRERole>(TMMRoles.ROLES.values());
@@ -282,9 +290,9 @@ public class InitModRolesMax {
                 }
             }
             // 动态大小
-            // 年兽角色：5%概率生成
+            // 年兽角色：5%概率生成（只在可跳跃地图中）
             Random random = new Random();
-            if(players_count >= 12 && random.nextInt(0, 100) < TOUHOU_CHANCE){
+            if(players_count >= 12 && random.nextInt(0, 100) < TOUHOU_CHANCE && canJumpMap){
                 Harpymodloader.setRoleMaximum(ModRoles.BAKA_ID, 1);
                 Harpymodloader.setRoleMaximum(ModRoles.HOAN_MEIRIN, 1);
                 Harpymodloader.setRoleMaximum(ModRoles.PACHURI, 1);
