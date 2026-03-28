@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 public class StarRailMurderGameMode extends GameMode {
     public StarRailMurderGameMode(ResourceLocation identifier) {
-        super(identifier, 10, 2);
+        super(identifier, 10, 6);
     }
 
     @Override
@@ -51,9 +51,6 @@ public class StarRailMurderGameMode extends GameMode {
         WorldModifierComponent worldModifierComponent = WorldModifierComponent.KEY.get(serverWorld);
         worldModifierComponent.modifiers.clear();
         worldModifierComponent.sync();
-
-        // 重置所有马桶方块实体
-        io.wifi.starrailexpress.game.GameUtils.resetAllToilets(serverWorld);
 
         super.finalizeGame(serverWorld, gameWorldComponent);
     }

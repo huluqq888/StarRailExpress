@@ -221,26 +221,27 @@ public class GameUtils {
         executeFunction(world.getServer().createCommandSourceStack(), "harpymodloader:early_start_game");
         executeFunction(world.getServer().createCommandSourceStack(),
                 "harpymodloader:early_start_game_" + MapManager.last_start_map);
-        for (ServerPlayer player : world.players()) {
+        List<ServerPlayer> players = world.getServer().getPlayerList().getPlayers();
+        for (ServerPlayer player : players) {
             ServerPlayNetworking.send(player, new CloseUiPayload());
         }
         SREGameWorldComponent game = SREGameWorldComponent.KEY.get(world);
         AreasWorldComponent areas = AreasWorldComponent.KEY.get(world);
-        int playerCount = Math.toIntExact(world.players().stream()
+        int playerCount = Math.toIntExact(players.stream()
                 .filter(serverPlayerEntity -> (areas.getReadyArea().contains(serverPlayerEntity.position()))).count());
         game.gameMode = (gameMode);
         SREGameTimeComponent.KEY.get(world).setResetTime(time);
         RefugeeComponent.KEY.get(world).reset();
         if (playerCount >= gameMode.minPlayerCount) {
-            game.setGameStatus(SREGameWorldComponent.GameStatus.STARTING);
 
             // 初始化计分板组件
             SREGameScoreboardComponent scoreboardComponent = SREGameScoreboardComponent.KEY
                     .get(world.getServer().getScoreboard());
             scoreboardComponent.reset();
+            game.setGameStatus(SREGameWorldComponent.GameStatus.STARTING);
 
         } else {
-            for (ServerPlayer player : world.players()) {
+            for (ServerPlayer player : players) {
                 player.displayClientMessage(
                         Component.translatable("game.start_error.not_enough_players", gameMode.minPlayerCount), true);
             }
@@ -273,12 +274,16 @@ public class GameUtils {
         RoleMethodDispatcher.onStartGame(serverWorld);
         List<ServerPlayer> readyPlayerList = getReadyPlayerList(serverWorld);
         // serverWorld.setWeatherParameters(0,-1, true, true);
-        baseInitialize(serverWorld, gameComponent, readyPlayerList);
-
+        List<ServerPlayer> players = serverWorld.getServer().getPlayerList().getPlayers();
         // 在分配角色前将所有玩家设置为冒险模式，并且resetPlayer
-        for (ServerPlayer player : serverWorld.players()) {
+        for (ServerPlayer player : players) {
+            player.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+        }
+        for (ServerPlayer player : readyPlayerList) {
             player.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
         }
+
+        baseInitialize(serverWorld, gameComponent, readyPlayerList);
 
         // 先分配角色,然后再初始化回放管理器
         gameComponent.getGameMode().initializeGame(serverWorld, gameComponent, readyPlayerList);
@@ -483,17 +488,18 @@ public class GameUtils {
             player.removeVehicle();
             resetPlayer(player);
         }
-        NameTagSyncPayload payload = new NameTagSyncPayload(nameTagMap);
-        for (ServerPlayer player : players) {
-            ServerPlayNetworking.send(player, payload);
+        if (SREConfig.instance().isItemSkinEnabled) {
+            NameTagSyncPayload payload = new NameTagSyncPayload(nameTagMap);
+            for (ServerPlayer player : players) {
+                ServerPlayNetworking.send(player, payload);
+            }
         }
-
         // teleport players to play area
 
         // teleport non playing players
-        for (ServerPlayer player : serverWorld
-                .getPlayers(serverPlayerEntity -> !players.contains(serverPlayerEntity))) {
-
+        for (ServerPlayer player : serverWorld.getServer().getPlayerList().getPlayers()) {
+            if (players.contains(player))
+                continue;
             player.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
 
             AreasWorldComponent.PosWithOrientation spectatorSpawnPos = areas.getSpectatorSpawnPos();
@@ -592,13 +598,13 @@ public class GameUtils {
         // Don't set game status to ACTIVE here - it will be set after roles are
         // assigned in initializeGame()
         // Create a copy of entities to avoid concurrent modification issues
-        List<net.minecraft.world.entity.Entity> entitiesToDiscard = new ArrayList<>();
-        serverWorld.getAllEntities().forEach(entity -> {
-            if (entity instanceof ItemEntity) {
-                entitiesToDiscard.add(entity);
-            }
-        });
-        entitiesToDiscard.forEach(net.minecraft.world.entity.Entity::discard);
+        // List<net.minecraft.world.entity.Entity> entitiesToDiscard = new ArrayList<>();
+        // serverWorld.getAllEntities().forEach(entity -> {
+        //     if (entity instanceof ItemEntity) {
+        //         entitiesToDiscard.add(entity);
+        //     }
+        // });
+        // entitiesToDiscard.forEach(net.minecraft.world.entity.Entity::discard);
 
         gameComponent.setJumpAvailable(areas.canJump);
         gameComponent.setOutsideSoundsAvailable(areas.haveOutsideSound);
@@ -606,8 +612,8 @@ public class GameUtils {
 
     private static List<ServerPlayer> getReadyPlayerList(ServerLevel serverWorld) {
         AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
-        return serverWorld
-                .getPlayers(serverPlayerEntity -> areas.getReadyArea().contains(serverPlayerEntity.position()));
+        return serverWorld.getServer().getPlayerList().getPlayers().stream()
+                .filter(serverPlayerEntity -> areas.getReadyArea().contains(serverPlayerEntity.position())).toList();
     }
 
     public static ArrayList<Predicate<Entry<Player, String>>> CustomWinnersPredicates = new ArrayList<>();
@@ -826,23 +832,6 @@ public class GameUtils {
         player.changeDimension(teleportTarget);
         player.setCamera(player);
         player.teleportTo(spawnPos.pos.x, spawnPos.pos.y, spawnPos.pos.z);
-    }
-
-    public static void resetAllToilets(ServerLevel serverWorld) {
-        // Use the same method as train reset to iterate through loaded chunks
-        for (int x = serverWorld.getMinSection(); x <= serverWorld.getMaxSection(); x++) {
-            for (int z = serverWorld.getMinSection(); z <= serverWorld.getMaxSection(); z++) {
-                net.minecraft.world.level.chunk.LevelChunk chunk = serverWorld.getChunk(x, z);
-                if (chunk != null) {
-                    for (net.minecraft.world.level.block.entity.BlockEntity blockEntity : chunk.getBlockEntities()
-                            .values()) {
-                        if (blockEntity instanceof io.wifi.starrailexpress.block_entity.ToiletBlockEntity toiletEntity) {
-                            toiletEntity.reset();
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public static boolean differentTeam(SRERole role1, SRERole role2) {
