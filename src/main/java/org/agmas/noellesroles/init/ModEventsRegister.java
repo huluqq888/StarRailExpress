@@ -626,6 +626,11 @@ public class ModEventsRegister {
         OnGameEnd.EVENT.register((world, gameWorldComponent) -> {
             HoanMeirinFistPunchHandler.PUNCH_RECORDS.clear();
             RoleShopHandler.resetOldmanEasterEggState();
+            // 重置所有玩家的锁匠灵感
+            world.players().forEach(player -> {
+                LocksmithInspirationComponent locksmithInspiration = ModComponents.LOCKSMITH_INSPIRATION.get(player);
+                locksmithInspiration.init();
+            });
             SREGameRoundEndComponent roundEnd = SREGameRoundEndComponent.KEY.get(world);
             if (roundEnd.getWinStatus().equals(GameUtils.WinStatus.TIME)) {
                 int alivePlayers = 0, aliveKillers = 0, aliveGhost = 0;
