@@ -224,7 +224,7 @@ public class ModRoles {
   public static SRERole EXAMPLER = TMMRoles.registerRole(
       new NormalRole(EXAMPLER_ID, new Color(213, 95, 214).getRGB(),
           false, true, SRERole.MoodType.FAKE,
-          TMMRoles.CIVILIAN.getMaxSprintTime(), true))
+          Integer.MAX_VALUE, true))
       .setCanSeeCoin(true).setCanSeeTeammateKiller(true)
       .setCanUseInstinct(true);
   // 好人：大妖精baka
