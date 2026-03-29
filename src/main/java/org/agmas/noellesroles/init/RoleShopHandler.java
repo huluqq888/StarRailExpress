@@ -665,7 +665,7 @@ public class RoleShopHandler {
       var displayStack = Items.WRITTEN_BOOK.getDefaultInstance();
       String title = "\u00a7d\u00a7lPachuri Knowledge Book";
       displayStack.set(DataComponents.WRITTEN_BOOK_CONTENT,
-          new WrittenBookContent(new Filterable<String>(title, Optional.of(title)), "System", 1, List.of(), true));
+          new WrittenBookContent(new Filterable<String>(title, Optional.of(title)), "Pachuri Knowledge", 1, List.of(), true));
       var SHOP = new ArrayList<ShopEntry>();
       SHOP.add(new ShopEntry(
           displayStack,
@@ -677,7 +677,7 @@ public class RoleShopHandler {
           var players = player.level().players();
           var gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
           players.removeIf((p) -> {
-            return gameWorldComponent.getRole(p) == null;
+            return gameWorldComponent.getRole(p) == null || !gameWorldComponent.getRole(p).isInnocent();
           });
           Collections.shuffle(players);
           int count = 1;
@@ -696,9 +696,9 @@ public class RoleShopHandler {
                 .withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.GOLD),
                 Component
                     .translatable("item.written_book.per_role_content",
-                        p.getDisplayName().copy().withStyle(ChatFormatting.GRAY),
+                        p.getDisplayName().copy().withStyle(ChatFormatting.DARK_GRAY),
                         RoleUtils.getRoleOrModifierNameWithColor(gameWorldComponent.getRole(p)))
-                    .withStyle(ChatFormatting.AQUA));
+                    .withStyle(ChatFormatting.DARK_AQUA));
             var content = new Filterable<Component>(ct, Optional.of(ct));
             contents.add(content);
           }
