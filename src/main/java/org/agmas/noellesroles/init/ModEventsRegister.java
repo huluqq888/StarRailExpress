@@ -533,11 +533,12 @@ public class ModEventsRegister {
             if (role == null) {
                 return false;
             }
-            if (Math.random()<=0.6)return false;
+            if (Math.random() <= 0.6)
+                return false;
 
             // 随机延迟 3~7 秒后触发回响
             int delayTicks = (int) ((Math.random() * 4 + 3) * 20); // 3-7 秒转换为 tick (20 ticks = 1 秒)
-            
+
             if (player.level() instanceof ServerLevel serverLevel) {
                 GameUtils.serverAsynTaskLists.add(new ServerTaskInfoClasses.SchedulerTask(delayTicks, () -> {
                     ConfigWorldComponent.KEY.get(serverLevel).announceSkillEchoForRole(role);
@@ -1233,8 +1234,10 @@ public class ModEventsRegister {
         //
         // });
         ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, serverPlayer, bound) -> {
+            if (!WorldModifierComponent.KEY.get(serverPlayer.level()).isModifier(serverPlayer,
+                    SEModifiers.SPLIT_PERSONALITY))
+                return true;
             var spc = SplitPersonalityComponent.KEY.get(serverPlayer);
-            SRE.LOGGER.info("msg: "+message);
             if (!spc.isDeath()) {
                 ServerPlayer mainP = serverPlayer.server.getPlayerList().getPlayer(spc.getMainPersonality());
                 ServerPlayer secondP = serverPlayer.server.getPlayerList().getPlayer(spc.getSecondPersonality());
