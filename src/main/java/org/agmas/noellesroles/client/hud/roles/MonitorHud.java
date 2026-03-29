@@ -16,7 +16,7 @@ public class MonitorHud {
     public static void register() {
         RoleHudRenderCallback.EVENT.register(ModRoles.MONITOR_ID, (context, deltaTracker) -> {
             Minecraft client = Minecraft.getInstance();
-if (SREClient.isPlayerSpectator())
+            if (SREClient.isPlayerSpectator())
                 return;
             MonitorPlayerComponent monitorComponent = MonitorPlayerComponent.KEY.get(client.player);
             UUID target = monitorComponent.markedTarget;
@@ -41,11 +41,11 @@ if (SREClient.isPlayerSpectator())
             int x = screenWidth - 20;
             int y = screenHeight - 30;
             if (target != null) {
-                var player = client.level.getPlayerByUUID(target);
+                var player = client.player.connection.getPlayerInfo(target);
                 var player_text = Component.translatable("gui.noellesroles.monitor.target_not_found")
                         .withStyle(ChatFormatting.YELLOW);
                 if (player != null) {
-                    Component display_player = player.getDisplayName();
+                    Component display_player = Component.literal(player.getProfile().getName());
                     player_text = Component
                             .translatable("gui.noellesroles.monitor.target",
                                     Component.literal("").append(display_player).withStyle(ChatFormatting.GOLD))

@@ -36,7 +36,7 @@ public abstract class ExecutionerHud {
                             xOffset, yOffset, 12);
 
                     Component targetText = Component.translatable("hud.executioner.target",
-                            info.getTabListDisplayName()).withStyle(ChatFormatting.GOLD);
+                            info.getProfile().getName()).withStyle(ChatFormatting.GOLD);
                     context.drawString(renderer, targetText, xOffset + 16, yOffset + 2, 0xFFAA00);
                 }
             } else {
