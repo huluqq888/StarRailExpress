@@ -27,7 +27,7 @@ public class CommonTalkChatMixin {
      */
     @Overwrite
     public static boolean onChatMessage(ServerPlayer sender, String message) {
-        return true;
+        return false;
         // // ServerMessageEvents.ALLOW_CHAT_MESSAGE.invoker().allowChatMessage(message, sender, null);
         // if (sender == null) {
         //     return false;
