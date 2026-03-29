@@ -27,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class GrenadeEntity extends ThrowableItemProjectile {
     private static final float EXPLOSION_RADIUS = 4f;
+    private static final int MAX_KILL_PLAYER_COUNT = 8;
 
     public GrenadeEntity(EntityType<?> ignored, Level world) {
         super(TMMEntities.GRENADE, world);
@@ -52,10 +53,14 @@ public class GrenadeEntity extends ThrowableItemProjectile {
             Vec3 explosionPos = this.position().add(0.0D, 0.5D, 0.0D);
             var hitted_players = getPlayersAffectedByExplosion(world, explosionPos.x, explosionPos.y, explosionPos.z,
                     EXPLOSION_RADIUS);
+            int count = 0;
             for (Player player : hitted_players) {
                 GameUtils.killPlayer(player, true,
                         this.getOwner() instanceof Player playerEntity ? playerEntity : null,
                         GameConstants.DeathReasons.GRENADE);
+                count++;
+                if (count >= MAX_KILL_PLAYER_COUNT)
+                    break;
             }
             this.discard();
         }
@@ -98,7 +103,15 @@ public class GrenadeEntity extends ThrowableItemProjectile {
 
             affected.add(player);
         }
-
+        affected.sort((a, b) -> {
+            double da = a.distanceToSqr(x, y, z);
+            double db = b.distanceToSqr(x, y, z);
+            if (da < db)
+                return -1;
+            if (da == db)
+                return 0;
+            return 1;
+        });
         return affected;
     }
 }
