@@ -832,15 +832,14 @@ public class SREClient implements ClientModInitializer {
 
     private static void updateHudApiCache(Minecraft client) {
         LocalPlayer player = client.player;
-        cachedPlayerAliveAndInSurvival = GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player);
-        cachedPlayerSpectatingOrCreative = GameUtils.isPlayerSpectatingOrCreativeIgnoreShitSplit(player);
+        cachedPlayerAliveAndInSurvival = GameUtils.isPlayerAliveAndSurvival(player);
+        cachedPlayerSpectatingOrCreative = GameUtils.isPlayerSpectatingOrCreative(player);
         cachedPlayerCreative = player != null && player.isCreative();
         cachedPlayerSpectator = player != null && player.isSpectator();
         cachedPlayerRole = gameComponent != null && player != null ? gameComponent.getRole(player) : null;
         cachedUseTrainHud = !isInLobby && trainComponent != null && trainComponent.hasHud();
         cachedKiller = gameComponent != null && player != null && gameComponent.canUseKillerFeatures(player);
         cachedShowDebugHud = isInLobby || (cachedPlayerCreative);
-        cachedRenderVanillaHud = isInLobby || player.isCreative();
 
         boolean canRender = true;
         if (isInLobby)
@@ -851,8 +850,10 @@ public class SREClient implements ClientModInitializer {
         if (player != null && !isInLobby && gameComponent.isRunning()) {
             if (SRE.cantUseChatHud.stream().anyMatch(pre -> pre.test(player))) {
                 canRender = false;
+                cachedRenderVanillaHud = false;
             } else if (!cachedPlayerAliveAndInSurvival) {
                 canRender = true;
+                cachedRenderVanillaHud = true;
             } else {
                 canRender = SRE.canUseChatHudPlayer.stream().anyMatch(predicate -> predicate.test(player))
                         || (cachedPlayerRole != null
@@ -860,5 +861,6 @@ public class SREClient implements ClientModInitializer {
             }
         }
         cachedCanRenderChatHud = canRender;
+        cachedRenderVanillaHud = cachedRenderVanillaHud || isInLobby || player.isCreative();
     }
 }
