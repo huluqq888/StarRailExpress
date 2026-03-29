@@ -1,4 +1,4 @@
-package org.agmas.noellesroles.client;
+package org.agmas.noellesroles.client.hud;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.SRERole;
@@ -17,6 +17,8 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemCooldowns.CooldownInstance;
 
 import org.agmas.noellesroles.AttendantHandler;
+import org.agmas.noellesroles.client.NoellesrolesClient;
+import org.agmas.noellesroles.client.WayfarerHudRenderer;
 import org.agmas.noellesroles.client.event.RoleHudRenderCallback;
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.entity.WheelchairEntity;
@@ -32,7 +34,7 @@ import org.agmas.noellesroles.roles.thief.ThiefPlayerComponent;
 
 import java.awt.*;
 
-public class ClientHudRenderer {
+public class CommonClientHudRenderer {
   public static void registerFather() {
     HudRenderCallback.EVENT.register((guiGraphics, deltaTracker) -> {
       var client = Minecraft.getInstance();
@@ -62,7 +64,9 @@ public class ClientHudRenderer {
       if (SREClient.gameComponent == null) {
         return;
       }
-      SRERole role = SREClient.gameComponent.getRole(client.player);
+      // if (SREClient.isPlayerSpectator())
+      //   return;
+      SRERole role = SREClient.getCachedPlayerRole();
       if (role == null)
         return;
       var consumer = RoleHudRenderCallback.EVENT.getConsumer(role.identifier());
@@ -89,6 +93,7 @@ public class ClientHudRenderer {
   public static void registerRenderersEvent() {
     registerFather();
     registerSons();
+    OtherRolesRegister.registerSons();
   }
 
   public static void registerSons() {

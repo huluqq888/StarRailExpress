@@ -68,6 +68,7 @@ import org.agmas.noellesroles.blood.BloodMain;
 import org.agmas.noellesroles.client.commands.GameManagePanelCommand;
 import org.agmas.noellesroles.client.event.MutableComponentResult;
 import org.agmas.noellesroles.client.event.OnMessageBelowMoneyRenderer;
+import org.agmas.noellesroles.client.hud.CommonClientHudRenderer;
 import org.agmas.noellesroles.client.renderer.VendingMachinesBlockEntityRenderer;
 import org.agmas.noellesroles.client.screen.*;
 import org.agmas.noellesroles.component.InsaneKillerPlayerComponent;
@@ -247,7 +248,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             }
             return true;
         });
-        ClientHudRenderer.registerRenderersEvent();
+        CommonClientHudRenderer.registerRenderersEvent();
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register((renderContext) -> {
             TaskBlockOverlayRenderer.render(renderContext);
