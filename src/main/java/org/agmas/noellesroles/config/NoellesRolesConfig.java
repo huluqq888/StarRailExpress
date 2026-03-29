@@ -60,7 +60,7 @@ public class NoellesRolesConfig implements ConfigData {
      * Modifier - The chance of Split Personality
      */
 
-    public int chanceOfModifierSplitPersonality = 10;
+    public int chanceOfModifierSplitPersonality = 0;
 
     /**
      * Starting cooldown (in ticks)

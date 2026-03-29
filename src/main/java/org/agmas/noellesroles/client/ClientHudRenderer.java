@@ -673,10 +673,11 @@ public class ClientHudRenderer {
       int yOffset = screenHeight - 10 - font.lineHeight; // 右下角
       int xOffset = screenWidth - 10; // 距离右边缘
       var abpc = HoanMeirinPlayerComponent.KEY.get(client.player);
+      var shpc = SREArmorPlayerComponent.KEY.get(client.player);
       {
         var text = Component
             .translatable("hud.hoan_meirin.armor",
-                abpc.armor)
+                shpc.armor)
             .withStyle(ChatFormatting.GOLD);
         guiGraphics.drawString(font, text, 10, yOffset - font.lineHeight - 4,
             Color.WHITE.getRGB());
