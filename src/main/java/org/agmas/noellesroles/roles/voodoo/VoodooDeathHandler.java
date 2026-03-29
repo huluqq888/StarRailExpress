@@ -23,7 +23,7 @@ public class VoodooDeathHandler {
                         if (voodooed != null) {
                             if (GameUtils.isPlayerAliveAndSurvival(voodooed) && voodooed != victim) {
                                 ConfigWorldComponent.onPlayerUsedSkill( (ServerPlayer) voodooed);
-                                GameUtils.killPlayer(voodooed, true, null,
+                                GameUtils.forceKillPlayer(voodooed, true, null,
                                         Noellesroles.id("voodoo"));
                             }
                         }
