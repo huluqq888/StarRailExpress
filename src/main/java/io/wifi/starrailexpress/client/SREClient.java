@@ -100,7 +100,6 @@ public class SREClient implements ClientModInitializer {
     public static HPManager handParticleManager;
     public static Map<Player, Vec3> particleMap;
     public static Map<UUID, Integer> cachedHighLightMap = new HashMap<>();
-    public static Set<Entity> pendingHighLight = new HashSet<>();
     private static boolean prevGameRunning;
     public static SREGameWorldComponent gameComponent;
     public static AreasWorldComponent areaComponent;
@@ -343,6 +342,7 @@ public class SREClient implements ClientModInitializer {
             boolean isKeyDown = instinctKeybind.isDown();
             if (isKeyDown && !prevInstinctKeyDown) {
                 isInstinctToggleEnabled = !isInstinctToggleEnabled; // 切换状态
+                updateInstinctCache(Minecraft.getInstance());
             }
             prevInstinctKeyDown = isKeyDown;
 
@@ -393,7 +393,9 @@ public class SREClient implements ClientModInitializer {
                 hideLocalMainHandItemInLayer = false;
                 hideLocalOffHandItemInLayer = false;
             } else {
-                updateInstinctCache(client);
+                if (client.level.getGameTime() % 20 == 0) {
+                    updateInstinctCache(client);
+                }
                 updateHudApiCache(client);
                 localPlayerPsychoActive = SREPlayerPsychoComponent.KEY.get(player).getPsychoTicks() > 0;
                 PLAYER_PSYCHO_CACHE.put(player.getUUID(), localPlayerPsychoActive);
@@ -668,20 +670,17 @@ public class SREClient implements ClientModInitializer {
     }
 
     private static void updateInstinctCache(Minecraft client) {
-        for (Entity entity : pendingHighLight) {
-            int a = getInstinctHighlight(entity);
-            cachedHighLightMap.put(entity.getUUID(), a);
-        }
-        pendingHighLight.clear();
-        if (client.level.getGameTime() % 20 == 0) {
-            for (var entry : cachedHighLightMap.entrySet()) {
-                Entity entity = client.level.getEntities().get(entry.getKey());
-                if (entity == null) {
-                    cachedHighLightMap.remove(entry.getKey());
-                    continue;
-                }
-                cachedHighLightMap.put(entity.getUUID(), getInstinctHighlight(entity));
+        HashSet<UUID> toRemove = new HashSet<>();
+        for (var entry : cachedHighLightMap.entrySet()) {
+            Entity entity = client.level.getEntities().get(entry.getKey());
+            if (entity == null) {
+                toRemove.add(entry.getKey());
+                continue;
             }
+            cachedHighLightMap.put(entity.getUUID(), getInstinctHighlight(entity));
+        }
+        for(var it: toRemove){
+            cachedHighLightMap.remove(it);
         }
     }
 
@@ -789,12 +788,14 @@ public class SREClient implements ClientModInitializer {
     }
 
     public static int getCachedInstinctHighlight(Entity target) {
-        if (!(target instanceof ItemEntity || target instanceof Player || target instanceof NoteEntity || target instanceof FirecrackerEntity)){
+        if (!(target instanceof ItemEntity || target instanceof Player || target instanceof NoteEntity
+                || target instanceof FirecrackerEntity)) {
             return -1;
         }
         if (!cachedHighLightMap.containsKey(target.getUUID())) {
-            pendingHighLight.add(target);
-            return -1;
+            int color = getInstinctHighlight(target);
+            cachedHighLightMap.put(target.getUUID(), color);
+            return color;
         }
         return cachedHighLightMap.getOrDefault(target.getUUID(), -1);
     }
