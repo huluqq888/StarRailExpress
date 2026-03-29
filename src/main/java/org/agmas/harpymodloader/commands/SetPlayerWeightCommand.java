@@ -55,23 +55,14 @@ public class SetPlayerWeightCommand {
       return 0;
     final String[] TypeMappings = { "All", "Innocent", "Neutral", "Neutral for killers", "Killer", "Vigilante" };
     if (roleType == 0) {
-      var weightManager = PlayerRoleWeightManager.playerWeights.get(player.getUUID());
-      if (weightManager == null) {
-        weightManager = new PlayerRoleWeightManager.WeightInfo();
-        PlayerRoleWeightManager.playerWeights.putIfAbsent(player.getUUID(), weightManager);
-      }
-      int weightTotal = weightManager.getWeightSum();
-      if (weightTotal == 0)
-        weightTotal = 1;
       source.sendSuccess(
           () -> Component.translatable("Player [%s]", player.getDisplayName()).withStyle(ChatFormatting.GOLD),
           false);
       for (int i = 1; i <= 5; i++) {
         // 获取玩家角色权重
         final int roleType_1 = i;
-        int weight = weightManager.getWeight(i);
-        double percent = 100 * (1. - (double) weight / (double) weightTotal);
-        source.sendSystemMessage(Component.translatable("%s(%s): Role Selected Weight: %s%%",
+        double percent = PlayerRoleWeightManager.getRoleWeightPercent(player, i) * 100;
+        source.sendSystemMessage(Component.translatable("%s(%s): Role Selected Weight: %s / 100",
             TypeMappings[roleType_1],
             roleType_1, String.format("%.2f", percent)));
       }
