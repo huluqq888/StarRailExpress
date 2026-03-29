@@ -2,8 +2,8 @@ package org.agmas.noellesroles.roles.hoan_meirin;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
-import io.wifi.starrailexpress.event.AfterShieldAllowPlayerDeathWithKiller;
 import io.wifi.starrailexpress.event.AllowPlayerPunching;
+import io.wifi.starrailexpress.event.OnShieldBroken;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.ChatFormatting;
@@ -19,7 +19,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.noellesroles.Noellesroles;
-import org.agmas.noellesroles.component.HoanMeirinPlayerComponent;
 import org.agmas.noellesroles.role.ModRoles;
 
 import java.util.HashMap;
@@ -88,12 +87,10 @@ public class HoanMeirinFistPunchHandler {
     public static final int KILL_THRESHOLD = 5;
 
     public static void register() {
-        AfterShieldAllowPlayerDeathWithKiller.EVENT.register((player, killer, deathReason) -> {
+        OnShieldBroken.EVENT.register((player, killer) -> {
             if (SREGameWorldComponent.KEY.get(player.level()).isRole(player, ModRoles.HOAN_MEIRIN)) {
-                var hmpc = HoanMeirinPlayerComponent.KEY.get(player);
-                return !hmpc.triggerArmor(player, killer, deathReason);
+                HoanMeirinFistPunchHandler.applyShockwave(player);
             }
-            return true;
         });
         AllowPlayerPunching.EVENT.register((player) -> {
             if (SREGameWorldComponent.KEY.get(player.level()).isRole(player, ModRoles.HOAN_MEIRIN)) {

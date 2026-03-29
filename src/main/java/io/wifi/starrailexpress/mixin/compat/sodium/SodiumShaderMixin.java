@@ -2,7 +2,7 @@ package io.wifi.starrailexpress.mixin.compat.sodium;
 
 
 import io.wifi.starrailexpress.compat.SodiumShaderInterface;
-import net.caffeinemc.mods.sodium.client.gl.buffer.GlMutableBuffer;
+// import net.caffeinemc.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 // import net.caffeinemc.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
 // import net.irisshaders.iris.gl.blending.BlendModeOverride;
