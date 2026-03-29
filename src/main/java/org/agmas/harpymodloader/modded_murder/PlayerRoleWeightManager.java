@@ -21,6 +21,10 @@ public class PlayerRoleWeightManager {
     private static int getFactionGroup(int type) {
         if (type <= 1)
             return 1;
+        if (type == 5)
+            return 1;
+        if (type == 3)
+            return 2;
         return type;
     }
 
