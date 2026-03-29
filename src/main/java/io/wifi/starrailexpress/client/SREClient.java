@@ -672,14 +672,15 @@ public class SREClient implements ClientModInitializer {
             cachedHighLightMap.put(entity.getUUID(), getInstinctHighlight(entity));
         }
         pendingHighLight.clear();
-
-        for(var entry: cachedHighLightMap.entrySet()){
-            Entity entity = client.level.getEntities().get(entry.getKey());
-            if(entity == null) {
-                cachedHighLightMap.remove(entry.getKey());
-                continue;
+        if (client.level.getGameTime() % 20 == 0) {
+            for (var entry : cachedHighLightMap.entrySet()) {
+                Entity entity = client.level.getEntities().get(entry.getKey());
+                if (entity == null) {
+                    cachedHighLightMap.remove(entry.getKey());
+                    continue;
+                }
+                cachedHighLightMap.put(entity.getUUID(), getInstinctHighlight(entity));
             }
-            cachedHighLightMap.put(entity.getUUID(), getInstinctHighlight(entity));
         }
     }
 

@@ -5,6 +5,8 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.SREClient;
@@ -31,6 +33,8 @@ public class MinecraftClientMixin {
 
     @ModifyReturnValue(method = "shouldEntityAppearGlowing", at = @At("RETURN"))
     public boolean tmm$hasInstinctOutline(boolean original, @Local(argsOnly = true) Entity entity) {
+        if (SRE.isLobby)
+            return original;
         if (SREClient.getCachedInstinctHighlight(entity) != -1)
             return true;
         return original;
