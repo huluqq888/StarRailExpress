@@ -77,7 +77,7 @@ public class StupidEventRegister {
 
                 StupidRoleUtils.changeRole(killer, role, true);
                 StupidRoleUtils.sendWelcomeAnnouncement((ServerPlayer) killer);
-                return false;
+                return true;
             }
             return true;
         });
