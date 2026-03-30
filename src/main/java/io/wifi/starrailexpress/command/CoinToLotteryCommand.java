@@ -2,7 +2,6 @@ package io.wifi.starrailexpress.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -17,11 +16,8 @@ import io.wifi.starrailexpress.cca.SREPlayerSkinsComponent;
 public class CoinToLotteryCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context) {
-        CommandRegistrationCallback.EVENT.register(
-                (dispatcher1, registryAccess, environment) -> {
-                    dispatcher1.register(Commands.literal("coin2lottery")
-                            .executes(CoinToLotteryCommand::exchange));
-                });
+        dispatcher.register(Commands.literal("coin2lottery")
+                .executes(CoinToLotteryCommand::exchange));
     }
 
     /**
@@ -56,12 +52,14 @@ public class CoinToLotteryCommand {
 
             // 发送成功消息
             context.getSource().sendSuccess(
-                    () -> Component.translatable("commands.coin2lottery.success", currentCoins - 100, currentLootChance + 1),
+                    () -> Component.translatable("commands.coin2lottery.success", currentCoins - 100,
+                            currentLootChance + 1),
                     true);
 
             return 1;
         } catch (Exception e) {
-            context.getSource().sendFailure(Component.translatable("commands.coin2lottery.error.failed", e.getMessage()));
+            context.getSource()
+                    .sendFailure(Component.translatable("commands.coin2lottery.error.failed", e.getMessage()));
             return 0;
         }
     }
