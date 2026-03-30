@@ -90,9 +90,6 @@ public class GamblerHandler {
                     vigilanteRoles.add(role);
                 }
             }
-                vigilanteRoles.removeIf(role -> role.identifier().equals(ModRoles.BEST_VIGILANTE_ID)
-                    || role.identifier().equals(ModRoles.GUEST_GHOST_ID)
-                    || role.identifier().equals(ModRoles.JOJO_ID));
             if (vigilanteRoles.isEmpty()) {
                 vigilanteRoles.add(TMMRoles.VIGILANTE);
             }
