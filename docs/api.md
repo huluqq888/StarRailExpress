@@ -1149,7 +1149,7 @@ OnOpenInventory.EVENT.register((localPlayer, screen) -> false);
 
 **包 / Package:** `org.agmas.harpymodloader`
 
-Harpymodloader 是修饰符系统和职业权重系统的核心，提供以下 API。
+`Harpymodloader` 是修饰符系统和职业权重系统的核心，提供以下 API。
 
 ### Harpymodloader — 主入口
 
