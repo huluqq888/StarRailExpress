@@ -156,8 +156,11 @@ public class GameUtils {
             return;
         }
         isStartingGame = true;
-        MapResetManager.loadArea(world);
         AreasWorldComponent areas = AreasWorldComponent.KEY.get(world);
+        if(areas.mapName == null){
+            MapManager.loadRandomMap(world);
+        }
+        MapResetManager.loadArea(world);
         if (areas.noReset) {
             resetEntities(world);
             SRE.LOGGER.info("NO RESET MAP!");

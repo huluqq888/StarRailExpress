@@ -34,7 +34,6 @@ public class StartCommand {
             return -1;
         }
         if (gameMode == SREGameModes.LOOSE_ENDS) {
-
             GameUtils.startGame(source.getLevel(), gameMode,
                     GameConstants.getInTicks(minutes >= 0 ? minutes : gameMode.defaultStartTime, 0));
             source.sendSuccess(
