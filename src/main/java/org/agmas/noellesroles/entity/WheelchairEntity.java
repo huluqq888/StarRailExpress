@@ -53,6 +53,11 @@ public class WheelchairEntity extends Mob {
     private ItemStack item = ItemStack.EMPTY;
     private SREGameWorldComponent gameWorldComponent;
     private Vec3 lastPos = null;
+    
+    // ===== 减速与红石冷却 =====
+    private int slowTime; // ticks remaining for slow effect
+    private float slowMultiplier = 1.0f; // applied multiplier when slowed
+    private int redstoneCooldown; // ticks until redstone can trigger again
 
     public WheelchairEntity(EntityType<? extends Mob> entityType, Level world) {
         super(entityType, world);
@@ -218,7 +223,7 @@ public class WheelchairEntity extends Mob {
     // ===== getRiddenSpeed：速度 = 属性 × 系数 × 加速倍率（类似 Pig.getRiddenSpeed）=====
     @Override
     protected float getRiddenSpeed(Player player) {
-        return (float) (this.getAttributeValue(Attributes.MOVEMENT_SPEED) * 0.225 * (double) this.boostFactor());
+        return (float) (this.getAttributeValue(Attributes.MOVEMENT_SPEED) * 0.225 * (double) this.speedMultiplier());
     }
 
     // ===== 加速系统（类似 ItemBasedSteering）=====
@@ -249,10 +254,53 @@ public class WheelchairEntity extends Mob {
                 );
             }
         }
+        
+        // 减速计时
+        if (this.slowTime > 0) {
+            this.slowTime--;
+            if (this.slowTime <= 0) {
+                this.slowMultiplier = 1.0f;
+            }
+        }
+
+        // 红石触发冷却计时
+        if (this.redstoneCooldown > 0) {
+            this.redstoneCooldown--;
+        }
     }
 
     public float boostFactor() {
         return this.boosting ? 1.0f + 2f * Mth.clamp((float) this.boostTime / 140.0f, 0.0f, 1.0f) : 1.0f;
+    }
+
+    // 综合速度因子（包含加速与减速）
+    public float speedMultiplier() {
+        float base = boostFactor();
+        return base * (this.slowTime > 0 ? this.slowMultiplier : 1.0f);
+    }
+
+    /**
+     * 应用减速效果
+     * @param ticks 持续时长（tick）
+     * @param multiplier 速度倍率（例如 0.5f 表示减半）
+     */
+    public void applySlow(int ticks, float multiplier) {
+        this.slowTime = ticks;
+        this.slowMultiplier = multiplier;
+    }
+
+    /**
+     * 尝试应用红石瘫痪效果，若处于冷却中则返回 false
+     * @param stunTicks 眩晕时长（tick）
+     * @param cooldownTicks 触发后冷却时长（tick）
+     */
+    public boolean tryApplyRedstoneStun(int stunTicks, int cooldownTicks) {
+        if (this.redstoneCooldown <= 0) {
+            this.setStunTime(stunTicks);
+            this.redstoneCooldown = cooldownTicks;
+            return true;
+        }
+        return false;
     }
 
     // ===== 以下代码与原文完全相同，不改动 =====

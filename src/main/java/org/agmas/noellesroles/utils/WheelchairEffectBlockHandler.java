@@ -95,6 +95,8 @@ public class WheelchairEffectBlockHandler {
         if (wheelchair.isBoosting()) {
             wheelchair.stopBoost();
         }
+        // 应用明显的减速效果：持续 4 秒，速度减半
+        wheelchair.applySlow(80, 0.5f);
         
         // 发送粒子效果
         for (int i = 0; i < 5; i++) {
@@ -155,7 +157,12 @@ public class WheelchairEffectBlockHandler {
      * 红石块效果：瘫痪轮椅 3 秒
      */
     private static void applyRedstoneBlockEffect(WheelchairEntity wheelchair, Player player, ServerLevel serverLevel) {
-        wheelchair.setStunTime(60);
+        // 仅每 5 秒触发一次红石瘫痪
+        boolean applied = wheelchair.tryApplyRedstoneStun(60, 100); // 60 ticks stun, 100 ticks cooldown (5s)
+        if (!applied) {
+            // 冷却中，不重复触发
+            return;
+        }
 
         // 停止所有加速效果
         wheelchair.stopBoost();
