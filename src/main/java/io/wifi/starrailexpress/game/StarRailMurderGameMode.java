@@ -31,6 +31,8 @@ import org.agmas.harpymodloader.modded_murder.RoleAssignmentManager;
 import org.agmas.harpymodloader.modded_murder.RoleAssignmentPool;
 import org.agmas.harpymodloader.modifiers.HMLModifiers;
 import org.agmas.harpymodloader.modifiers.SREModifier;
+import org.agmas.noellesroles.commands.BroadcastCommand;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -477,10 +479,9 @@ public class StarRailMurderGameMode extends GameMode {
                         FactionCardType cardType = FactionCardType.fromInt(roleType);
                         if (cardType != FactionCardType.NONE) {
                             SREPlayerProgressionComponent.KEY.get(selectedPlayer).addFactionCard(cardType, 1);
-                            selectedPlayer.displayClientMessage(
+                            BroadcastCommand.BroadcastMessage(selectedPlayer,
                                     Component.translatable("message.sre.pass.faction.assign_failed")
-                                            .withStyle(ChatFormatting.RED),
-                                    true);
+                                            .withStyle(ChatFormatting.RED));
                         }
                     }
                 }

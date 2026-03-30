@@ -250,6 +250,14 @@ public class SREPlayerProgressionComponent implements AutoSyncedComponent, Serve
         return CARD_PREFERRED_PICK_CHANCE;
     }
 
+    public void setFactionCard(FactionCardType type, int count) {
+        if (type == FactionCardType.NONE || count == 0) {
+            return;
+        }
+        this.factionCards.put(type, Math.max(0, count));
+        markChanged(SYNC_DIRTY_CARDS);
+    }
+
     public void addFactionCard(FactionCardType type, int count) {
         if (type == FactionCardType.NONE || count == 0) {
             return;

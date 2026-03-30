@@ -23,11 +23,11 @@ public class ProgressionCommand {
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
     dispatcher.register(Commands.literal("sre:pass")
         .executes(context -> open(context.getSource(), null))
-        .then(Commands.argument("player", GameProfileArgument.gameProfile())
+        .then(Commands.literal("open").then(Commands.argument("player", GameProfileArgument.gameProfile())
             .requires(source -> source.hasPermission(2))
             .executes(context -> open(context.getSource(),
                 GameProfileArgument.getGameProfiles(context,
-                    "player"))))
+                    "player")))))
         .then(Commands.literal("refresh")
             .requires(source -> source.hasPermission(2))
             .executes(context -> refresh(context.getSource(),
@@ -69,9 +69,9 @@ public class ProgressionCommand {
                         .getPlayerOrException(),
                     StringArgumentType.getString(context,
                         "faction")))))
-        .then(Commands.literal("givecard")
+        .then(Commands.literal("card")
             .requires(source -> source.hasPermission(2))
-            .then(Commands.argument("player", GameProfileArgument.gameProfile())
+            .then(Commands.literal("give").then(Commands.argument("player", GameProfileArgument.gameProfile())
                 .then(Commands.argument("faction",
                     StringArgumentType.word())
                     .then(Commands.argument("count",
@@ -91,6 +91,26 @@ public class ProgressionCommand {
                             IntegerArgumentType
                                 .getInteger(context,
                                     "count")))))))
+            .then(Commands.literal("set").then(Commands.argument("player", GameProfileArgument.gameProfile())
+                .then(Commands.argument("faction",
+                    StringArgumentType.word())
+                    .then(Commands.argument("count",
+                        IntegerArgumentType
+                            .integer(1))
+                        .executes(context -> setCard(
+                            context.getSource(),
+                            getSinglePlayer(context
+                                .getSource(),
+                                GameProfileArgument
+                                    .getGameProfiles(
+                                        context,
+                                        "player")),
+                            StringArgumentType
+                                .getString(context,
+                                    "faction"),
+                            IntegerArgumentType
+                                .getInteger(context,
+                                    "count"))))))))
         .then(Commands.literal("xp")
             .requires(source -> source.hasPermission(2))
             .then(Commands.literal("set")
@@ -207,11 +227,28 @@ public class ProgressionCommand {
     FactionCardType type = FactionCardType.fromString(faction);
     if (!component.activateFactionCard(type)) {
       source.sendFailure(Component.translatable("cmd.stupid_express.progression.activate.failed",
-           Component.translatable(type.displayName)));
+          Component.translatable(type.displayName)));
       return 0;
     }
     source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.activate.success",
         Component.translatable(type.displayName)), false);
+    return 1;
+  }
+  private static int setCard(CommandSourceStack source, ServerPlayer player, String faction, int count) {
+    if (player == null) {
+      source.sendFailure(Component
+          .translatable("cmd.stupid_express.progression.error.player_not_found"));
+      return 0;
+    }
+    FactionCardType type = FactionCardType.fromString(faction);
+    if (type == FactionCardType.NONE) {
+      source.sendFailure(Component.translatable("cmd.stupid_express.progression.givecard.invalid",
+          faction));
+      return 0;
+    }
+    SREPlayerProgressionComponent.KEY.get(player).setFactionCard(type, count);
+    source.sendSuccess(() -> Component.translatable("cmd.stupid_express.progression.givecard.success",
+        player.getName().getString(), count, Component.translatable(type.displayName)), true);
     return 1;
   }
 
