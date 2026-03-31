@@ -53,6 +53,8 @@ public class PlateBlockEntityRenderer implements BlockEntityRenderer<BeveragePla
         if (player == null || entity.getLevel() == null) {
             return false;
         }
+        if (entity.getStoredItems().isEmpty())
+            return false;
 
         // 计算玩家与方块实体之间的距离平方
         double distanceSq = player.distanceToSqr(
@@ -73,7 +75,7 @@ public class PlateBlockEntityRenderer implements BlockEntityRenderer<BeveragePla
         int maxRender = 0;
         maxRender = SREConfig.isUltraPerfMode() ? 6 : 12;
         itemCount = Math.min(itemCount, maxRender);
-        
+
         double radius = 0.25;
         double centerX = 0.5;
         double centerY = 0.0375;
