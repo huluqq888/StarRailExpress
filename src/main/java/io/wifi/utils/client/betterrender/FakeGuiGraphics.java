@@ -341,4 +341,11 @@ public class FakeGuiGraphics {
     public void drawManaged(Runnable runnable) {
         real.drawManaged(runnable);
     }
+
+    // ── innerBlit — intercepted, batched for tick-rate optimization ────────────
+
+    public void innerBlit(ResourceLocation texture, int x1, int x2, int y1, int y2, int z,
+            float u0, float u1, float v0, float v1, float r, float g, float b, float a) {
+        textRenderer.enqueueBlit(real, texture, x1, x2, y1, y2, z, u0, u1, v0, v1, r, g, b, a);
+    }
 }

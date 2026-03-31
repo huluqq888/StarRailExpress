@@ -1,20 +1,24 @@
 package io.wifi.utils.client.betterrender;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Frame-level text batch renderer with tick-rate computation.
+ * Frame-level text batch renderer with tick-rate computation and VertexBuffer caching.
  *
  * <p>
  * Lifecycle (managed by GuiRenderMixin):
@@ -23,13 +27,13 @@ import java.util.List;
  *   ClientTickEvent  →  markTickDirty()    ← called every game tick
  *   Gui.render HEAD  →  beginFrame()       ← opens batch window
  *     FakeGuiGraphics →  enqueue(...)      ← only runs if tick is dirty
- *   Gui.render RETURN →  endFrame()        ← submits single GPU draw call
+ *   Gui.render RETURN →  endFrame()        ← submits cached VertexBuffer or rebuilds
  * </pre>
  *
  * <p>
  * When the tick has NOT changed since last frame, {@link #isTickDirty()}
- * returns false. GuiRenderMixin skips re-invoking HUD render logic entirely
- * and endFrame() replays the cached entries from the last tick directly.
+ * returns false. The cached VertexBuffer is replayed directly without
+ * re-computing text or blit entries.
  */
 public class OptimizedTextRenderer {
 
@@ -44,12 +48,18 @@ public class OptimizedTextRenderer {
     private boolean tickDirty = true;
 
     /**
-     * The pending entries computed on the LAST dirty tick — replayed every frame.
+     * The pending text entries computed on the LAST dirty tick — replayed every frame.
      */
     private final List<PendingEntry> tickCache = new ArrayList<>(64);
 
-    /** Entries accumulated during the current frame's enqueue pass. */
+    /** Text entries accumulated during the current frame's enqueue pass. */
     private final List<PendingEntry> pending = new ArrayList<>(64);
+
+    /** The pending blit entries computed on the LAST dirty tick — replayed every frame. */
+    private final List<BlitEntry> blitTickCache = new ArrayList<>(32);
+
+    /** Blit entries accumulated during the current frame's enqueue pass. */
+    private final List<BlitEntry> blitPending = new ArrayList<>(32);
 
     private GuiGraphics frameGraphics = null;
     private boolean inFrame = false;
@@ -72,17 +82,20 @@ public class OptimizedTextRenderer {
         frameGraphics = graphics;
         inFrame = true;
         pending.clear();
+        blitPending.clear();
     }
 
     public void endFrame() {
         if (!inFrame)
             return;
 
-        // If the tick was dirty, the HUD ran and filled `pending` with fresh entries.
+        // If the tick was dirty, the HUD ran and filled pending lists with fresh entries.
         // Promote them to tickCache and clear the dirty flag.
-        if (tickDirty && !pending.isEmpty()) {
+        if (tickDirty && (!pending.isEmpty() || !blitPending.isEmpty())) {
             tickCache.clear();
             tickCache.addAll(pending);
+            blitTickCache.clear();
+            blitTickCache.addAll(blitPending);
             tickDirty = false;
         }
 
@@ -90,12 +103,30 @@ public class OptimizedTextRenderer {
         flushCache();
 
         pending.clear();
+        blitPending.clear();
         inFrame = false;
         frameGraphics = null;
     }
 
     private void flushCache() {
-        if (tickCache.isEmpty() || frameGraphics == null)
+        if (frameGraphics == null)
+            return;
+
+        // Flush blit entries (textures like player heads)
+        for (BlitEntry b : blitTickCache) {
+            RenderSystem.setShaderTexture(0, b.texture());
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.enableBlend();
+            Matrix4f matrix = b.matrix();
+            BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            bufferBuilder.addVertex(matrix, b.x1(), b.y2(), 0).setUv(b.u0(), b.v1()).setColor(b.r(), b.g(), b.b(), b.a());
+            bufferBuilder.addVertex(matrix, b.x2(), b.y2(), 0).setUv(b.u1(), b.v1()).setColor(b.r(), b.g(), b.b(), b.a());
+            bufferBuilder.addVertex(matrix, b.x2(), b.y1(), 0).setUv(b.u1(), b.v0()).setColor(b.r(), b.g(), b.b(), b.a());
+            bufferBuilder.addVertex(matrix, b.x1(), b.y1(), 0).setUv(b.u0(), b.v0()).setColor(b.r(), b.g(), b.b(), b.a());
+            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        }
+
+        if (tickCache.isEmpty())
             return;
 
         Font font = Minecraft.getInstance().font;
@@ -140,13 +171,36 @@ public class OptimizedTextRenderer {
                 new Matrix4f(graphics.pose().last().pose())));
     }
 
-    // ── Internal record ────────────────────────────────────────────────────────
+    public void enqueueBlit(GuiGraphics graphics, ResourceLocation texture,
+            int x1, int x2, int y1, int y2, int z,
+            float u0, float u1, float v0, float v1,
+            float r, float g, float b, float a) {
+        if (!inFrame) {
+            graphics.innerBlit(texture, x1, x2, y1, y2, z, u0, u1, v0, v1, r, g, b, a);
+            return;
+        }
+        blitPending.add(new BlitEntry(texture,
+                x1, x2, y1, y2,
+                u0, u1, v0, v1,
+                r, g, b, a,
+                new Matrix4f(graphics.pose().last().pose())));
+    }
+
+    // ── Internal records ───────────────────────────────────────────────────────
 
     private record PendingEntry(
-            FormattedCharSequence seq,
-            Component text,
+            @Nullable FormattedCharSequence seq,
+            @Nullable Component text,
             float x, float y,
             int color, boolean shadow,
+            Matrix4f matrix) {
+    }
+
+    private record BlitEntry(
+            ResourceLocation texture,
+            int x1, int x2, int y1, int y2,
+            float u0, float u1, float v0, float v1,
+            float r, float g, float b, float a,
             Matrix4f matrix) {
     }
 }
