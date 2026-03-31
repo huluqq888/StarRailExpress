@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import io.wifi.starrailexpress.SREConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.SignRenderer;
@@ -20,6 +21,7 @@ public class SignRendererMixin {
     @Unique
     private static final int SRE$MAX_BLOCK_DISTANCE = 32 * 32;
     private static final int SRE$MAX_TEXT_DISTANCE = 16 * 16;
+    private static final int SRE$ULTRA_MAX_TEXT_DISTANCE = 8 * 8;
 
     @Inject(method = "renderSignText", at = @At("HEAD"), cancellable = true)
     private void sre$blockRenderSignText(BlockPos blockPos, SignText signText, PoseStack poseStack,
@@ -28,10 +30,18 @@ public class SignRendererMixin {
         if (client.player == null) {
             return;
         }
-        if (blockPos.distToCenterSqr(client.player.position()) >= SRE$MAX_TEXT_DISTANCE) {
-            ci.cancel();
-            return;
+        if (SREConfig.isUltraPerfMode()) {
+            if (blockPos.distToCenterSqr(client.player.position()) >= SRE$ULTRA_MAX_TEXT_DISTANCE) {
+                ci.cancel();
+                return;
+            }
+        } else {
+            if (blockPos.distToCenterSqr(client.player.position()) >= SRE$MAX_TEXT_DISTANCE) {
+                ci.cancel();
+                return;
+            }
         }
+
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
