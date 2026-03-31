@@ -472,6 +472,10 @@ public class RoundTextRenderer {
         welcomeTime = WELCOME_DURATION;
         RoundTextRenderer.killers = killers;
         RoundTextRenderer.targets = targets;
+        RoundTextRenderer.cachedWelcomeText = null;
+        RoundTextRenderer.cachedCanJumpTip = null;
+        RoundTextRenderer.cachedGoalText = null;
+        RoundTextRenderer.cachedPremiseText = null;
     }
 
     public static void startEnd() {

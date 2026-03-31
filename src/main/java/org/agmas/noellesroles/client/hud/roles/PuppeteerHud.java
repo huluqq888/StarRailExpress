@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.client.hud.roles;
 
 import io.wifi.starrailexpress.client.SREClient;
+import io.wifi.utils.client.betterrender.FakeGuiGraphics;
 import io.wifi.utils.client.betterrender.OptimizedTextRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.ChatFormatting;
@@ -24,7 +25,7 @@ import org.agmas.noellesroles.role.ModRoles;
 public class PuppeteerHud {
 
     public static void register() {
-        HudRenderCallback.EVENT.register((context, deltaTracker) -> {
+        HudRenderCallback.EVENT.register((trueContext, deltaTracker) -> {
             if (!OptimizedTextRenderer.INSTANCE.isTickDirty())
                 return;
             Minecraft client = Minecraft.getInstance();
@@ -32,7 +33,7 @@ public class PuppeteerHud {
                 return;
             if (SREClient.isPlayerSpectator())
                 return;
-
+            FakeGuiGraphics context = new FakeGuiGraphics(trueContext);
             // 获取傀儡师组件
             PuppeteerPlayerComponent puppeteerComp = ModComponents.PUPPETEER.get(client.player);
 
