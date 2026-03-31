@@ -2,6 +2,8 @@ package org.agmas.noellesroles.client.hud.roles;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.client.SREClient;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
@@ -14,11 +16,14 @@ import static org.agmas.noellesroles.client.DetectiveListenStepHandler.*;
 public class DetectivePassiveHud {
 
     public static void register() {
-        HudRenderCallback.EVENT.register( (guiGraphics, deltaTracker) -> {
+        HudRenderCallback.EVENT.register((guiGraphics, deltaTracker) -> {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null)
                 return;
-            if(!SREClient.getCachedPlayerRole().equals(ModRoles.DETECTIVE)){
+            SRERole role = SREClient.getCachedPlayerRole();
+            if (role == null)
+                return;
+            if (!role.equals(ModRoles.DETECTIVE)) {
                 return;
             }
             if (SREClient.isPlayerSpectator())
