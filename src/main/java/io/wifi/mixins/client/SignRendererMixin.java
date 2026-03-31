@@ -21,8 +21,8 @@ public class SignRendererMixin {
     private static final int SRE$MAX_BLOCK_DISTANCE = 32 * 32;
     private static final int SRE$MAX_TEXT_DISTANCE = 10 * 10;
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void renderSignText(BlockPos blockPos, SignText signText, PoseStack poseStack,
+    @Inject(method = "renderSignText", at = @At("HEAD"), cancellable = true)
+    private void sre$blockRenderSignText(BlockPos blockPos, SignText signText, PoseStack poseStack,
             MultiBufferSource multiBufferSource, int i, int j, int k, boolean bl, CallbackInfo ci) {
         final var client = Minecraft.getInstance();
         if (client.player == null) {
@@ -35,7 +35,7 @@ public class SignRendererMixin {
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void render(SignBlockEntity signBlockEntity, float f, PoseStack poseStack,
+    private void sre$blockRenderSign(SignBlockEntity signBlockEntity, float f, PoseStack poseStack,
             MultiBufferSource multiBufferSource, int i, int j, CallbackInfo ci) {
         final var client = Minecraft.getInstance();
         if (client.player == null) {
