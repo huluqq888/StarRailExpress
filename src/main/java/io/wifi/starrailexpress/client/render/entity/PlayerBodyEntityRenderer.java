@@ -30,7 +30,7 @@ public class PlayerBodyEntityRenderer<T extends LivingEntity, M extends EntityMo
         extends LivingEntityRenderer<PlayerBodyEntity, PlayerModel<PlayerBodyEntity>> {
     public static final ResourceLocation DEFAULT_TEXTURE = SRE.watheId("textures/entity/player_body_default.png");
     private static final ResourceLocation SKELETON_TEXTURE = SRE.watheId("textures/entity/player_skeleton.png");
-    static final int MAX_DISTANCE = 16 * 16;
+    static final int MAX_DISTANCE = 32 * 32;
 
     protected PlayerSkeletonEntityModel<PlayerBodyEntity> skeletonModel;
 

@@ -11,12 +11,28 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.SignRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 
 @Mixin(SignRenderer.class)
 public class SignRendererMixin {
     @Unique
-    private static final int SRE$MAX_DISTANCE = 10 * 10;
+    private static final int SRE$MAX_BLOCK_DISTANCE = 32 * 32;
+    private static final int SRE$MAX_TEXT_DISTANCE = 10 * 10;
+
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void renderSignText(BlockPos blockPos, SignText signText, PoseStack poseStack,
+            MultiBufferSource multiBufferSource, int i, int j, int k, boolean bl, CallbackInfo ci) {
+        final var client = Minecraft.getInstance();
+        if (client.player == null) {
+            return;
+        }
+        if (blockPos.distToCenterSqr(client.player.position()) >= SRE$MAX_TEXT_DISTANCE) {
+            ci.cancel();
+            return;
+        }
+    }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void render(SignBlockEntity signBlockEntity, float f, PoseStack poseStack,
@@ -25,7 +41,7 @@ public class SignRendererMixin {
         if (client.player == null) {
             return;
         }
-        if (signBlockEntity.getBlockPos().distToCenterSqr(client.player.position()) >= SRE$MAX_DISTANCE) {
+        if (signBlockEntity.getBlockPos().distToCenterSqr(client.player.position()) >= SRE$MAX_BLOCK_DISTANCE) {
             ci.cancel();
             return;
         }

@@ -54,7 +54,8 @@ public class MoodRenderer {
         SREPlayerMoodComponent component = SREPlayerMoodComponent.KEY.get(player);
         float oldMood = moodRender;
         moodRender = Mth.lerp(tickCounter.getGameTimeDeltaPartialTick(true) / 8, moodRender, component.getMood());
-        moodAlpha = 1;
+        moodAlpha = Mth.lerp(tickCounter.getGameTimeDeltaPartialTick(true) / 16, moodAlpha,
+                renderers.isEmpty() ? 0f : 1f);
         SREPlayerPsychoComponent psycho = SREPlayerPsychoComponent.KEY.get(player);
         if (psycho.getPsychoTicks() > 0) {
             renderPsycho(player, textRenderer, context, psycho, tickCounter);
