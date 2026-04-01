@@ -34,7 +34,7 @@
       "org.agmas.harpymodloader.Harpymodloader",
       "io.wifi.starrailexpress.SRE"
     ],
-    "server":[
+    "server": [
       "io.wifi.starrailexpress.mod_whitelist.server.ModWhitelistServer"
     ],
     "cardinal-components": [
@@ -48,7 +48,7 @@
       "pro.fazeclan.river.stupid_express.StupidExpressVoiceChatPlugin",
       "io.wifi.starrailexpress.compat.TrainVoicePlugin"
     ],
-    "modmenu":[
+    "modmenu": [
       "io.wifi.ConfigCompact.modmenu.StarRailConfigEntry"
     ]
   },
@@ -190,6 +190,7 @@
     "voicechat": "*",
     "architectury": "*",
     "exposure_polaroid": "*",
-    "exposure": "*"
+    "exposure": "*",
+    "sre_resource": "*"
   }
 }
