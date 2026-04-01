@@ -21,7 +21,7 @@ public class CoinToLotteryCommand {
     }
 
     /**
-     * 执行兑换：花费 200 金币兑换 1 次抽奖机会
+     * 执行兑换：花费 cost 金币兑换 1 次抽奖机会
      */
     private static int exchange(CommandContext<CommandSourceStack> context) {
         try {
@@ -43,7 +43,7 @@ public class CoinToLotteryCommand {
                 return 0;
             }
             int count = currentCoins / cost;
-            // 扣除 100 金币
+            // 扣除 cost 金币
             skinsComponent.addCoinNum(-cost * count);
             // 增加 1 次抽奖机会
             skinsComponent.addLootChance(count);

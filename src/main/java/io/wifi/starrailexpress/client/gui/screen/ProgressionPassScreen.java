@@ -1,11 +1,13 @@
 package io.wifi.starrailexpress.client.gui.screen;
 
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
+import io.wifi.starrailexpress.cca.SREPlayerSkinsComponent;
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent.FactionCardType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import org.agmas.noellesroles.client.widget.custom_button.ModernButton;
 
@@ -38,6 +40,7 @@ public class ProgressionPassScreen extends Screen {
 
     // ------- 组件状态 -------
     private final SREPlayerProgressionComponent progression;
+    private final SREPlayerSkinsComponent skinsComponent;
     private final List<Button> cardButtons = new ArrayList<>();
 
     private int activeTab = 0; // 0 = 每日, 1 = 周常, 2 = 永久
@@ -53,9 +56,13 @@ public class ProgressionPassScreen extends Screen {
     private boolean closing;
     // private long closeAnimStartMs;
 
+    private LocalPlayer player;
+
     public ProgressionPassScreen() {
         super(Component.translatable("sre.pass.name"));
-        this.progression = SREPlayerProgressionComponent.KEY.get(Minecraft.getInstance().player);
+        this.player = Minecraft.getInstance().player;
+        this.progression = SREPlayerProgressionComponent.KEY.get(player);
+        this.skinsComponent = SREPlayerSkinsComponent.KEY.get(player);
     }
 
     // =========================================================================
@@ -132,7 +139,8 @@ public class ProgressionPassScreen extends Screen {
                         weeklyPage = Math.max(0, weeklyPage - 1);
                     else
                         permanentPage = Math.max(0, permanentPage - 1);
-                }).accentBar(ModernButton.AccentSide.LEFT).bounds(panelX + panelW / 2 - 60, pgY, 48, 20).accentColor(0xFF2B3A55).build());
+                }).accentBar(ModernButton.AccentSide.LEFT).bounds(panelX + panelW / 2 - 60, pgY, 48, 20)
+                        .accentColor(0xFF2B3A55).build());
         addRenderableWidget(
                 ModernButton.builder(Component.literal("▶"), btn -> {
                     int total = activeTab == 0 ? progression.getActiveDailyQuests().size()
@@ -145,7 +153,8 @@ public class ProgressionPassScreen extends Screen {
                         weeklyPage = Math.min(pages - 1, weeklyPage + 1);
                     else
                         permanentPage = Math.min(pages - 1, permanentPage + 1);
-                }).accentBar(ModernButton.AccentSide.RIGHT).bounds(panelX + panelW / 2 + 12, pgY, 48, 20).accentColor(0xFF2B3A55).build());
+                }).accentBar(ModernButton.AccentSide.RIGHT).bounds(panelX + panelW / 2 + 12, pgY, 48, 20)
+                        .accentColor(0xFF2B3A55).build());
 
         // ---- 阵营卡按钮 ----
         int bottomY = panelY + panelH - 38;
@@ -310,10 +319,10 @@ public class ProgressionPassScreen extends Screen {
         renderSummaryCard(g, startX, y, cardW, Component.translatable("sre.pass.total_exp").getString(),
                 String.valueOf(progression.getTotalExperience()), 0xFF61D0FF);
         renderSummaryCard(g, startX + cardW + 12, y, cardW, Component.translatable("sre.pass.coin_reward").getString(),
-                String.valueOf(progression.getClaimedCoinRewards()), 0xFFFFD166);
+                String.valueOf(skinsComponent.getCoinNum()), 0xFFFFD166);
         renderSummaryCard(g, startX + cardW * 2 + 24, y, cardW,
                 Component.translatable("sre.pass.loot_count").getString(),
-                String.valueOf(progression.getClaimedLootRewards()), 0xFFCDB4FF);
+                String.valueOf(skinsComponent.getLootChance()), 0xFFCDB4FF);
     }
 
     private void renderSummaryCard(GuiGraphics g, int x, int y, int w, String label, String value, int accent) {

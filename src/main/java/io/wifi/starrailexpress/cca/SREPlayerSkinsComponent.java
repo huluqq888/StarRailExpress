@@ -519,6 +519,11 @@ public class SREPlayerSkinsComponent implements AutoSyncedComponent, ServerTicki
                 this.equippedSkins.put(key, equippedSkinsTag.getString(key));
             }
         }
+        if (compoundTag.contains("lootChance")) {
+            this.lootChance = compoundTag.getInt("lootChance");
+        } else {
+            this.lootChance = 0;
+        }
         if (compoundTag.contains("coinNum")) {
             this.coinNum = compoundTag.getInt("coinNum");
         } else {
@@ -646,7 +651,12 @@ public class SREPlayerSkinsComponent implements AutoSyncedComponent, ServerTicki
             equippedSkinsTag.putString(entry.getKey(), entry.getValue());
         }
         compoundTag.put("equippedSkins", equippedSkinsTag);
-        compoundTag.putInt("coinNum", this.coinNum);
+        if (this.coinNum > 0) {
+            compoundTag.putInt("coinNum", this.coinNum);
+        }
+        if (this.lootChance > 0) {
+            compoundTag.putInt("lootChance", this.lootChance);
+        }
         if (syncMode) {
             if (!SREConfig.instance().isItemSkinManagementEnabled) {
                 return;
