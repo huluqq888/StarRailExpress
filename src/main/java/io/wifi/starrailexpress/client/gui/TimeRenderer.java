@@ -38,9 +38,9 @@ public class TimeRenderer {
                 offsetDelta = Mth.lerp(delta / 16, offsetDelta, 0f);
             }
             view.setTarget(time);
-            float r = offsetDelta > 0 ? 1f - offsetDelta : 1f;
-            float g = offsetDelta < 0 ? 1f + offsetDelta : 1f;
-            float b = 1f - Math.abs(offsetDelta);
+            float r = 1f;
+            float g = 1f;
+            float b = 1f;
             int colour = Mth.color(r, g, b) | 0xFF000000;
             context.pose().pushPose();
             context.pose().translate(context.guiWidth() / 2f, 6, 0);
