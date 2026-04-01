@@ -17,8 +17,6 @@
     "requireAnnotations": true
   },
   "client": [
-    "client.modifier.lovers.LoversHudMixin",
-    "client.modifier.refugee.RefugeeHudMixin",
     "client.modifier.split_personality.BanSpectatorGuiMove",
     "client.modifier.split_personality.InventoryScreenSplitPersonalityMixin",
     "client.modifier.split_personality.KeyBindingMixin",

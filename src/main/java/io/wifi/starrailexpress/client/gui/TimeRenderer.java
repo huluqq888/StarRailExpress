@@ -26,9 +26,6 @@ public class TimeRenderer {
         if (gameWorldComponent == null)
             return;
         SRERole role = gameWorldComponent.getRole(player);
-        if (role == null) {
-            return;
-        }
         cachedCanSeeTime = gameWorldComponent.isRunning() &&
                 (role != null && role.canSeeTime() || GameUtils.isPlayerSpectatingOrCreative(player));
         if (cachedCanSeeTime) {

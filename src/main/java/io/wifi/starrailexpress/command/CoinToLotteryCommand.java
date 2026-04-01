@@ -35,7 +35,7 @@ public class CoinToLotteryCommand {
             int currentCoins = skinsComponent.getCoinNum();
             int currentLootChance = skinsComponent.getLootChance();
             // 价格
-            final int cost = 500;
+            final int cost = 648;
             // 检查是否有足够的金币
             if (currentCoins < cost) {
                 context.getSource().sendFailure(

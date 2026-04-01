@@ -375,9 +375,9 @@ public class SREClient implements ClientModInitializer {
 
             if (player != null) {
                 StoreRenderer.tick();
+                HudStoreRenderer.tick();
                 TimeRenderer.tick();
                 StaminaRenderer.tick();
-
             }
 
         });

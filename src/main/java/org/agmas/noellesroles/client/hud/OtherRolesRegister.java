@@ -1,5 +1,6 @@
 package org.agmas.noellesroles.client.hud;
 
+import org.agmas.noellesroles.client.hud.modifiers.*;
 import org.agmas.noellesroles.client.hud.roles.*;
 
 public class OtherRolesRegister {
@@ -30,5 +31,7 @@ public class OtherRolesRegister {
         TrapperHud.register();
         VultureHud.register();
         WaterGhostHud.register();
+        RefugeeHud.register();
+        LoversHud.register();
     }
 }
