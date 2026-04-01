@@ -34,16 +34,17 @@ public class CoinToLotteryCommand {
             SREPlayerSkinsComponent skinsComponent = SREPlayerSkinsComponent.KEY.get(player);
             int currentCoins = skinsComponent.getCoinNum();
             int currentLootChance = skinsComponent.getLootChance();
-
+            // 价格
+            final int cost = 500;
             // 检查是否有足够的金币
-            if (currentCoins < 200) {
+            if (currentCoins < cost) {
                 context.getSource().sendFailure(
                         Component.translatable("commands.coin2lottery.error.not_enough_coins", currentCoins));
                 return 0;
             }
-            int count = currentCoins / 200;
+            int count = currentCoins / cost;
             // 扣除 100 金币
-            skinsComponent.addCoinNum(-200 * count);
+            skinsComponent.addCoinNum(-cost * count);
             // 增加 1 次抽奖机会
             skinsComponent.addLootChance(count);
 
@@ -52,7 +53,7 @@ public class CoinToLotteryCommand {
 
             // 发送成功消息
             context.getSource().sendSuccess(
-                    () -> Component.translatable("commands.coin2lottery.success", currentCoins - 200 * count,
+                    () -> Component.translatable("commands.coin2lottery.success", currentCoins - cost * count,
                             currentLootChance + count),
                     true);
 
