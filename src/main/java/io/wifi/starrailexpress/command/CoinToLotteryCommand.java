@@ -39,7 +39,7 @@ public class CoinToLotteryCommand {
             // 检查是否有足够的金币
             if (currentCoins < cost) {
                 context.getSource().sendFailure(
-                        Component.translatable("commands.coin2lottery.error.not_enough_coins", currentCoins));
+                        Component.translatable("commands.coin2lottery.error.not_enough_coins", currentCoins, cost));
                 return 0;
             }
             int count = currentCoins / cost;

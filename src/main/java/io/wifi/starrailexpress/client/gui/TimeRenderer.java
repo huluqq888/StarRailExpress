@@ -3,6 +3,7 @@ package io.wifi.starrailexpress.client.gui;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREGameTimeComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.utils.client.betterrender.FakeGuiGraphics;
@@ -17,21 +18,23 @@ public class TimeRenderer {
     public static float offsetDelta = 0f;
     // 缓存角色状态，避免每帧查询
     private static boolean cachedCanSeeTime = false;
-    private static int lastCachedTick = -1;
 
-    public static void renderHud(Font renderer, @NotNull LocalPlayer player, @NotNull FakeGuiGraphics context, float delta) {
+    public static void renderHud(Font renderer, @NotNull LocalPlayer player, @NotNull FakeGuiGraphics context,
+            float delta) {
         // 每20tick更新一次角色权限缓存
-        int currentTick = player.tickCount;
-        if (currentTick - lastCachedTick > 20 || lastCachedTick < 0) {
-            SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
-            SRERole role = gameWorldComponent.getRole(player);
-            cachedCanSeeTime = gameWorldComponent.isRunning() && 
-                (role != null && role.canSeeTime() || GameUtils.isPlayerSpectatingOrCreative(player));
-            lastCachedTick = currentTick;
+        SREGameWorldComponent gameWorldComponent = SREClient.gameComponent;
+        if (gameWorldComponent == null)
+            return;
+        SRERole role = gameWorldComponent.getRole(player);
+        if (role == null) {
+            return;
         }
+        cachedCanSeeTime = gameWorldComponent.isRunning() &&
+                (role != null && role.canSeeTime() || GameUtils.isPlayerSpectatingOrCreative(player));
         if (cachedCanSeeTime) {
             int time = SREGameTimeComponent.KEY.get(player.level()).getTime();
-            if (Math.abs(view.getTarget() - time) > 10) offsetDelta = time > view.getTarget() ? .6f : -.6f;
+            if (Math.abs(view.getTarget() - time) > 10)
+                offsetDelta = time > view.getTarget() ? .6f : -.6f;
             if (time < GameConstants.getInTicks(1, 0)) {
                 offsetDelta = -0.9f;
             } else {
@@ -54,8 +57,10 @@ public class TimeRenderer {
     }
 
     public static class TimeNumberRenderer {
-        private final Tuple<ScrollingDigit, ScrollingDigit> minutes = new Tuple<>(new ScrollingDigit(7200, false), new ScrollingDigit(720, false));
-        private final Tuple<ScrollingDigit, ScrollingDigit> seconds = new Tuple<>(new ScrollingDigit(120, true), new ScrollingDigit(12, false));
+        private final Tuple<ScrollingDigit, ScrollingDigit> minutes = new Tuple<>(new ScrollingDigit(7200, false),
+                new ScrollingDigit(720, false));
+        private final Tuple<ScrollingDigit, ScrollingDigit> seconds = new Tuple<>(new ScrollingDigit(120, true),
+                new ScrollingDigit(12, false));
         private float target;
 
         public void setTarget(float target) {
@@ -98,8 +103,8 @@ public class TimeRenderer {
 
     public static class ScrollingDigit {
         // 预缓存数字字符串和幂次结果，避免每帧创建对象和重复计算
-        private static final String[] DIGIT_STRINGS = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        
+        private static final String[] DIGIT_STRINGS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
         private final int power;
         private final boolean cap6;
         private float target;
@@ -114,7 +119,8 @@ public class TimeRenderer {
         public void update() {
             this.lastValue = this.value;
             this.value = Mth.lerp(0.15f, this.value, this.target);
-            if (Math.abs(this.value - this.target) < 0.01f) this.value = this.target;
+            if (Math.abs(this.value - this.target) < 0.01f)
+                this.value = this.target;
         }
 
         public void render(@NotNull Font renderer, @NotNull FakeGuiGraphics context, int colour, float delta) {
@@ -137,12 +143,13 @@ public class TimeRenderer {
                 context.drawString(renderer, DIGIT_STRINGS[digitNext], 0, renderer.lineHeight + 2, nextColour);
             context.pose().popPose();
         }
-        
+
         // 快速整数幂计算，比Math.pow更高效
         private static float fastPow(float base, int exp) {
             float result = 1.0f;
             while (exp > 0) {
-                if ((exp & 1) == 1) result *= base;
+                if ((exp & 1) == 1)
+                    result *= base;
                 base *= base;
                 exp >>= 1;
             }

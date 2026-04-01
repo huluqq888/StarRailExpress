@@ -519,7 +519,11 @@ public class SREPlayerSkinsComponent implements AutoSyncedComponent, ServerTicki
                 this.equippedSkins.put(key, equippedSkinsTag.getString(key));
             }
         }
-
+        if (compoundTag.contains("coinNum")) {
+            this.coinNum = compoundTag.getInt("coinNum");
+        } else {
+            this.coinNum = 0;
+        }
         if (compoundTag.contains("unlockedSkins")) {
             // 读取解锁的皮肤数据
             CompoundTag unlockedSkinsTag = compoundTag.getCompound("unlockedSkins");
@@ -642,7 +646,7 @@ public class SREPlayerSkinsComponent implements AutoSyncedComponent, ServerTicki
             equippedSkinsTag.putString(entry.getKey(), entry.getValue());
         }
         compoundTag.put("equippedSkins", equippedSkinsTag);
-
+        compoundTag.putInt("coinNum", this.coinNum);
         if (syncMode) {
             if (!SREConfig.instance().isItemSkinManagementEnabled) {
                 return;
