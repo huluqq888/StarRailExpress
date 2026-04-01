@@ -59,9 +59,10 @@ public class CommonClientHudRenderer {
     // This ensures rendering happens INSIDE the frame lifecycle
     // (beginFrame/endFrame)
     // which fixes the font rendering issue where text would randomly disappear
-    FakeHudRenderCallback.EVENT.register((guiGraphics, deltaTracker) -> {
+    FakeHudRenderCallback.EVENT.register((guiGraphics, trueDeltaTracker) -> {
       if (!OptimizedTextRenderer.INSTANCE.isTickDirty())
         return;
+      DeltaTracker deltaTracker = DeltaTracker.ONE;
       final Minecraft client = Minecraft.getInstance();
       final Font font = client.font;
       // FakeGuiGraphics is already provided by the callback - no need to wrap again

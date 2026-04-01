@@ -59,8 +59,9 @@ public class HudMoodRenderer {
                 || gameWorldComponent.getGameMode() != SREGameModes.MURDER)
             return;
         
-        // 缓存delta值，避免多次调用
-        float delta = tickCounter.getGameTimeDeltaPartialTick(true);
+        // 因为renderHud只在每tick执行一次，使用固定delta值（1.0f）代替partialTick
+        // partialTick在逐帧渲染时是0-1的连续值，但每tick调用时会不连续
+        float delta = 1.0f;
         
         SREPlayerMoodComponent component = SREPlayerMoodComponent.KEY.get(player);
         float oldMood = moodRender;
@@ -69,7 +70,7 @@ public class HudMoodRenderer {
         
         SREPlayerPsychoComponent psycho = SREPlayerPsychoComponent.KEY.get(player);
         if (psycho.getPsychoTicks() > 0) {
-            renderPsycho(player, textRenderer, context, psycho, tickCounter, delta);
+            renderPsycho(player, textRenderer, context, psycho);
             return;
         }
         
@@ -183,7 +184,7 @@ public class HudMoodRenderer {
     }
 
     private static void renderPsycho(@NotNull Player player, @NotNull Font renderer, @NotNull FakeGuiGraphics context,
-            SREPlayerPsychoComponent component, @NotNull DeltaTracker tickCounter, float delta) {
+            SREPlayerPsychoComponent component) {
         MutableComponent text = Component.translatable("game.psycho_mode.text").withColor(PSYCHO_COLOR);
         int width = renderer.width(text);
         
@@ -195,7 +196,8 @@ public class HudMoodRenderer {
         context.pose().translate(random.nextGaussian() / 3, random.nextGaussian() / 3, 0);
         context.enableScissor(22, 6, 180, 23);
         
-        float value = 1 - ((player.tickCount + delta) / 64) % 1;
+        // 每tick执行，直接使用tickCount，不需要加delta插值
+        float value = 1 - (player.tickCount / 64f) % 1;
         int colorWithAlpha = PSYCHO_COLOR | (255 << 24);
         for (int i = -1; i <= 3; i++) {
             context.pose().pushPose();
@@ -210,7 +212,8 @@ public class HudMoodRenderer {
         context.pose().translate(random.nextGaussian() / 3, random.nextGaussian() / 3, 0);
         context.pose().pushPose();
         context.pose().translate(26, 8 + renderer.lineHeight, 0);
-        float duration = Math.max(1f, component.getPsychoTicks() - delta) / GameConstants.getPsychoTimer();
+        // 每tick执行，直接使用psychoTicks，不需要减delta插值
+        float duration = Math.max(1f, component.getPsychoTicks()) / GameConstants.getPsychoTimer();
         context.pose().scale(150 * duration, 1, 1);
         context.fill(0, 0, 1, 1, PSYCHO_COLOR | ((int) (0.9f * 255) << 24));
         context.pose().popPose();
