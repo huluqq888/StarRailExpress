@@ -37,6 +37,8 @@ import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.Unbreakable;
 import net.minecraft.world.item.component.WrittenBookContent;
+
+import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.component.MaChenXuPlayerComponent;
 import org.agmas.noellesroles.component.SingerPlayerComponent;
 import org.agmas.noellesroles.component.StalkerPlayerComponent;
@@ -677,7 +679,7 @@ public class RoleShopHandler {
           var players = new ArrayList<>(player.level().players());
           var gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
           players.removeIf((p) -> {
-            return gameWorldComponent.getRole(p) == null || !gameWorldComponent.getRole(p).isInnocent();
+            return gameWorldComponent.getRole(p) == null || p.isSpectator();
           });
           Collections.shuffle(players);
           int count = 1;
@@ -701,6 +703,8 @@ public class RoleShopHandler {
                     .withStyle(ChatFormatting.DARK_AQUA));
             var content = new Filterable<Component>(ct, Optional.of(ct));
             contents.add(content);
+            if(p instanceof ServerPlayer sp)
+            BroadcastCommand.BroadcastMessage(sp, Component.translatable("message.pachuri.be_known_role").withStyle(ChatFormatting.RED));
           }
           String title = "\u00a7d\u00a7lPachuri Knowledge Book";
 
