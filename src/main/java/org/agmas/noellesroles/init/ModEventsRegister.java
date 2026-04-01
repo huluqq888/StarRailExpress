@@ -1282,8 +1282,31 @@ public class ModEventsRegister {
             RoleShopHandler.resetOldmanEasterEggState();
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(serverLevel);
             WorldModifierComponent worldModifierComponent = WorldModifierComponent.KEY.get(serverLevel);
-            boolean hasDio = serverLevel.players().stream().anyMatch(p -> gameWorldComponent.isRole(p, ModRoles.DIO));
-            serverLevel.players().forEach(p -> {
+            boolean hasDio = false;
+            boolean hasRecorder = false;
+            // 年兽除岁效果：给所有玩家分发4个鞭炮
+            boolean hasNianShou = false;
+            final var all_players = serverLevel.players();
+            for (var p : all_players) {
+                if (!gameWorldComponent.isJumpAvailable() && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p)) {
+                    // NO JUMPING! For everyone who hasn't permissions
+                    if (!p.hasPermissions(2)) {
+                        p.getAttribute(Attributes.JUMP_STRENGTH).addOrReplacePermanentModifier(noJumpingAttribute);
+                    }
+                }
+
+                if (gameWorldComponent.isRole(p, ModRoles.THIEF)) {
+                    ThiefPlayerComponent.KEY.get(p).updateHonorCost(serverLevel.players().size());
+                } else if (gameWorldComponent.isRole(p, ModRoles.ATTENDANT)) {
+                    SRE.SendRoomInfoToPlayer(p);
+                    // 发送房间信息
+                } else if (gameWorldComponent.isRole(p, ModRoles.DIO)) {
+                    hasDio = true;
+                } else if (gameWorldComponent.isRole(p, ModRoles.RECORDER)) {
+                    hasRecorder = true;
+                } else if (gameWorldComponent.isRole(p, ModRoles.NIAN_SHOU)) {
+                    hasNianShou = true;
+                }
                 if (worldModifierComponent.isModifier(p, NRModifiers.EXPEDITION)) {
                     SRERole role = gameWorldComponent.getRole(p);
                     var expeditionComponent = ExpeditionComponent.KEY.get(p);
@@ -1305,43 +1328,27 @@ public class ModEventsRegister {
                         }
                     }
                 }
-                if (hasDio) {
-                    GameUtils.serverAsynTaskLists.add(new ServerTaskInfoClasses.SchedulerTask(20 * 8, () -> {
+            }
+            if (hasDio) {
+                GameUtils.serverAsynTaskLists.add(new ServerTaskInfoClasses.SchedulerTask(20 * 8, () -> {
+                    all_players.forEach((p) -> {
                         if (p != null) {
                             p.playNotifySound(NRSounds.DIO_SPAWN, SoundSource.PLAYERS, 0.5F, 1.0F);
                         }
-                    }));
-                }
-            });
-            serverLevel.players().forEach(player -> {
-                if (gameWorldComponent.isRole(player, ModRoles.THIEF)) {
-                    ThiefPlayerComponent.KEY.get(player).updateHonorCost(serverLevel.players().size());
-                }
-                if (!gameWorldComponent.isJumpAvailable() && GameUtils.isPlayerAliveAndSurvival(player)) {
-                    // NO JUMPING! For everyone who hasn't permissions
-                    if (!player.hasPermissions(2)) {
-                        player.getAttribute(Attributes.JUMP_STRENGTH).addOrReplacePermanentModifier(noJumpingAttribute);
+                    });
+                }));
+            }
+            if (hasRecorder) {
+                all_players.forEach((p) -> {
+                    if (p != null) {
+                        BroadcastCommand.BroadcastMessage(p, Component
+                                .translatable("message.noellesroles.recorder.entry").withStyle(ChatFormatting.YELLOW));
                     }
-                }
-                if (gameWorldComponent.isRole(player, ModRoles.ATTENDANT)) {
-                    SRE.SendRoomInfoToPlayer(player);
-                    // 发送房间信息
-                }
-            });
-
-            // 年兽除岁效果：给所有玩家分发4个鞭炮
-            boolean hasNianShou = false;
-            if (gameWorldComponent != null) {
-                for (var player : serverLevel.players()) {
-                    if (gameWorldComponent.isRole(player, ModRoles.NIAN_SHOU)) {
-                        hasNianShou = true;
-                        break;
-                    }
-                }
+                });
             }
 
             if (hasNianShou) {
-                for (ServerPlayer player : serverLevel.players()) {
+                for (var player : all_players) {
                     // 给每个玩家4个鞭炮
                     ItemStack firecrackerStack = new ItemStack(TMMItems.FIRECRACKER);
                     firecrackerStack.set(DataComponents.MAX_STACK_SIZE, 4);
@@ -1349,11 +1356,9 @@ public class ModEventsRegister {
                     player.getInventory().add(firecrackerStack);
 
                     // 发送提示消息
-                    player.displayClientMessage(
-                            net.minecraft.network.chat.Component
-                                    .translatable("message.noellesroles.nianshou.firecrackers_distributed")
-                                    .withStyle(net.minecraft.ChatFormatting.GOLD),
-                            true);
+                    BroadcastCommand.BroadcastMessage(player, Component
+                            .translatable("message.noellesroles.nianshou.firecrackers_distributed")
+                            .withStyle(net.minecraft.ChatFormatting.GOLD));
                 }
             }
         });
