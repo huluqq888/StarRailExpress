@@ -12,6 +12,7 @@ import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.client.model.TMMModelLayers;
 import io.wifi.starrailexpress.client.model.entity.PlayerSkeletonEntityModel;
 import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.game.GameConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
@@ -68,6 +69,25 @@ public class PlayerBodyEntityRenderer<T extends LivingEntity, M extends EntityMo
 
         this.setModelPose();
         matrixStack.pushPose();
+        float clamp = Mth.clamp(
+                (float) (playerBodyEntity.tickCount - GameConstants.TIME_TO_DECOMPOSITION)
+                        / GameConstants.DECOMPOSING_TIME,
+                0, GameConstants.TIME_TO_DECOMPOSITION + GameConstants.DECOMPOSING_TIME);
+        float ease = Easing.CUBIC_IN.ease(clamp, 0, -1, 1);
+        final var moodComponent = SREClient.moodComponent;
+        if (moodComponent == null)
+            return;
+        if (ease > -1) {
+            matrixStack.translate(0, ease, 0);
+            float alpha = moodComponent.isLowerThanDepressed() ? Mth.lerp(Mth
+                    .clamp(Easing.SINE_IN.ease(Math.min(1f, (float) playerBodyEntity.tickCount / 100f), 0, 1, 1), 0, 1),
+                    1f, 0f) : 1f;
+            this.renderBody(playerBodyEntity, f, g, matrixStack, vertexConsumerProvider, light, alpha);
+        }
+        matrixStack.popPose();
+
+        renderSkeleton(playerBodyEntity, f, g, matrixStack, vertexConsumerProvider, light,
+                moodComponent.isLowerThanDepressed() ? 0f : 1f);
         // ... 其余保持不变
     }
 
