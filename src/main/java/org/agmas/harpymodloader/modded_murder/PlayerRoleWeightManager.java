@@ -28,6 +28,17 @@ public class PlayerRoleWeightManager {
         return type;
     }
 
+    private static boolean isKillerSideType(int type) {
+        return type == 3 || type == 4;
+    }
+
+    private static double getKillerSideFailureBoost(WeightInfo weightManager, int type) {
+        if (!isKillerSideType(type)) {
+            return 1.0;
+        }
+        return Math.pow(1.35, weightManager.getKillerSideFailureBoost());
+    }
+
     public static double getRoleWeightPercent(UUID player, int type) {
         var weightManager = PlayerRoleWeightManager.playerWeights.get(player);
         if (weightManager == null) {
@@ -40,10 +51,10 @@ public class PlayerRoleWeightManager {
             total = 1;
         double basePercent = 1.0 - (double) typeWeight / (double) total;
 
-        // 连续相同阵营惩罚：streak>=3时每多一局概率减半，防止一直游玩同一阵营
+        // streak>=3 后，对非杀手侧进行压制、对杀手侧进行抬升，缓解长期拿不到杀手侧的问题。
         int streak = weightManager.getStreakCount();
         if (streak >= 3) {
-            if (getFactionGroup(type) == weightManager.getLastAssignedFactionGroup()) {
+            if (!isKillerSideType(type)) {
                 double streakPenalty = Math.pow(0.5, streak - 1);
                 basePercent *= streakPenalty;
             } else {
@@ -52,7 +63,30 @@ public class PlayerRoleWeightManager {
             }
         }
 
+        if (type <= 1) {
+            basePercent = Math.min(basePercent, 1.2);
+        }
+
+        basePercent *= getKillerSideFailureBoost(weightManager, type);
+
         return Math.max(0.0, basePercent);
+    }
+
+    public static int getHighestScoredType(UUID player) {
+        int bestType = 1;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        for (int type = 1; type <= 5; type++) {
+            double score = getRoleWeightPercent(player, type);
+            if (score > bestScore) {
+                bestScore = score;
+                bestType = type;
+                continue;
+            }
+            if (Double.compare(score, bestScore) == 0 && isKillerSideType(type) && !isKillerSideType(bestType)) {
+                bestType = type;
+            }
+        }
+        return bestType;
     }
 
     public static double getRoleWeightPercent(Player playerEntity, int roleType) {
@@ -174,6 +208,7 @@ public class PlayerRoleWeightManager {
         public int neutralsWeight = 1;
         public int neutralsForKillerWeight = 1;
         public int vigilanteWeight = 1;
+        private int killerSideFailureBoost = 0;
 
         // 连续阵营追踪：记录上一局所属阵营组及连续次数
         private int lastAssignedFactionGroup = -1;
@@ -194,6 +229,9 @@ public class PlayerRoleWeightManager {
                 streakCount = 1;
                 lastAssignedFactionGroup = fg;
             }
+            if (isKillerSideType(type)) {
+                killerSideFailureBoost = 0;
+            }
         }
 
         public int getStreakCount() {
@@ -202,6 +240,14 @@ public class PlayerRoleWeightManager {
 
         public int getLastAssignedFactionGroup() {
             return lastAssignedFactionGroup;
+        }
+
+        public int getKillerSideFailureBoost() {
+            return killerSideFailureBoost;
+        }
+
+        public void incrementKillerSideFailureBoost() {
+            killerSideFailureBoost++;
         }
 
         /**
@@ -351,6 +397,15 @@ public class PlayerRoleWeightManager {
         } else {
             ForcePlayerTeam.put(player, roleType);
         }
+    }
+
+    public static void boostKillerSideAfterForceFailure(UUID player) {
+        var weightManager = PlayerRoleWeightManager.playerWeights.get(player);
+        if (weightManager == null) {
+            weightManager = new PlayerRoleWeightManager.WeightInfo();
+            PlayerRoleWeightManager.playerWeights.put(player, weightManager);
+        }
+        weightManager.incrementKillerSideFailureBoost();
     }
 
 }

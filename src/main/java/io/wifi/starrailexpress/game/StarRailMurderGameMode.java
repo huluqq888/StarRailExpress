@@ -407,9 +407,12 @@ public class StarRailMurderGameMode extends GameMode {
         for (var p : players) {
             var manager = PlayerRoleWeightManager.playerWeights.get(p.getUUID());
             if (manager != null) {
-                if (manager.getStreakCount() >= random.nextInt(5, 7)) {
-                    int highestWeightType = manager.getHighestWeightType();
-                    if (highestWeightType == manager.getLastAssignedFactionGroup())
+                if (manager.getStreakCount() >= random.nextInt(4, 7)) {
+                    int highestWeightType = PlayerRoleWeightManager.getHighestScoredType(p.getUUID());
+                    int requestedFactionGroup = highestWeightType <= 1 || highestWeightType == 5
+                            ? 1
+                            : (highestWeightType == 3 ? 2 : highestWeightType);
+                    if (requestedFactionGroup == manager.getLastAssignedFactionGroup())
                         continue;
                     PlayerRoleWeightManager.forceTeam(p.getUUID(), highestWeightType);
                 }
@@ -472,6 +475,7 @@ public class StarRailMurderGameMode extends GameMode {
                                 playerUid, selectedRole.getIdentifier().toString(),
                                 roleType);
                     } else {
+                        PlayerRoleWeightManager.boostKillerSideAfterForceFailure(playerUid);
                         Harpymodloader.LOGGER.warn(
                                 "Couldn't force player [{}]'s role to {} because there are no roles available for him.",
                                 playerUid,
