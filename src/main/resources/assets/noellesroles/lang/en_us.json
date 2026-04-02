@@ -1,5 +1,7 @@
 {
   "unknown": "Unknown",
+  "commands.loot.error.execute_fail": "Failed execute, reason:\n %s",
+  "commands.loot.success.add_or_degree_chance" : "Successfully add %s for %s chance. CurrentSum: %s",
   "info.screen.role.see_more": "... (For more information, right‑click the paper)",
   "info.screen.roleid.discovery_civilian": "Civilian Camp\nSpecial‑mode exclusive role.",
   "info.screen.roleid.civilian": "Civilian Camp\nYou have no special abilities; try to survive this journey.",
