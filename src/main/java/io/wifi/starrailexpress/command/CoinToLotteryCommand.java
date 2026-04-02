@@ -21,7 +21,7 @@ public class CoinToLotteryCommand {
     }
 
     /**
-     * 执行兑换：花费 100 金币兑换 1 次抽奖机会
+     * 执行兑换：花费 cost 金币兑换 1 次抽奖机会
      */
     private static int exchange(CommandContext<CommandSourceStack> context) {
         try {
@@ -34,26 +34,27 @@ public class CoinToLotteryCommand {
             SREPlayerSkinsComponent skinsComponent = SREPlayerSkinsComponent.KEY.get(player);
             int currentCoins = skinsComponent.getCoinNum();
             int currentLootChance = skinsComponent.getLootChance();
-
+            // 价格
+            final int cost = 648;
             // 检查是否有足够的金币
-            if (currentCoins < 100) {
+            if (currentCoins < cost) {
                 context.getSource().sendFailure(
-                        Component.translatable("commands.coin2lottery.error.not_enough_coins", currentCoins));
+                        Component.translatable("commands.coin2lottery.error.not_enough_coins", currentCoins, cost));
                 return 0;
             }
-
-            // 扣除 100 金币
-            skinsComponent.addCoinNum(-100);
+            int count = currentCoins / cost;
+            // 扣除 cost 金币
+            skinsComponent.addCoinNum(-cost * count);
             // 增加 1 次抽奖机会
-            skinsComponent.addLootChance(1);
+            skinsComponent.addLootChance(count);
 
             // 同步到客户端
             skinsComponent.sync();
 
             // 发送成功消息
             context.getSource().sendSuccess(
-                    () -> Component.translatable("commands.coin2lottery.success", currentCoins - 100,
-                            currentLootChance + 1),
+                    () -> Component.translatable("commands.coin2lottery.success", currentCoins - cost * count,
+                            currentLootChance + count),
                     true);
 
             return 1;

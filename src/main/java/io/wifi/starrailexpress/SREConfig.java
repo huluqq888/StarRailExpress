@@ -144,6 +144,27 @@ public class SREConfig implements ConfigData {
     public boolean isTeammedStatsSyncEnabled = true;
     @ConfigEntry.Category(value = "stats")
     public boolean isDetailedStatsSyncEnabled = false;
+    @ConfigEntry.Category(value = "sync")
+    public boolean mysqlPlayerSyncEnabled = false;
+    @ConfigEntry.Category(value = "sync")
+    public String mysqlSyncHost = "127.0.0.1";
+    @ConfigEntry.Category(value = "sync")
+    public int mysqlSyncPort = 3306;
+    @ConfigEntry.Category(value = "sync")
+    public String mysqlSyncDatabase = "starrailexpress";
+    @ConfigEntry.Category(value = "sync")
+    public String mysqlSyncUsername = "root";
+    @ConfigEntry.Category(value = "sync")
+    public String mysqlSyncPassword = "";
+    @ConfigEntry.Category(value = "sync")
+    public String mysqlSyncTablePrefix = "sre_";
+    @ConfigEntry.Category(value = "sync")
+    public boolean mysqlSyncUseSsl = false;
+    @ConfigEntry.Category(value = "sync")
+    public int mysqlSyncPoolSize = 4;
+    @ConfigEntry.Category(value = "sync")
+    public int mysqlSyncConnectTimeoutMs = 5000;
+    
     @ConfigEntry.Category(value = "progression")
     public boolean enableProgressionSystem = false;
     @ConfigEntry.Category(value = "progression")
@@ -159,12 +180,7 @@ public class SREConfig implements ConfigData {
     public boolean isItemSkinEnabled = true;
     @ConfigEntry.Category(value = "skin")
     public boolean isItemSkinManagementEnabled = false;
-    @ConfigEntry.Category(value = "skin")
-    public String itemSkinSyncServerHost = "";
-    @ConfigEntry.Category(value = "skin")
-    public int itemSkinSyncServerPort = 8080;
-    @ConfigEntry.Category(value = "skin")
-    public String itemSkinSyncServerKey = "";
+    
     @ConfigEntry.Category(value = "skin")
     public boolean itemSkinSyncServerEnabled = false;
     // AFK设置

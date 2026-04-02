@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * Animated HUD toast for newly unlocked roles.
  */
+@Deprecated
 public class RoleUnlockHudRenderer {
 
     private static final long DURATION_MS = 6800L;

@@ -6,11 +6,11 @@ import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.client.gui.RoleNameRenderer;
 import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.utils.client.betterrender.FakeGuiGraphics;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -24,7 +24,6 @@ import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -35,11 +34,8 @@ import java.awt.*;
 @Mixin(RoleNameRenderer.class)
 public abstract class CustomRolesRoleNameRendererMixin {
 
-    @Shadow
-    private static float nametagAlpha;
-
-    @Inject(method = "renderHud", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)I", ordinal = 0))
-    private static void b(Font renderer, @NotNull LocalPlayer lp, GuiGraphics context, DeltaTracker tickCounter,
+    @Inject(method = "renderHud", at = @At(value = "INVOKE", target = "Lio/wifi/utils/client/betterrender/FakeGuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)I", ordinal = 0))
+    private static void b(Font renderer, @NotNull LocalPlayer lp, FakeGuiGraphics context, DeltaTracker tickCounter,
             CallbackInfo ci) {
         if (Minecraft.getInstance() == null || Minecraft.getInstance().player == null)
             return;
@@ -78,7 +74,7 @@ public abstract class CustomRolesRoleNameRendererMixin {
                 }
 
                 context.drawString(renderer, name, -renderer.width(name) / 2, 0,
-                        di_color | (int) (nametagAlpha * 255.0F) << 24);
+                        di_color | (int) (1 * 255.0F) << 24);
             }
         }
         if (NoellesrolesClient.hudTarget != null) {
@@ -95,13 +91,13 @@ public abstract class CustomRolesRoleNameRendererMixin {
                 var _color = Color.MAGENTA.getRGB();
 
                 context.drawString(renderer, room_name, -renderer.width(room_name) / 2, -20,
-                        _color | (int) (nametagAlpha * 255.0F) << 24);
+                        _color | (int) (1 * 255.0F) << 24);
             }
         }
     }
 
     @Inject(method = "renderHud", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getDisplayName()Lnet/minecraft/network/chat/Component;"))
-    private static void b(Font renderer, @NotNull LocalPlayer player, GuiGraphics context, DeltaTracker tickCounter,
+    private static void b(Font renderer, @NotNull LocalPlayer player, FakeGuiGraphics context, DeltaTracker tickCounter,
             CallbackInfo ci, @Local Player target) {
         SREGameWorldComponent gameWorldComponent = SREClient.gameComponent;
         WorldModifierComponent worldModifierComponent = WorldModifierComponent.KEY.get(player.level());

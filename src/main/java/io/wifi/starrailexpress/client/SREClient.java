@@ -375,9 +375,9 @@ public class SREClient implements ClientModInitializer {
 
             if (player != null) {
                 StoreRenderer.tick();
+                HudStoreRenderer.tick();
                 TimeRenderer.tick();
                 StaminaRenderer.tick();
-
             }
 
         });
@@ -561,11 +561,11 @@ public class SREClient implements ClientModInitializer {
                                 new io.wifi.starrailexpress.client.gui.screen.RoleUnlockProgressScreen());
                     });
                 });
-        ClientPlayNetworking.registerGlobalReceiver(
-                io.wifi.starrailexpress.network.RoleUnlockedHudPayload.ID, (payload, context) -> {
-                    context.client().execute(() -> io.wifi.starrailexpress.client.gui.RoleUnlockHudRenderer
-                            .enqueue(payload.globalGamesPlayed(), payload.unlockedRoleIds()));
-                });
+        // ClientPlayNetworking.registerGlobalReceiver(
+        //         io.wifi.starrailexpress.network.RoleUnlockedHudPayload.ID, (payload, context) -> {
+        //             context.client().execute(() -> io.wifi.starrailexpress.client.gui.RoleUnlockHudRenderer
+        //                     .enqueue(payload.globalGamesPlayed(), payload.unlockedRoleIds()));
+        //         });
         ClientPlayNetworking.registerGlobalReceiver(CloseUiPayload.ID, (payload, context) -> {
             context.client().execute(() -> {
                 context.client().setScreen(null);
@@ -623,7 +623,7 @@ public class SREClient implements ClientModInitializer {
             ScopeOverlayRenderer.renderScopeOverlay(guiGraphics, deltaTick);
             WaypointHUD.renderHUD(guiGraphics, deltaTick.getRealtimeDeltaTicks());
             AFKRenderer.renderAFKEffects(guiGraphics, deltaTick.getRealtimeDeltaTicks());
-            RoleUnlockHudRenderer.render(guiGraphics);
+            // RoleUnlockHudRenderer.render(guiGraphics);
 
             // // 添加地图详情渲染
             // Font font = Minecraft.getInstance().font;
@@ -749,6 +749,9 @@ public class SREClient implements ClientModInitializer {
         }
     }
 
+    public static boolean isPlayerAliveAndInSurvivalIgnoreShitSplit() {
+        return cachedPlayerAliveAndInSurvivalIgnoreShitSplit;
+    }
     public static boolean isPlayerAliveAndInSurvival() {
         return cachedPlayerAliveAndInSurvival;
     }
@@ -844,6 +847,7 @@ public class SREClient implements ClientModInitializer {
             return true;
         return false;
     };
+    private static boolean cachedPlayerAliveAndInSurvivalIgnoreShitSplit = false;
 
     public static boolean isInstinctEnabled() {
         boolean canUseInstinct = isKiller();
@@ -871,6 +875,7 @@ public class SREClient implements ClientModInitializer {
     private static void updateHudApiCache(Minecraft client) {
         LocalPlayer player = client.player;
         cachedPlayerAliveAndInSurvival = GameUtils.isPlayerAliveAndSurvival(player);
+        cachedPlayerAliveAndInSurvivalIgnoreShitSplit = GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player);
         cachedPlayerSpectatingOrCreative = GameUtils.isPlayerSpectatingOrCreative(player);
         cachedPlayerCreative = player != null && player.isCreative();
         cachedPlayerSpectator = player != null && player.isSpectator();

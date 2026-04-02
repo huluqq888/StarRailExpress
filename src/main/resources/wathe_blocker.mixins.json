@@ -12,6 +12,10 @@
     "defaultRequire": 1
   },
   "client": [
+    "client.GuiGraphicsAccessor",
+    "client.SignRendererMixin",
+    "client.GuiRenderMixin",
+    "client.ClientTickMixin",
     "client.BlockWatheClient",
     "client.IHateWatheModelLayers",
     "client.PanoramaMixin",

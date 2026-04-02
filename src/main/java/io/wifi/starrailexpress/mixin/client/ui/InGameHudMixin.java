@@ -13,7 +13,7 @@ import io.wifi.starrailexpress.client.gui.*;
 import io.wifi.starrailexpress.game.GameConstants;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+// import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
@@ -42,24 +42,18 @@ public class InGameHudMixin {
     private static final ResourceLocation TMM_HOTBAR_SELECTION_TEXTURE = SRE.watheId("hud/hotbar_selection");
 
     @Inject(method = "renderHotbarAndDecorations", at = @At("TAIL"))
-    private void tmm$renderHud(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    private void tmm$renderHud(GuiGraphics trueContext, DeltaTracker tickCounter, CallbackInfo ci) {
         if (!SREClient.shouldUseTrainHud()) {
             return;
         }
         LocalPlayer player = this.minecraft.player;
         if (player == null)
             return;
-        Font renderer = Minecraft.getInstance().font;
-        MoodRenderer.renderHud(player, renderer, context, tickCounter);
-        RoleNameRenderer.renderHud(renderer, player, context, tickCounter);
-        RoundTextRenderer.renderHud(renderer, player, context, tickCounter.getRealtimeDeltaTicks());
-        StatusBarHUD.getInstance().render(context, tickCounter.getRealtimeDeltaTicks());
-        if (Minecraft.getInstance().screen == null)
-            StoreRenderer.renderHud(renderer, player, context, tickCounter.getGameTimeDeltaPartialTick(true));
-        TimeRenderer.renderHud(renderer, player, context, tickCounter.getGameTimeDeltaPartialTick(true));
-        StaminaRenderer.renderHud(player, context, tickCounter.getGameTimeDeltaPartialTick(true));
-        SansRenderer.instance.tick(player, context, tickCounter.getGameTimeDeltaPartialTick(true));
-        LobbyPlayersRenderer.renderHud(renderer, player, context);
+        // Font renderer = Minecraft.getInstance().font;
+        
+        StatusBarHUD.getInstance().render(trueContext, tickCounter.getRealtimeDeltaTicks());
+        StaminaRenderer.renderHud(player, trueContext, tickCounter.getGameTimeDeltaPartialTick(true));
+        SansRenderer.instance.tick(player, trueContext, tickCounter.getGameTimeDeltaPartialTick(true));
     }
 
     @WrapMethod(method = "renderCrosshair")

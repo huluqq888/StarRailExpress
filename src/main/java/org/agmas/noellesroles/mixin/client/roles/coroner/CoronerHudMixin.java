@@ -9,11 +9,11 @@ import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.client.gui.RoleNameRenderer;
 import io.wifi.starrailexpress.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.game.GameConstants;
+import io.wifi.utils.client.betterrender.FakeGuiGraphics;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -31,7 +31,6 @@ import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.roles.coroner.BodyDeathReasonComponent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -41,14 +40,8 @@ import pro.fazeclan.river.stupid_express.modifier.split_personality.cca.SplitPer
 @Mixin(RoleNameRenderer.class)
 public abstract class CoronerHudMixin {
 
-    @Shadow
-    private static float nametagAlpha;
-
-    @Shadow
-    private static Component nametag;
-
     @Inject(method = "renderHud", at = @At("TAIL"))
-    private static void coronerRoleNameRenderer(Font renderer, LocalPlayer player, GuiGraphics context,
+    private static void coronerRoleNameRenderer(Font renderer, LocalPlayer player, FakeGuiGraphics context,
             DeltaTracker tickCounter, CallbackInfo ci) {
         SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY.get(player.level());
 
@@ -228,7 +221,7 @@ public abstract class CoronerHudMixin {
     }
 
     @Inject(method = "renderHud", at = @At(value = "INVOKE", target = "Lio/wifi/starrailexpress/game/GameUtils;isPlayerSpectatingOrCreative(Lnet/minecraft/world/entity/player/Player;)Z"))
-    private static void customRaycast(Font renderer, LocalPlayer player, GuiGraphics context, DeltaTracker tickCounter,
+    private static void customRaycast(Font renderer, LocalPlayer player, FakeGuiGraphics context, DeltaTracker tickCounter,
             CallbackInfo ci) {
         float range = RoleNameRenderer.getPlayerRange(player);
         HitResult line = ProjectileUtil.getHitResultOnViewVector(player,

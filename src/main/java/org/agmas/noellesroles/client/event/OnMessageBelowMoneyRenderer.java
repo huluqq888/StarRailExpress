@@ -3,9 +3,10 @@ package org.agmas.noellesroles.client.event;
 import net.fabricmc.fabric.api.event.Event;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 
 import static net.fabricmc.fabric.api.event.EventFactory.createArrayBacked;
+
+import io.wifi.utils.client.betterrender.FakeGuiGraphics;
 
 public interface OnMessageBelowMoneyRenderer {
 
@@ -21,5 +22,5 @@ public interface OnMessageBelowMoneyRenderer {
                 return a;
             });
 
-    MutableComponentResult onRenderer(Minecraft client, GuiGraphics guiGraphics, DeltaTracker deltaTracker);
+    MutableComponentResult onRenderer(Minecraft client, FakeGuiGraphics guiGraphics, DeltaTracker deltaTracker);
 }

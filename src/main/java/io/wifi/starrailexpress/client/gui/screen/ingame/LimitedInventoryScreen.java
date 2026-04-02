@@ -271,7 +271,7 @@ public class LimitedInventoryScreen extends LimitedHandledScreen<InventoryMenu> 
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
         this.drawMouseoverTooltip(context, mouseX, mouseY);
-        StoreRenderer.renderHud(this.font, this.player, context, delta);
+        StoreRenderer.renderHud(this.font, this.player, (context), delta);
     }
 
     public static class StoreItemWidget extends Button {

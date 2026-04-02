@@ -1,5 +1,6 @@
 package org.agmas.noellesroles.client.hud;
 
+import org.agmas.noellesroles.client.hud.modifiers.*;
 import org.agmas.noellesroles.client.hud.roles.*;
 
 public class OtherRolesRegister {
@@ -9,7 +10,6 @@ public class OtherRolesRegister {
         AvengerHud.register();
         BomberHud.register();
         BoxerHud.register();
-        BroadcasterHud.register();
         DetectiveHud.register();
         DetectivePassiveHud.register();
         DIOHud.register();
@@ -30,5 +30,8 @@ public class OtherRolesRegister {
         TrapperHud.register();
         VultureHud.register();
         WaterGhostHud.register();
+        RefugeeHud.register();
+        LoversHud.register();
+        BroadcasterHud.register();
     }
 }

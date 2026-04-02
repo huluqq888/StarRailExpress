@@ -6,14 +6,23 @@ import io.wifi.starrailexpress.cca.SREArmorPlayerComponent;
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.client.SREClient;
+import io.wifi.starrailexpress.client.gui.HudMoodRenderer;
+import io.wifi.starrailexpress.client.gui.HudStoreRenderer;
+import io.wifi.starrailexpress.client.gui.LobbyPlayersRenderer;
+import io.wifi.starrailexpress.client.gui.RoleNameRenderer;
+import io.wifi.starrailexpress.client.gui.RoundTextRenderer;
+import io.wifi.starrailexpress.client.gui.TimeRenderer;
 import io.wifi.starrailexpress.game.GameUtils;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import io.wifi.utils.client.betterrender.FakeGuiGraphics;
+import io.wifi.utils.client.betterrender.FakeHudRenderCallback;
+import io.wifi.utils.client.betterrender.OptimizedTextRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemCooldowns.CooldownInstance;
@@ -21,7 +30,11 @@ import net.minecraft.world.item.ItemCooldowns.CooldownInstance;
 import org.agmas.noellesroles.AttendantHandler;
 import org.agmas.noellesroles.client.NoellesrolesClient;
 import org.agmas.noellesroles.client.WayfarerHudRenderer;
+import org.agmas.noellesroles.client.event.CommonHudRenderCallback;
+import org.agmas.noellesroles.client.event.MutableComponentResult;
+import org.agmas.noellesroles.client.event.OnMessageBelowMoneyRenderer;
 import org.agmas.noellesroles.client.event.RoleHudRenderCallback;
+import org.agmas.noellesroles.client.hud.roles.BroadcasterHud;
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.entity.WheelchairEntity;
 import org.agmas.noellesroles.init.ModEffects;
@@ -40,46 +53,90 @@ import java.util.ArrayList;
 import java.util.function.BiConsumer;
 
 public class CommonClientHudRenderer {
-  static ArrayList<BiConsumer<GuiGraphics, DeltaTracker>> roleRenderConsumers = null;
+  static ArrayList<BiConsumer<FakeGuiGraphics, DeltaTracker>> roleRenderConsumers = null;
   static SRERole lastRenderRole = null;
 
   public static void registerFather() {
-    HudRenderCallback.EVENT.register((guiGraphics, deltaTracker) -> {
-      var client = Minecraft.getInstance();
-      if (client == null)
+    // Use FakeHudRenderCallback instead of Fabric's HudRenderCallback
+    // This ensures rendering happens INSIDE the frame lifecycle
+    // (beginFrame/endFrame)
+    // which fixes the font rendering issue where text would randomly disappear
+    FakeHudRenderCallback.EVENT.register((guiGraphics, trueDeltaTracker) -> {
+      if (!OptimizedTextRenderer.INSTANCE.isTickDirty())
         return;
+      DeltaTracker deltaTracker = DeltaTracker.ONE;
+      final Minecraft client = Minecraft.getInstance();
+      final Font font = client.font;
+      // FakeGuiGraphics is already provided by the callback - no need to wrap again
       if (client.player == null)
         return;
       if (SREClient.gameComponent == null) {
         return;
       }
-      if (!SREClient.gameComponent.isRunning())
-        return;
-      if (!client.player.hasEffect(ModEffects.NO_COLLIDE))
-        return;
-      var effect = client.player.getEffect(ModEffects.NO_COLLIDE);
-      Component message = Component.translatable("hud.noellesroles.safe_time", effect.getDuration() / 20)
-          .withStyle(ChatFormatting.GREEN);
-      guiGraphics.drawCenteredString(client.font, message, guiGraphics.guiWidth() / 2, 40,
-          java.awt.Color.WHITE.getRGB());
-    });
-    HudRenderCallback.EVENT.register((guiGraphics, deltaTracker) -> {
-      var client = Minecraft.getInstance();
-      if (client == null)
-        return;
-      if (client.player == null)
-        return;
-      if (SREClient.gameComponent == null) {
-        return;
+      final LocalPlayer player = client.player;
+      {
+        RoleNameRenderer.renderHud(font, player, guiGraphics, deltaTracker);
+        LobbyPlayersRenderer.renderHud(font, player, guiGraphics);
+      }
+      {
+        RoundTextRenderer.renderHud(font, player, guiGraphics, deltaTracker.getRealtimeDeltaTicks());
+      }
+      {
+        TimeRenderer.renderHud(font, player, guiGraphics, deltaTracker.getGameTimeDeltaPartialTick(true));
+      }
+      {
+        if (Minecraft.getInstance().screen == null)
+          HudStoreRenderer.renderHud(font, player, guiGraphics, deltaTracker.getGameTimeDeltaPartialTick(true));
+      }
+      {
+        HudMoodRenderer.renderHud(player, font, guiGraphics, deltaTracker);
+      }
+      {
+        if (client.screen == null) {
+          MutableComponentResult texts = OnMessageBelowMoneyRenderer.EVENT.invoker().onRenderer(
+              client, guiGraphics,
+              deltaTracker);
+          java.util.List<MutableComponent> infoLines = texts.mutipleContent;
+          int y = 20;
+          int width = guiGraphics.guiWidth();
+          int lineHeight = client.font.lineHeight + 4;
+          for (var line : infoLines) {
+            guiGraphics.drawString(client.font, line, width - 10 - client.font.width(line), y,
+                java.awt.Color.WHITE.getRGB());
+            y += lineHeight;
+          }
+        }
+      }
+      {
+        if (SREClient.gameComponent.isRunning()) {
+          if (client.player.hasEffect(ModEffects.NO_COLLIDE)) {
+            var effect = client.player.getEffect(ModEffects.NO_COLLIDE);
+            Component message = Component.translatable("hud.noellesroles.safe_time", effect.getDuration() / 20)
+                .withStyle(ChatFormatting.GREEN);
+            guiGraphics.drawCenteredString(client.font, message, guiGraphics.guiWidth() / 2, 40,
+                java.awt.Color.WHITE.getRGB());
+          }
+        }
       }
       // if (SREClient.isPlayerSpectator())
       // return;
+      {
+        // 最后渲染在上层
+        BroadcasterHud.renderBroadcast(guiGraphics, deltaTracker);
+      }
+
       SRERole role = SREClient.getCachedPlayerRole();
       if (role == null)
         return;
       if (role != lastRenderRole) {
         roleRenderConsumers = RoleHudRenderCallback.EVENT.getConsumer(role.identifier());
         lastRenderRole = role;
+      }
+      var consumer1 = CommonHudRenderCallback.EVENT.getConsumer();
+      if (consumer1 != null && !consumer1.isEmpty()) {
+        consumer1.forEach((c) -> {
+          c.accept(guiGraphics, deltaTracker);
+        });
       }
       if (roleRenderConsumers != null) {
         try {
@@ -635,10 +692,10 @@ public class CommonClientHudRenderer {
       int yOffset = screenHeight - 10 - font.lineHeight; // 右下角
       int xOffset = screenWidth - 10; // 距离右边缘
       var abpc = AthletePlayerComponent.KEY.get(client.player);
-      if (client.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+      if (abpc.speedTicks > 0) {
         var text = Component
             .translatable("hud.noellesroles.athlete.active",
-                client.player.getEffect(MobEffects.MOVEMENT_SPEED).getDuration() / 20)
+                abpc.speedTicks / 20)
             .withStyle(ChatFormatting.AQUA);
         guiGraphics.drawString(font, text, xOffset - font.width(text), yOffset - font.lineHeight - 4,
             Color.WHITE.getRGB());

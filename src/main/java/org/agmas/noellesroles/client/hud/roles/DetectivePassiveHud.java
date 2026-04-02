@@ -2,22 +2,30 @@ package org.agmas.noellesroles.client.hud.roles;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.client.SREClient;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
-import org.agmas.noellesroles.client.Listen;
-import org.agmas.noellesroles.client.event.RoleHudRenderCallback;
+import org.agmas.noellesroles.client.DetectiveListenStepHandler;
 import org.agmas.noellesroles.role.ModRoles;
 import org.joml.Vector3f;
 
-import static org.agmas.noellesroles.client.Listen.*;
+import static org.agmas.noellesroles.client.DetectiveListenStepHandler.*;
 
 public class DetectivePassiveHud {
 
     public static void register() {
-        RoleHudRenderCallback.EVENT.register(ModRoles.DETECTIVE_ID, (guiGraphics, deltaTracker) -> {
+        HudRenderCallback.EVENT.register((guiGraphics, deltaTracker) -> {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null)
                 return;
+            SRERole role = SREClient.getCachedPlayerRole();
+            if (role == null)
+                return;
+            if (!role.equals(ModRoles.DETECTIVE)) {
+                return;
+            }
             if (SREClient.isPlayerSpectator())
                 return;
 
@@ -37,7 +45,7 @@ public class DetectivePassiveHud {
 
             // 遍历所有实体
             for (int i = soundInfos.size() - 1; i >= 0; i--) {
-                Listen.SoundInfo info = soundInfos.get(i);
+                DetectiveListenStepHandler.SoundInfo info = soundInfos.get(i);
 
                 // 世界坐标 → 屏幕坐标
                 Vector3f screen = worldToScreen(info.pos.x, info.pos.y, info.pos.z);

@@ -109,7 +109,7 @@ public class InitModRolesMax {
         Harpymodloader.setRoleMaximum(ModRoles.ATHLETE_ID, 1);
 
         // 明星每局只能有 1 个
-        Harpymodloader.setRoleMaximum(ModRoles.STAR_ID, 1);
+        Harpymodloader.setRoleMaximum(ModRoles.SUPERSTAR_ID, 1);
 
         // 退伍军人每局只能有 1 个
         Harpymodloader.setRoleMaximum(ModRoles.VETERAN_ID, 1);
@@ -321,7 +321,7 @@ public class InitModRolesMax {
                 Harpymodloader.setRoleMaximum(ModRoles.DIO, 0);
                 Harpymodloader.setRoleMaximum(ModRoles.MAID_SAKUYA, 0);
             }
-            if (random.nextInt(0, 100) <= 25) {
+            if (players_count >= 16 && random.nextInt(0, 100) <= 25) {
                 Harpymodloader.setRoleMaximum(ModRoles.MAGICIAN_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.MAGICIAN_ID, 0);
