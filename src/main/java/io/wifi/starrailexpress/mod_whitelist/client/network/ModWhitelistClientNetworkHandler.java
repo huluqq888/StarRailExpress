@@ -23,7 +23,7 @@ public class ModWhitelistClientNetworkHandler {
 	/**
 	 * Handles incoming ModWhitelistConfigPayload from server
 	 */
-	private static void handleModWhitelistConfigPayload(ModWhitelistConfigPayload payload, ClientPlayNetworking.Context context) {
+	public static void handleModWhitelistConfigPayload(ModWhitelistConfigPayload payload, ClientPlayNetworking.Context context) {
 		serverSyncHashValues = payload.syncHashValues();
 		MWLogger.LOGGER.debug("Received mod whitelist config from server (sync hashes: {})", serverSyncHashValues);
 	}

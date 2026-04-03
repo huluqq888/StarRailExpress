@@ -2,7 +2,6 @@ package io.wifi.starrailexpress.mod_whitelist.client;
 
 import com.google.common.collect.Lists;
 import io.wifi.starrailexpress.mod_whitelist.ModWhitelist;
-import io.wifi.starrailexpress.mod_whitelist.client.network.ModWhitelistClientNetworkHandler;
 import io.wifi.starrailexpress.mod_whitelist.common.utils.MWLogger;
 import net.fabricmc.loader.api.FabricLoader;
 
