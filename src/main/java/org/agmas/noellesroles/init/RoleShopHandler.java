@@ -504,6 +504,17 @@ public class RoleShopHandler {
       ShopContent.customEntries.put(ModRoles.NINJA_ID, NINJA_SHOP);
     }
     {
+      // 模仿者商店 - 标准杀手商店
+      var IMITATOR_SHOP = new ArrayList<ShopEntry>();
+      IMITATOR_SHOP.add(new ShopEntry(TMMItems.KNIFE.getDefaultInstance(),
+          SREConfig.instance().knifePrice, ShopEntry.Type.WEAPON));
+      IMITATOR_SHOP.add(new ShopEntry(TMMItems.LOCKPICK.getDefaultInstance(),
+          SREConfig.instance().lockpickPrice, ShopEntry.Type.TOOL));
+      IMITATOR_SHOP.add(new ShopEntry(HSRItems.createGrenade(), 275, ShopEntry.Type.WEAPON));
+      IMITATOR_SHOP.add(new ShopEntry(HSRItems.createBlackout(), 250, ShopEntry.Type.TOOL));
+      ShopContent.customEntries.put(ModRoles.IMITATOR_ID, IMITATOR_SHOP);
+    }
+    {
       // 厨师的商店
       var shop = new ArrayList<ShopEntry>();
       shop.add(new ShopEntry(ModItems.A_BOTTLE_OF_WATER.getDefaultInstance(), 75,
