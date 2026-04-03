@@ -527,7 +527,7 @@ public class AbilityHandler {
         }
         if (gameWorldComponent.isRole(player, ModRoles.IMITATOR)) {
             ImitatorPlayerComponent comp = ModComponents.IMITATOR.get(player);
-            if (!comp.hasAnyAbility()) {
+            if (comp.isCopyMode) {
                 comp.tryCopyAbility(player, targetUUID);
             } else {
                 comp.useActiveAbility(player, targetUUID);

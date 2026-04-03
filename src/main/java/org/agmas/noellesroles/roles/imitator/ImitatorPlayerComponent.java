@@ -44,6 +44,10 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
     public ResourceLocation tempCopiedRoleId = null;
     public int tempCopiedUsesRemaining = 0;
     public int tempSkillCooldown = 0; // 临时技能冷却
+    /** true = 当前激活的是临时技能；false = 当前激活的是永久槽位 */
+    public boolean useTemp = false;
+    /** true = 当前处于"复制模式"，G键瞄准活人会复制其技能 */
+    public boolean isCopyMode = false;
 
     // ==================== 复制动作冷却 ====================
     public int copyActionCooldown = 0; // 复制活人的冷却
@@ -82,6 +86,7 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
         tempCopiedRoleId = null;
         tempCopiedUsesRemaining = 0;
         tempSkillCooldown = 0;
+        useTemp = false;
         copyActionCooldown = 0;
         isCharging = false;
         chargeTicks = 0;
@@ -89,6 +94,8 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
         imitRecallerPlaced = false;
         imitRecallerX = imitRecallerY = imitRecallerZ = 0;
         imitBoxerInvulnTicks = 0;
+        useTemp = false;
+        isCopyMode = false;
         this.sync();
     }
 
@@ -136,6 +143,8 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
         tempCopiedRoleId = roleId;
         tempCopiedUsesRemaining = 3;
         tempSkillCooldown = 0;
+        useTemp = true;   // 复制后自动切到临时技能
+        isCopyMode = false; // 退出复制模式
         copyActionCooldown = COPY_ACTION_COOLDOWN; // 60秒
         // 复制新能力时重置召回者状态
         imitRecallerPlaced = false;
@@ -254,28 +263,53 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
 
     // ==================== 槽位管理 ====================
 
+    /**
+     * Shift+G 循环切换：临时技能 → 槽0 → 槽1 → 槽2 → 「复制模式」→ 临时（循环）
+     * 复制模式：G键瞄准活人会复制其技能（覆盖临时槽），有独立60秒冷却。
+     * 空位跳过，但复制模式始终在循环末尾。
+     */
     public void switchSlot() {
-        if (filledSlots == 0) {
-            if (player instanceof ServerPlayer sp) {
-                sp.displayClientMessage(Component.translatable("message.noellesroles.imitator.no_ability")
-                        .withStyle(ChatFormatting.RED), true);
-            }
-            return;
+        // 构建有效选项列表：-1=临时, 0/1/2=槽位, -2=复制模式
+        java.util.List<Integer> options = new java.util.ArrayList<>();
+        if (tempCopiedRoleId != null) options.add(-1); // 临时技能
+        for (int i = 0; i < MAX_SLOTS; i++) {
+            if (slotRoleId[i] != null) options.add(i);  // 有效槽位
         }
-        int startIndex = activeSlotIndex;
-        for (int i = 1; i <= MAX_SLOTS; i++) {
-            int nextIndex = (startIndex + i) % MAX_SLOTS;
-            if (slotRoleId[nextIndex] != null) {
-                activeSlotIndex = nextIndex;
-                break;
-            }
-        }
+        options.add(-2); // 复制模式始终存在
+
+        // 找当前位置
+        int currentOpt = isCopyMode ? -2 : (useTemp ? -1 : activeSlotIndex);
+        int currentIdx = options.indexOf(currentOpt);
+        if (currentIdx < 0) currentIdx = 0;
+
+        // 切到下一个
+        int nextIdx = (currentIdx + 1) % options.size();
+        int nextOpt = options.get(nextIdx);
+
+        isCopyMode = (nextOpt == -2);
+        useTemp = (nextOpt == -1);
+        if (nextOpt >= 0) activeSlotIndex = nextOpt;
+
+        // 显示消息
         if (player instanceof ServerPlayer sp) {
-            String name = slotRoleId[activeSlotIndex] != null ? slotRoleId[activeSlotIndex].getPath() : "empty";
-            int cd = slotCooldown[activeSlotIndex];
-            String cdStr = cd > 0 ? " (" + ((cd + 19) / 20) + "s)" : "";
-            sp.displayClientMessage(Component.translatable("message.noellesroles.imitator.slot_switch",
-                    activeSlotIndex + 1, name + cdStr).withStyle(ChatFormatting.AQUA), true);
+            if (isCopyMode) {
+                int cd = copyActionCooldown;
+                String cdStr = cd > 0 ? " (" + ((cd + 19) / 20) + "s CD)" : "";
+                sp.displayClientMessage(Component.literal("【复制模式" + cdStr + "】瞄准玩家按G复制能力")
+                        .withStyle(cd > 0 ? ChatFormatting.RED : ChatFormatting.YELLOW), true);
+            } else if (useTemp && tempCopiedRoleId != null) {
+                int cd = tempSkillCooldown;
+                String cdStr = cd > 0 ? " (" + ((cd + 19) / 20) + "s)" : "";
+                sp.displayClientMessage(Component.translatable("message.noellesroles.imitator.slot_switch_temp",
+                        tempCopiedRoleId.getPath(), tempCopiedUsesRemaining + cdStr)
+                        .withStyle(ChatFormatting.GREEN), true);
+            } else {
+                String name = slotRoleId[activeSlotIndex] != null ? slotRoleId[activeSlotIndex].getPath() : "empty";
+                int cd = slotCooldown[activeSlotIndex];
+                String cdStr = cd > 0 ? " (" + ((cd + 19) / 20) + "s)" : "";
+                sp.displayClientMessage(Component.translatable("message.noellesroles.imitator.slot_switch",
+                        activeSlotIndex + 1, name + cdStr).withStyle(ChatFormatting.AQUA), true);
+            }
         }
         this.sync();
     }
@@ -283,16 +317,19 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
     // ==================== 使用能力(非消息类) ====================
 
     public void useActiveAbility(ServerPlayer self, @Nullable UUID target) {
-        // 优先级: 临时 > 当前槽位
         ResourceLocation roleId;
         boolean isTemp;
 
-        if (tempCopiedRoleId != null) {
+        if (useTemp && tempCopiedRoleId != null) {
             roleId = tempCopiedRoleId;
             isTemp = true;
-        } else if (slotRoleId[activeSlotIndex] != null) {
+        } else if (!useTemp && slotRoleId[activeSlotIndex] != null) {
             roleId = slotRoleId[activeSlotIndex];
             isTemp = false;
+        } else if (tempCopiedRoleId != null) {
+            // useTemp=false 但槽位为空，回退到临时
+            roleId = tempCopiedRoleId;
+            isTemp = true;
         } else {
             self.displayClientMessage(Component.translatable("message.noellesroles.imitator.no_ability")
                     .withStyle(ChatFormatting.RED), true);
@@ -338,12 +375,15 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
         ResourceLocation roleId;
         boolean isTemp;
 
-        if (tempCopiedRoleId != null) {
+        if (useTemp && tempCopiedRoleId != null) {
             roleId = tempCopiedRoleId;
             isTemp = true;
-        } else if (slotRoleId[activeSlotIndex] != null) {
+        } else if (!useTemp && slotRoleId[activeSlotIndex] != null) {
             roleId = slotRoleId[activeSlotIndex];
             isTemp = false;
+        } else if (tempCopiedRoleId != null) {
+            roleId = tempCopiedRoleId;
+            isTemp = true;
         } else {
             return false;
         }
@@ -384,6 +424,8 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
                     tempCopiedUsesRemaining = 0;
                     tempSkillCooldown = 0;
                     imitRecallerPlaced = false;
+                    // 临时技能用尽，自动切到第一个有效槽位
+                    useTemp = false;
                 }
             }
         } else {
@@ -392,11 +434,12 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
     }
 
     /**
-     * 获取当前活跃技能的冷却
+     * 获取当前激活技能的冷却
      */
     public int getCurrentSkillCooldown() {
+        if (useTemp && tempCopiedRoleId != null) return tempSkillCooldown;
+        if (!useTemp && slotRoleId[activeSlotIndex] != null) return slotCooldown[activeSlotIndex];
         if (tempCopiedRoleId != null) return tempSkillCooldown;
-        if (slotRoleId[activeSlotIndex] != null) return slotCooldown[activeSlotIndex];
         return 0;
     }
 
@@ -411,8 +454,9 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
     }
 
     public ResourceLocation getCurrentAbilityRoleId() {
-        if (tempCopiedRoleId != null) return tempCopiedRoleId;
-        if (slotRoleId[activeSlotIndex] != null) return slotRoleId[activeSlotIndex];
+        if (useTemp && tempCopiedRoleId != null) return tempCopiedRoleId;
+        if (!useTemp && slotRoleId[activeSlotIndex] != null) return slotRoleId[activeSlotIndex];
+        if (tempCopiedRoleId != null) return tempCopiedRoleId; // 回退
         return null;
     }
 
@@ -534,6 +578,8 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
             tag.putInt("tempUses", tempCopiedUsesRemaining);
             tag.putInt("tempCd", tempSkillCooldown);
         }
+        tag.putBoolean("useTemp", useTemp);
+        tag.putBoolean("isCopyMode", isCopyMode);
 
         tag.putInt("copyActionCd", copyActionCooldown);
         tag.putBoolean("isCharging", isCharging);
@@ -576,6 +622,8 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
             tempCopiedUsesRemaining = 0;
             tempSkillCooldown = 0;
         }
+        useTemp = tag.contains("useTemp") && tag.getBoolean("useTemp");
+        isCopyMode = tag.contains("isCopyMode") && tag.getBoolean("isCopyMode");
 
         copyActionCooldown = tag.contains("copyActionCd") ? tag.getInt("copyActionCd") : 0;
         isCharging = tag.contains("isCharging") && tag.getBoolean("isCharging");

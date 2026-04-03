@@ -129,18 +129,34 @@ public final class GKeyRoleSkill {
         register(ModRoles.IMITATOR, true, (client, gameWorld) -> {
             if (!GameUtils.isPlayerAliveAndSurvival(client.player)) return true;
 
-            // Shift+G = switch slot
+            // Shift+G = switch slot/mode
             if (client.player.isShiftKeyDown()) {
                 ClientPlayNetworking.send(new AbilityC2SPacket());
                 return true;
             }
 
-            // 检查当前能力是否是消息技能(电报员/广播员)
             org.agmas.noellesroles.roles.imitator.ImitatorPlayerComponent comp =
                     org.agmas.noellesroles.roles.imitator.ImitatorPlayerComponent.KEY.get(client.player);
+
+            // 复制模式：只处理瞄准玩家的情况
+            if (comp.isCopyMode) {
+                var hitResult = client.hitResult;
+                if (hitResult != null && hitResult.getType() == net.minecraft.world.phys.HitResult.Type.ENTITY) {
+                    net.minecraft.world.phys.EntityHitResult entityHit = (net.minecraft.world.phys.EntityHitResult) hitResult;
+                    if (entityHit.getEntity() instanceof Player targetPlayer) {
+                        ClientPlayNetworking.send(new AbilityWithTargetC2SPacket(targetPlayer));
+                        return true;
+                    }
+                }
+                // 没有瞄准玩家，提示
+                client.player.displayClientMessage(Component.translatable(
+                        "message.noellesroles.imitator.copy_mode_hint").withStyle(ChatFormatting.YELLOW), true);
+                return true;
+            }
+
+            // 非复制模式：检查当前能力是否是消息技能
             ResourceLocation currentAbility = comp.getCurrentAbilityRoleId();
             if (currentAbility != null && org.agmas.noellesroles.roles.imitator.ImitatorSkillRegistry.isMessageSkill(currentAbility)) {
-                // 客户端冷却检查
                 int cd = comp.getCurrentSkillCooldown();
                 if (cd > 0) {
                     client.player.displayClientMessage(Component.translatable(
@@ -148,7 +164,6 @@ public final class GKeyRoleSkill {
                             .withStyle(ChatFormatting.RED), true);
                     return true;
                 }
-                // 打开对应的消息输入屏幕
                 if (currentAbility.equals(ModRoles.TELEGRAPHER_ID)) {
                     client.execute(() -> client.setScreen(new TelegrapherScreen()));
                 } else if (currentAbility.equals(ModRoles.BROADCASTER_ID)) {
@@ -157,17 +172,7 @@ public final class GKeyRoleSkill {
                 return true;
             }
 
-            // Looking at a player → send with target (server decides copy vs use)
-            var hitResult = client.hitResult;
-            if (hitResult != null && hitResult.getType() == net.minecraft.world.phys.HitResult.Type.ENTITY) {
-                net.minecraft.world.phys.EntityHitResult entityHit = (net.minecraft.world.phys.EntityHitResult) hitResult;
-                if (entityHit.getEntity() instanceof Player targetPlayer) {
-                    ClientPlayNetworking.send(new AbilityWithTargetC2SPacket(targetPlayer));
-                    return true;
-                }
-            }
-
-            // No target → use ability (server handles)
+            // 普通使用：无目标直接发包，有目标也当作无目标使用（因为8个技能都不需要目标）
             ClientPlayNetworking.send(new AbilityC2SPacket());
             return true;
         });
