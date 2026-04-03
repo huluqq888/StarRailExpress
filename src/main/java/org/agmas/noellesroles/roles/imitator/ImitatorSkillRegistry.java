@@ -51,9 +51,9 @@ public class ImitatorSkillRegistry {
     public static boolean execute(ResourceLocation roleId, ServerPlayer player, @Nullable UUID target) {
         var handler = IMITATABLE_SKILLS.get(roleId);
         if (handler != null) {
-            temporaryChangeRole(player, TMMRoles.ROLES.get(roleId));
+            // temporaryChangeRole(player, TMMRoles.ROLES.get(roleId));
             handler.accept(player, target);
-            temporaryChangeRole(player, ModRoles.IMITATOR);
+            // temporaryChangeRole(player, ModRoles.IMITATOR);
             return true;
         }
         return false;
