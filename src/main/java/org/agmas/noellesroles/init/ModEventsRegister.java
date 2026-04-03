@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.init;
 
 import io.wifi.starrailexpress.SRE;
+import org.agmas.noellesroles.component.NinjaPlayerComponent;
 import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
@@ -161,6 +162,7 @@ public class ModEventsRegister {
         // 无敌状态下阻止任何死亡
         return true;
     }
+
 
     /**
      * 处理跟踪者免疫
@@ -523,6 +525,7 @@ public class ModEventsRegister {
     private static boolean isMJVerifyEnabled = false;
 
     public static void registerEvents() {
+        NinjaPlayerComponent.registerEvents();
         OnPlayerUsedSkill.EVENT.register((player) -> {
             NoellesRolesConfig config = NoellesRolesConfig.HANDLER.instance();
             if (!config.skillEchoEventEnabled) {

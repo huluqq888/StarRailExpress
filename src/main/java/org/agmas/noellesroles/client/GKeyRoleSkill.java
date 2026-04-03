@@ -116,6 +116,7 @@ public final class GKeyRoleSkill {
             client.execute(() -> client.setScreen(new BroadcasterScreen()));
             return true;
         });
+
         register(ModRoles.TELEGRAPHER, false, (client, gameWorld) -> {
             if (!NoellesrolesClient.isPlayerInAdventureMode(client.player)) {
                 return true;

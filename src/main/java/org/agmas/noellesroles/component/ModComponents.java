@@ -29,7 +29,7 @@ import org.ladysnake.cca.api.v3.entity.EntityComponentInitializer;
 import org.ladysnake.cca.api.v3.entity.RespawnCopyStrategy;
 import org.ladysnake.cca.api.v3.world.WorldComponentFactoryRegistry;
 import org.ladysnake.cca.api.v3.world.WorldComponentInitializer;
-
+import org.agmas.noellesroles.component.NinjaPlayerComponent;
 /**
  * Cardinal Components API 组件注册
  *
@@ -165,6 +165,7 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "telegrapher"),
       TelegrapherPlayerComponent.class);
 
+
   public static final ComponentKey<DefibrillatorComponent> DEFIBRILLATOR = ComponentRegistry.getOrCreate(
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "defibrillator"),
       DefibrillatorComponent.class);
@@ -191,6 +192,9 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
   public static final ComponentKey<BanditPlayerComponent> BANDIT = ComponentRegistry.getOrCreate(
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "bandit"),
       BanditPlayerComponent.class);
+  public static final ComponentKey<NinjaPlayerComponent> NINJA = ComponentRegistry.getOrCreate(
+          ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "ninja"),
+          NinjaPlayerComponent.class);
 
   public static final ComponentKey<BloodFeudistPlayerComponent> BLOOD_FEUDIST = ComponentRegistry.getOrCreate(
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "blood_feudist"),
@@ -270,6 +274,10 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
     registry.beginRegistration(Player.class, AVENGER)
         .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
         .end(AvengerPlayerComponent::new);
+
+    registry.beginRegistration(Player.class, NINJA)
+            .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
+            .end(NinjaPlayerComponent::new);
 
     // 注册算命大师组件 - 存储目标和死亡倒计时
     registry.beginRegistration(Player.class, FORTUNETELLER)

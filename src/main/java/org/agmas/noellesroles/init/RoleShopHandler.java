@@ -38,11 +38,16 @@ import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.Unbreakable;
 import net.minecraft.world.item.component.WrittenBookContent;
 
+import org.agmas.noellesroles.Noellesroles;
+import org.agmas.noellesroles.component.*;
+
+
 import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.component.MaChenXuPlayerComponent;
 import org.agmas.noellesroles.component.SingerPlayerComponent;
 import org.agmas.noellesroles.component.StalkerPlayerComponent;
 import org.agmas.noellesroles.component.WatcherPlayerComponent;
+
 import org.agmas.noellesroles.repack.HSRConstants;
 import org.agmas.noellesroles.repack.HSRItems;
 import org.agmas.noellesroles.role.ModRoles;
@@ -160,6 +165,8 @@ public class RoleShopHandler {
   public static ArrayList<ShopEntry> WATER_GHOST_SHOP = new ArrayList<>();
   // ==================== 秉烛人商店 ====================
   public static ArrayList<ShopEntry> CANDLE_BEARER_SHOP = new ArrayList<>();
+  //=============忍者商店================
+  public static ArrayList<ShopEntry> NINJA_SHOP = new ArrayList<>();
 
   /**
    * 初始化框架角色商店
@@ -418,6 +425,7 @@ public class RoleShopHandler {
       });
       ShopContent.customEntries.put(ModRoles.OLDMAN.getIdentifier(), SHOP);
     }
+
     {
       // 监察员的商店
       var SHOP = new ArrayList<ShopEntry>();
@@ -441,6 +449,32 @@ public class RoleShopHandler {
           ShopEntry.Type.TOOL));
       ShopContent.customEntries.put(SERoles.NECROMANCER.getIdentifier(), NECROMANCER_SHOP);
       ShopContent.customEntries.put(SERoles.ARSONIST.getIdentifier(), NECROMANCER_SHOP);
+    }
+    {
+      // 忍者商店
+      var NINJA_SHOP = new ArrayList<ShopEntry>();
+
+      // 普通刀 - 130金币
+      NINJA_SHOP.add(new ShopEntry(TMMItems.KNIFE.getDefaultInstance(), 130, ShopEntry.Type.WEAPON));
+
+      // 苦无 - 130金币
+      NINJA_SHOP.add(new ShopEntry(ModItems.NINJA_KNIFE.getDefaultInstance(), 130, ShopEntry.Type.WEAPON));
+
+
+      // 手里剑 - 275金币
+      NINJA_SHOP.add(new ShopEntry(ModItems.NINJA_SHURIKEN.getDefaultInstance(), 275, ShopEntry.Type.WEAPON));
+
+      // 关灯 - 50金币
+      NINJA_SHOP.add(new ShopEntry(TMMItems.BLACKOUT.getDefaultInstance(), 50, ShopEntry.Type.TOOL) {
+        public boolean onBuy(@NotNull Player player) {
+          return SREPlayerShopComponent.useBlackout(player);
+        }
+      });
+
+      // 撬锁器 - 75金币
+      NINJA_SHOP.add(new ShopEntry(TMMItems.LOCKPICK.getDefaultInstance(), 75, ShopEntry.Type.TOOL));
+
+      ShopContent.customEntries.put(ModRoles.NINJA_ID, NINJA_SHOP);
     }
     {
       // 厨师的商店

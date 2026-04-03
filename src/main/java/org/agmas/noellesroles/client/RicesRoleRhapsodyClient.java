@@ -7,10 +7,12 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -344,7 +346,20 @@ public class RicesRoleRhapsodyClient implements ClientModInitializer {
             }
             return true;
         }
-
+        if (gameWorld.isRole(client.player, ModRoles.NINJA)) {
+            if (!GameUtils.isPlayerAliveAndSurvival(client.player)) return true;
+            NinjaPlayerComponent ninjaComp = NinjaPlayerComponent.KEY.get(client.player);
+            if (ninjaComp == null) return true;
+            if (ninjaComp.canUseAbility()) {
+                ClientPlayNetworking.send(new NinjaAbilityC2SPacket());  // 直接 new
+            } else if (ninjaComp.cooldown > 0) {
+                client.player.displayClientMessage(
+                        Component.translatable("message.noellesroles.ninja.block_cooldown",
+                                        String.format("%.1f", ninjaComp.getCooldownSeconds()))
+                                .withStyle(ChatFormatting.RED), true);
+            }
+            return true;
+        }
         // ==================== 明星：聚光灯技能 ====================
         if (gameWorld.isRole(client.player, ModRoles.SUPERSTAR)) {
             // 检查玩家是否存活
@@ -631,6 +646,7 @@ public class RicesRoleRhapsodyClient implements ClientModInitializer {
         // 锁实体渲染器 - 使用自定义渲染器
         EntityRendererRegistry.register(ModEntities.LOCK_ENTITY, LockEntityRender::new);
     }
+
 
     /**
      * 注册Screen
