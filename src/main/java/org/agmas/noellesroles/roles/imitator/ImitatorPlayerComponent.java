@@ -17,11 +17,12 @@ import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
+import org.ladysnake.cca.api.v3.component.tick.ClientTickingComponent;
 import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 
 import java.util.UUID;
 
-public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComponent {
+public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComponent, ClientTickingComponent {
     public static final ComponentKey<ImitatorPlayerComponent> KEY = ModComponents.IMITATOR;
     private final Player player;
 
@@ -373,8 +374,11 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
         if (!gameWorld.isRole(player, ModRoles.IMITATOR))
             return;
 
-        if (cooldown > 0)
+        if (cooldown > 0) {
             cooldown--;
+            if (cooldown == 0)
+                sync();
+        }
 
         if (isCharging) {
             chargeTicks++;
@@ -449,5 +453,12 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
 
     @Override
     public void readFromNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
+    }
+
+    @Override
+    public void clientTick() {
+        if (this.cooldown > 1) {
+            this.cooldown--;
+        }
     }
 }
