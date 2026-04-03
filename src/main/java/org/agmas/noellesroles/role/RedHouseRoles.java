@@ -38,6 +38,8 @@ public class RedHouseRoles {
           Integer.MAX_VALUE, true) {
         @Override
         public InteractionResult rightClickEntity(Player player, Entity target) {
+          if (!GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player))
+            return InteractionResult.PASS;
           if (target instanceof PlayerBodyEntity be) {
             BodyDeathReasonComponent bdrc = BodyDeathReasonComponent.KEY.get(be);
             bdrc.playerRole = THEventHandler.getRandomRole().identifier();
@@ -47,12 +49,12 @@ public class RedHouseRoles {
           return InteractionResult.PASS;
         }
       })
-      .setCanSeeCoin(true).setCanSeeBodyInfo(true);
+      .setCanSeeCoin(true).setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);
   // 独立中立：芙兰朵路
   public static SRERole FURANDORU = TMMRoles.registerRole(
       new NormalRole(FURANDORU_ID, new Color(177, 153, 130).getRGB(),
           false, false, SRERole.MoodType.FAKE,
-          Integer.MAX_VALUE, false) {
+          Integer.MAX_VALUE, true) {
         @Override
         public void serverTick(ServerPlayer player) {
           if (player.isSpectator())
@@ -61,7 +63,7 @@ public class RedHouseRoles {
           GhostPlayerComponent.KEY.get(player).checkLastStand(SREGameWorldComponent.KEY.get(player.level()));
         }
       })
-      .setCanSeeCoin(true).setNeutrals(true).setCanUseInstinct(true);
+      .setCanSeeCoin(true).setNeutrals(true).setCanUseInstinct(true).setCanIgnoreBlackout(true);
   // 好人：MAID_SAKUYA 十六夜咲夜
   public static SRERole MAID_SAKUYA = TMMRoles.registerRole(new NormalRole(
       MAID_SAKUYA_ID, // 角色 ID

@@ -49,7 +49,7 @@ public abstract class CoronerHudMixin {
         if (NoellesrolesClient.targetFakeBody != null) {
             SRERole selfrole = SREClient.getCachedPlayerRole();
             boolean canSeeBody = false;
-            if (selfrole != null && selfrole.canSeeBodyInfo())
+            if (selfrole != null && selfrole.canSeeBodyDeathReason())
                 canSeeBody = true;
             if (canSeeBody
                     || SREClient.isPlayerSpectatingOrCreative()) {
@@ -99,7 +99,7 @@ public abstract class CoronerHudMixin {
         if (NoellesrolesClient.targetBody != null) {
             SRERole selfrole = SREClient.getCachedPlayerRole();
             boolean canSeeBody = false;
-            if (selfrole != null && selfrole.canSeeBodyInfo())
+            if (selfrole != null && selfrole.canSeeBodyDeathReason())
                 canSeeBody = true;
             if (canSeeBody
                     || SREClient.isPlayerSpectatingOrCreative()) {
@@ -175,7 +175,7 @@ public abstract class CoronerHudMixin {
                         foundRole = role;
                 }
                 if ((SREClient.isPlayerSpectatingOrCreative()
-                        || SREClient.isRole(ModRoles.CORONER))
+                        || selfrole.canSeeBodyRoleInfo())
                         && !bodyDeathReasonComponent.vultured) {
                     Component roleInfo = Component.translatable("hud.coroner.role_info").withColor(CommonColors.RED)
                             .append(Component

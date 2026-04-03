@@ -30,8 +30,10 @@ import java.util.function.ToIntFunction;
 public abstract class SRERole {
     private ResourceLocation identifier;
     private boolean canSeeCoin = true;
-    private boolean canSeeBodyInfo = false;
+    private boolean canSeeBodyDeathReason = false;
+    private boolean canSeeBodyRoleInfo = false;
     private boolean canUseInstinct = false;
+    private boolean canIgnoreBlackout = false;
     private int occupiedRoleCount = 1;
     public BiConsumer<ServerPlayer, SREGameWorldComponent> serverTickEvent = null;
     public BiConsumer<Player, SREGameWorldComponent> clientTickEvent = null;
@@ -41,12 +43,30 @@ public abstract class SRERole {
         return this;
     };
 
-    public boolean canSeeBodyInfo() {
-        return canSeeBodyInfo;
+    public boolean canIgnoreBlackout() {
+        return canIgnoreBlackout;
     }
 
-    public SRERole setCanSeeBodyInfo(boolean bl) {
-        this.canSeeBodyInfo = bl;
+    public SRERole setCanIgnoreBlackout(Boolean bl) {
+        this.canIgnoreBlackout = bl;
+        return this;
+    }
+
+    public boolean canSeeBodyRoleInfo() {
+        return canSeeBodyRoleInfo;
+    }
+
+    public SRERole setCanSeeBodyRoleInfo(boolean bl) {
+        this.canSeeBodyRoleInfo = bl;
+        return this;
+    }
+
+    public boolean canSeeBodyDeathReason() {
+        return canSeeBodyDeathReason;
+    }
+
+    public SRERole setCanSeeBodyDeathReason(boolean bl) {
+        this.canSeeBodyDeathReason = bl;
         return this;
     }
 

@@ -201,7 +201,7 @@ public class ModRoles {
       SRERole.MoodType.FAKE, // 真实心情
       Integer.MAX_VALUE, // 无限冲刺时间
       true // 不隐藏计分板
-  )).setCanSeeCoin(true).setComponentKey(ModComponents.DIO).setOccupiedRoleCount(2).setCanSeeBodyInfo(true);
+  )).setCanSeeCoin(true).setComponentKey(ModComponents.DIO).setOccupiedRoleCount(2).setCanSeeBodyDeathReason(true);
   // JOJO 承太郎
   public static SRERole JOJO = TMMRoles.registerRole(new NormalRole(
       JOJO_ID, // 角色 ID
@@ -292,7 +292,7 @@ public class ModRoles {
           false, false, SRERole.MoodType.FAKE,
           Integer.MAX_VALUE, false))
       .setCanSeeCoin(true).setNeutrals(true).setCanPickUpRevolver(false)
-      .setComponentKey(ModComponents.WAYFARER).setCanUseInstinct(false).setCanSeeBodyInfo(true);
+      .setComponentKey(ModComponents.WAYFARER).setCanUseInstinct(false).setCanSeeBodyDeathReason(true);
   public static SRERole JESTER = TMMRoles
       .registerRole(new NormalRole(JESTER_ID, new Color(186, 85, 211).getRGB(), false,
           false, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true))
@@ -683,10 +683,10 @@ public class ModRoles {
       .registerRole(new NormalRole(VULTURE_ID, new Color(210, 105, 30).getRGB(), false,
           false, SRERole.MoodType.FAKE, TMMRoles.CIVILIAN.getMaxSprintTime(), true)
           .setComponentKey(VulturePlayerComponent.KEY))
-      .setNeutralForKiller(true).setCanSeeTeammateKiller(false).setCanSeeBodyInfo(true);
+      .setNeutralForKiller(true).setCanSeeTeammateKiller(false).setCanSeeBodyDeathReason(true);
   public static SRERole CORONER = TMMRoles
       .registerRole(new NormalRole(CORONER_ID, new Color(122, 122, 122).getRGB(), true,
-          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanSeeBodyInfo(true);
+          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);
 
   // ==================== 自定义角色对象定义 ====================
   // 乘客阵营角色
