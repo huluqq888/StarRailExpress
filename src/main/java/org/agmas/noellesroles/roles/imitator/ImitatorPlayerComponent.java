@@ -273,7 +273,7 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
         if (tempCopiedRoleId != null) {
             if (ImitatorSkillRegistry.execute(tempCopiedRoleId, self, target)) {
                 tempCopiedUsesRemaining--;
-                cooldown = 20; // 1s cooldown
+                cooldown = 20 * 60; // 60s cooldown
                 if (tempCopiedUsesRemaining <= 0) {
                     tempCopiedRoleId = null;
                     tempCopiedUsesRemaining = 0;
@@ -459,6 +459,9 @@ public class ImitatorPlayerComponent implements RoleComponent, ServerTickingComp
     public void clientTick() {
         if (this.cooldown > 1) {
             this.cooldown--;
+        }
+        if (isCharging && chargeTicks < MAX_CHARGE_TICKS) {
+            chargeTicks++;
         }
     }
 }

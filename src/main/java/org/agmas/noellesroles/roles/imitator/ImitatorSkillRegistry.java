@@ -10,11 +10,11 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
-import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
+import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.api.TMMRoles;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
-import io.wifi.starrailexpress.game.GameConstants;
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.config.NoellesRolesConfig;
 import org.agmas.noellesroles.init.ModEffects;
@@ -24,6 +24,7 @@ import org.agmas.noellesroles.roles.ghost.GhostPlayerComponent;
 import org.agmas.noellesroles.roles.noise_maker.NoiseMakerPlayerComponent;
 import org.agmas.noellesroles.roles.recaller.RecallerPlayerComponent;
 import org.agmas.noellesroles.roles.thief.ThiefPlayerComponent;
+import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -33,7 +34,8 @@ import java.util.function.BiConsumer;
 
 /**
  * Registry mapping role IDs to their ability execution logic.
- * This allows the Imitator to use copied abilities without relying on isRole checks.
+ * This allows the Imitator to use copied abilities without relying on isRole
+ * checks.
  */
 public class ImitatorSkillRegistry {
     private static final Map<ResourceLocation, BiConsumer<ServerPlayer, UUID>> IMITATABLE_SKILLS = new HashMap<>();
@@ -42,10 +44,17 @@ public class ImitatorSkillRegistry {
         return IMITATABLE_SKILLS.containsKey(roleId);
     }
 
+    private static void temporaryChangeRole(ServerPlayer player, SRERole role) {
+        var gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
+        gameWorldComponent.addRole(player, role);
+    }
+
     public static boolean execute(ResourceLocation roleId, ServerPlayer player, @Nullable UUID target) {
         var handler = IMITATABLE_SKILLS.get(roleId);
         if (handler != null) {
+            temporaryChangeRole(player, TMMRoles.ROLES.get(roleId));
             handler.accept(player, target);
+            temporaryChangeRole(player, ModRoles.IMITATOR);
             return true;
         }
         return false;
@@ -137,8 +146,10 @@ public class ImitatorSkillRegistry {
             for (ServerPlayer t : player.serverLevel().getEntitiesOfClass(
                     ServerPlayer.class, range,
                     p -> !p.getUUID().equals(player.getUUID()) && GameUtils.isPlayerAliveAndSurvival(p))) {
-                if (player.distanceToSqr(t) > radius * radius) continue;
-                if (!(t.isInWater() || t.isUnderWater())) continue;
+                if (player.distanceToSqr(t) > radius * radius)
+                    continue;
+                if (!(t.isInWater() || t.isUnderWater()))
+                    continue;
                 t.addEffect(new MobEffectInstance(ModEffects.MOVE_BANED, duration, 0, false, true, false));
                 t.addEffect(new MobEffectInstance(MobEffects.GLOWING, duration, 0, false, true, false));
             }
