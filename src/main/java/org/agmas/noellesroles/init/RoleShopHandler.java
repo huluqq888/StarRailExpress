@@ -482,9 +482,6 @@ public class RoleShopHandler {
       // 忍者商店
       var NINJA_SHOP = new ArrayList<ShopEntry>();
 
-      // 普通刀 - 130金币
-      NINJA_SHOP.add(new ShopEntry(TMMItems.KNIFE.getDefaultInstance(), 130, ShopEntry.Type.WEAPON));
-
       // 苦无 - 130金币
       NINJA_SHOP.add(new ShopEntry(ModItems.NINJA_KNIFE.getDefaultInstance(), 130, ShopEntry.Type.WEAPON));
 
