@@ -36,7 +36,7 @@ public class ParanoidHandler {
     }
 
     private static void tickPhantasmagoria(ServerPlayer player) {
-        Level world = player.getLevel();
+        Level world = player.level();
         WorldModifierComponent modifierComp = WorldModifierComponent.KEY.get(world);
         if (modifierComp == null) return;
 
@@ -63,6 +63,6 @@ public class ParanoidHandler {
         float volume = 1.0f;
         float pitch = 0.8f + (float) (random.nextDouble() * 0.4D);
 
-        player.getLevel().playSound(null, pos.x, pos.y, pos.z, sound, SoundSource.PLAYERS, volume, pitch);
+        player.level().playSound(null, pos.x, pos.y, pos.z, sound, SoundSource.PLAYERS, volume, pitch);
     }
 }
