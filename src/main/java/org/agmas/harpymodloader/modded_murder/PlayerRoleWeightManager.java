@@ -38,8 +38,7 @@ public class PlayerRoleWeightManager {
         }
         return Math.pow(1.35, weightManager.getKillerSideFailureBoost());
     }
-
-    public static double getRoleWeightPercent(UUID player, int type) {
+public static double getRoleWeightPercent(UUID player, int type) {
         var weightManager = PlayerRoleWeightManager.playerWeights.get(player);
         if (weightManager == null) {
             weightManager = new PlayerRoleWeightManager.WeightInfo();
@@ -51,10 +50,10 @@ public class PlayerRoleWeightManager {
             total = 1;
         double basePercent = 1.0 - (double) typeWeight / (double) total;
 
-        // streak>=3 后，对非杀手侧进行压制、对杀手侧进行抬升，缓解长期拿不到杀手侧的问题。
+        // 连续相同阵营惩罚：streak>=3时每多一局概率减半，防止一直游玩同一阵营
         int streak = weightManager.getStreakCount();
         if (streak >= 3) {
-            if (!isKillerSideType(type)) {
+            if (getFactionGroup(type) == weightManager.getLastAssignedFactionGroup()) {
                 double streakPenalty = Math.pow(0.5, streak - 1);
                 basePercent *= streakPenalty;
             } else {
@@ -62,12 +61,6 @@ public class PlayerRoleWeightManager {
                 basePercent *= streakPenalty;
             }
         }
-
-        if (type <= 1) {
-            basePercent = Math.min(basePercent, 1.2);
-        }
-
-        basePercent *= getKillerSideFailureBoost(weightManager, type);
 
         return Math.max(0.0, basePercent);
     }

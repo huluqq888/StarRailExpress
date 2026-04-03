@@ -205,7 +205,7 @@ public class ModPacketsReciever {
             }
             abpc.sync();
           }
-          if (GameUtils.isPlayerAliveAndSurvival(player)) {
+          if (GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player)) {
             var psc = SREPlayerShopComponent.KEY.get(player);
             if (psc.balance >= 100) {
               psc.addToBalance(-100);
