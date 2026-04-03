@@ -217,6 +217,11 @@ public class ImitatorSkillRegistry {
                 st.connection.teleport(target.getX(), target.getY(), target.getZ(), yaw, pitch);
                 st.displayClientMessage(Component.translatable("message.noellesroles.star.attracted")
                         .withStyle(ChatFormatting.GOLD), true);
+
+                // 每吸引一个玩家奖励10金币
+                SREPlayerShopComponent shop = SREPlayerShopComponent.KEY.get(player);
+                shop.balance += 10;
+                shop.sync();
             }
         }
 
