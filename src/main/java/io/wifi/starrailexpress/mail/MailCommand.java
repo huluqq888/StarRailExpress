@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.mail;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -115,7 +116,7 @@ public class MailCommand {
     private static int executeSendItem(CommandSourceStack source,
                                        Collection<ServerPlayer> targets,
                                        String title, String content,
-                                       ItemInput itemInput, int count) {
+                                                                           ItemInput itemInput, int count) throws CommandSyntaxException {
         String senderName = source.getTextName();
         for (ServerPlayer player : targets) {
             ItemStack stack = itemInput.createItemStack(count, false);
