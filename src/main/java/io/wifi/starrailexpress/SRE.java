@@ -85,6 +85,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
     public static ArrayList<String> canDropItem = new ArrayList<>();
     public static ArrayList<Predicate<Player>> canDrop = new ArrayList<>();
 
+
     public static @NotNull ResourceLocation id(String name) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
     }
@@ -227,6 +228,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             SetAutoTrainResetCommand.register(dispatcher);
             SetBoundCommand.register(dispatcher);
             AutoStartCommand.register(dispatcher);
+            AutoShutdownWhenNotRunningCommand.register(dispatcher);
             LockToSupportersCommand.register(dispatcher);
             SetRoleCountCommand.register(dispatcher);
             ConfigCommand.register(dispatcher);
@@ -284,6 +286,10 @@ public class SRE extends StarRailExpressID implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(
                 io.wifi.starrailexpress.mod_whitelist.common.network.ModWhitelistPayload.ID,
                 io.wifi.starrailexpress.mod_whitelist.common.network.ModWhitelistPayload.CODEC);
+
+        PayloadTypeRegistry.playS2C().register(
+                io.wifi.starrailexpress.mod_whitelist.common.network.ModWhitelistConfigPayload.ID,
+                io.wifi.starrailexpress.mod_whitelist.common.network.ModWhitelistConfigPayload.CODEC);
 
         PayloadTypeRegistry.playS2C().register(ModVersionPacket.ID, ModVersionPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(ModVersionPacket.ID, ModVersionPacket.CODEC);
@@ -367,6 +373,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
     }
 
     private void registerGlobalReceivers() {
+
         UpdateSkinSelectedPayload.registerReceiver();
         UpdateNameTagSelectedPayload.registerReceiver();
         ServerPlayNetworking.registerGlobalReceiver(KnifeStabPayload.ID, new KnifeStabPayload.Receiver());
