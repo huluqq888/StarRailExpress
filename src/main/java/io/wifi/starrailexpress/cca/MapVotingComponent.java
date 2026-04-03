@@ -27,6 +27,7 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
 
     private final Level world;
     private boolean votingActive = false;
+    private boolean votingPaused = false;
     private int votingTimeLeft = 0;
     private int totalVotingTime = 0;
     private final Map<String, Integer> votes = new HashMap<>();
@@ -40,6 +41,7 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
     @Override
     public void readFromNbt(@NotNull CompoundTag tag, HolderLookup.Provider provider) {
         this.votingActive = tag.getBoolean("VotingActive");
+        this.votingPaused = tag.getBoolean("VotingPaused");
         this.votingTimeLeft = tag.getInt("VotingTimeLeft");
         this.totalVotingTime = tag.getInt("TotalVotingTime");
 
@@ -57,6 +59,7 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
     @Override
     public void writeToNbt(@NotNull CompoundTag tag, HolderLookup.Provider provider) {
         tag.putBoolean("VotingActive", this.votingActive);
+        tag.putBoolean("VotingPaused", this.votingPaused);
         tag.putInt("VotingTimeLeft", this.votingTimeLeft);
         tag.putInt("TotalVotingTime", this.totalVotingTime);
 
@@ -82,7 +85,7 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
         // 处理投票倒计时
         if (world != null && world.isClientSide && votingActive) {
             votingTimeLeft--;
-        } else if (world != null && votingActive) {
+        } else if (world != null && votingActive && !votingPaused) {
             votingTimeLeft--;
             if (votingTimeLeft <= 0) {
                 finishVoting();
@@ -113,6 +116,10 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
         return votingActive;
     }
 
+    public boolean isVotingPaused() {
+        return votingPaused;
+    }
+
     public int getVotingTimeLeft() {
         return votingTimeLeft;
     }
@@ -135,6 +142,11 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
         this.shouldSync = true;
     }
 
+    public void setVotingPaused(boolean paused) {
+        this.votingPaused = paused;
+        this.shouldSync = true;
+    }
+
     public void setVotingTimeLeft(int timeLeft) {
         this.votingTimeLeft = timeLeft;
         this.shouldSync = true;
@@ -147,7 +159,7 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
 
     // 投票管理方法
     public boolean voteForMap(UUID playerId, String mapId) {
-        if (!votingActive) {
+        if (!votingActive || votingPaused) {
             return false;
         }
 
@@ -193,8 +205,30 @@ public class MapVotingComponent implements AutoSyncedComponent, CommonTickingCom
     public void startVoting(int votingTimeSeconds) {
         reset();
         this.votingActive = true;
+        this.votingPaused = false;
         this.votingTimeLeft = votingTimeSeconds;
         this.totalVotingTime = votingTimeSeconds;
+        this.shouldSync = true;
+    }
+
+    public void pauseVoting() {
+        if (votingActive && !votingPaused) {
+            this.votingPaused = true;
+            this.shouldSync = true;
+        }
+    }
+
+    public void resumeVoting() {
+        if (votingActive && votingPaused) {
+            this.votingPaused = false;
+            this.shouldSync = true;
+        }
+    }
+
+    public void stopVoting() {
+        this.votingActive = false;
+        this.votingPaused = false;
+        this.votingTimeLeft = 0;
         this.shouldSync = true;
     }
 

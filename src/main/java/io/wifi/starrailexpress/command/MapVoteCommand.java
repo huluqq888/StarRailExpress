@@ -22,7 +22,13 @@ public class MapVoteCommand {
                                 IntegerArgumentType.integer(10 * 20, 300 * 20)) // 时间范围10-300秒
                                 .executes(context -> startVoting(context.getSource(),
                                         IntegerArgumentType.getInteger(context,
-                                                "time")))));
+                                                "time"))))
+                        .then(Commands.literal("pause")
+                                .executes(context -> pauseVoting(context.getSource())))
+                        .then(Commands.literal("resume")
+                                .executes(context -> resumeVoting(context.getSource())))
+                        .then(Commands.literal("stop")
+                                .executes(context -> stopVoting(context.getSource()))));
     }
 
     private static int startVoting(CommandSourceStack source, int time) {
@@ -42,6 +48,11 @@ public class MapVoteCommand {
             return 0;
         }
 
+        if (votingManager.isVotingPaused()) {
+            source.sendFailure(Component.literal("投票系统已暂停，无法发起新的投票！"));
+            return 0;
+        }
+
         votingManager.startVoting(time);
         String mapconfigs = ShowSelectedMapUIPayload
                 .convertServerMapConfigToString(ServerMapConfig.getInstance(source.getServer()));
@@ -53,6 +64,55 @@ public class MapVoteCommand {
                 });
         source.sendSuccess(() -> Component.translatable("command.sre.votemap.success"), false);
 
+        return 1;
+    }
+
+    private static int pauseVoting(CommandSourceStack source) {
+        MapVotingManager votingManager = MapVotingManager.getInstance();
+
+        if (!votingManager.isVotingActive()) {
+            source.sendFailure(Component.literal("当前没有正在进行的投票！"));
+            return 0;
+        }
+
+        if (votingManager.isVotingPaused()) {
+            source.sendFailure(Component.literal("投票已经处于暂停状态！"));
+            return 0;
+        }
+
+        votingManager.pauseVoting();
+        source.sendSuccess(() -> Component.literal("投票已暂停"), true);
+        return 1;
+    }
+
+    private static int resumeVoting(CommandSourceStack source) {
+        MapVotingManager votingManager = MapVotingManager.getInstance();
+
+        if (!votingManager.isVotingActive()) {
+            source.sendFailure(Component.literal("当前没有正在进行的投票！"));
+            return 0;
+        }
+
+        if (!votingManager.isVotingPaused()) {
+            source.sendFailure(Component.literal("投票未处于暂停状态！"));
+            return 0;
+        }
+
+        votingManager.resumeVoting();
+        source.sendSuccess(() -> Component.literal("投票已恢复"), true);
+        return 1;
+    }
+
+    private static int stopVoting(CommandSourceStack source) {
+        MapVotingManager votingManager = MapVotingManager.getInstance();
+
+        if (!votingManager.isVotingActive()) {
+            source.sendFailure(Component.literal("当前没有正在进行的投票！"));
+            return 0;
+        }
+
+        votingManager.stopVoting();
+        source.sendSuccess(() -> Component.literal("投票已终止"), true);
         return 1;
     }
 }

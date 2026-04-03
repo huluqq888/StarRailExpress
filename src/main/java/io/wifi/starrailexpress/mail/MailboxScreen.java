@@ -182,6 +182,7 @@ public class MailboxScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        super.render(graphics, mouseX, mouseY, delta);
         // 暗化背景
         graphics.fill(0, 0, this.width, this.height, 0x88000000);
         // 面板
@@ -195,7 +196,7 @@ public class MailboxScreen extends Screen {
             renderListView(graphics, mouseX, mouseY);
         }
 
-        super.render(graphics, mouseX, mouseY, delta);
+
     }
 
     private void renderListView(GuiGraphics graphics, int mouseX, int mouseY) {

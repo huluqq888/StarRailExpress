@@ -51,12 +51,49 @@ public class MapVotingManager {
         }
     }
 
+    public void pauseVoting() {
+        MinecraftServer server = SRE.SERVER;
+        if (server != null) {
+            Level level = server.overworld();
+            MapVotingComponent votingComponent = MapVotingComponent.KEY.get(level);
+            votingComponent.pauseVoting();
+        }
+    }
+
+    public void resumeVoting() {
+        MinecraftServer server = SRE.SERVER;
+        if (server != null) {
+            Level level = server.overworld();
+            MapVotingComponent votingComponent = MapVotingComponent.KEY.get(level);
+            votingComponent.resumeVoting();
+        }
+    }
+
+    public void stopVoting() {
+        MinecraftServer server = SRE.SERVER;
+        if (server != null) {
+            Level level = server.overworld();
+            MapVotingComponent votingComponent = MapVotingComponent.KEY.get(level);
+            votingComponent.stopVoting();
+        }
+    }
+
     public boolean isVotingActive() {
         MinecraftServer server = SRE.SERVER;
         if (server != null) {
             Level level = server.overworld();
             MapVotingComponent votingComponent = MapVotingComponent.KEY.get(level);
             return votingComponent.isVotingActive();
+        }
+        return false;
+    }
+
+    public boolean isVotingPaused() {
+        MinecraftServer server = SRE.SERVER;
+        if (server != null) {
+            Level level = server.overworld();
+            MapVotingComponent votingComponent = MapVotingComponent.KEY.get(level);
+            return votingComponent.isVotingPaused();
         }
         return false;
     }
