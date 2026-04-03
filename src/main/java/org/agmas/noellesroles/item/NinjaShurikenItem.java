@@ -25,6 +25,10 @@ public class NinjaShurikenItem extends ThrowingKnife {
     }
 
     @Override
+    public void releaseUsing(ItemStack stack, Level world, LivingEntity user, int remainingUseTicks) {
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player user, InteractionHand hand) {
         ItemStack itemStack = user.getItemInHand(hand);
         if (user.isSpectator() || user.getCooldowns().isOnCooldown(ModItems.NINJA_SHURIKEN)) {
@@ -46,7 +50,7 @@ public class NinjaShurikenItem extends ThrowingKnife {
                 if (level.isClientSide) {
                     ClientPlayNetworking.send(new TryThrowItemPacket());
                 }
-                itemStack.shrink(1);
+                // itemStack.shrink(1);
                 return itemStack;
             }
         }
@@ -55,12 +59,16 @@ public class NinjaShurikenItem extends ThrowingKnife {
 
     @Override
     public UseAnim getUseAnimation(ItemStack stack) {
-        return UseAnim.NONE;
+        return UseAnim.SPEAR;
     }
 
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         return false;
+    }
+    @Override
+    public int getUseDuration(ItemStack stack, LivingEntity user) {
+        return 5;
     }
 
     @Override

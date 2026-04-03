@@ -282,7 +282,8 @@ public class ModPacketsReciever {
 
     ServerPlayNetworking.registerGlobalReceiver(NinjaAbilityC2SPacket.ID, (payload, context) -> {
       NinjaPlayerComponent comp = NinjaPlayerComponent.KEY.get(context.player());
-      if (comp != null) comp.useAbility();
+      if (comp != null)
+        comp.useAbility();
     });
     // 操纵师数据包处理
     ServerPlayNetworking.registerGlobalReceiver(ModPackets.MANIPULATOR_PACKET, (payload, context) -> {
@@ -313,6 +314,8 @@ public class ModPacketsReciever {
 
     ServerPlayNetworking.registerGlobalReceiver(TryThrowItemPacket.ID, (payload, context) -> {
       final var player = context.player();
+      if (player.isSpectator())
+        return;
       ItemStack mainHandItem = player.getMainHandItem();
       if (mainHandItem.getItem() instanceof ThrowingKnife tk) {
         ItemCooldowns cooldowns1 = player.getCooldowns();
@@ -320,22 +323,25 @@ public class ModPacketsReciever {
         if (GameUtils.isPlayerAliveAndSurvival(player) && cooldowns1.isOnCooldown(tk)
             && cooldowns.get(tk).endTime - cooldowns1.tickCount <= 20)
           return;
-        player.getMainHandItem().shrink(1);
+        if (!player.isCreative())
+          player.getMainHandItem().shrink(1);
         if (!cooldowns1.isOnCooldown(tk)) {
           cooldowns1.addCooldown(tk, 20);
         }
-        ThrowingKnifeEntity entity = new ThrowingKnifeEntity(ModEntities.THROWING_KNIFE, player.level(),tk.getDefaultInstance());
+        ThrowingKnifeEntity entity = new ThrowingKnifeEntity(ModEntities.THROWING_KNIFE, player.level(),
+            tk.getDefaultInstance());
         entity.setPos(player.getEyePosition().add(0, -0.2, 0));
         entity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, 1.3f, 1.0f);
         entity.setOwner(player);
         player.level().addFreshEntity(entity);
         player.swing(InteractionHand.MAIN_HAND);
         ServerLevel serverLevel = player.serverLevel();
-        serverLevel.players().forEach(p -> {
-          serverLevel.playSound(p, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.TRIDENT_THROW,
-              SoundSource.PLAYERS, 1.0f, 1.0f);
-        });
-
+        if (mainHandItem.is(ModItems.THROWING_KNIFE)) {
+          serverLevel.players().forEach(p -> {
+            serverLevel.playSound(p, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.TRIDENT_THROW,
+                SoundSource.PLAYERS, 1.0f, 1.0f);
+          });
+        }
       }
       if (player.getMainHandItem().getItem() instanceof StalkerKnifeItem stalkerKnifeItem) {
         if (SREGameWorldComponent.KEY.get(player.level()).isRole(player.getUUID(), ModRoles.STALKER)) {
@@ -346,7 +352,6 @@ public class ModPacketsReciever {
             }
           }
         }
-
       }
     });
     ServerPlayNetworking.registerGlobalReceiver(ModPackets.VULTURE_PACKET, (payload, context) -> {

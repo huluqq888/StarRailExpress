@@ -111,5 +111,5 @@
   "item.starrailexpress.light_toilet.desc": "潜色马桶，任务方块，右键坐马桶上可以完成上厕所任务。。",
   "item.starrailexpress.security_monitor.desc": "安全监控，用于观察监控摄像头的视角。",
   "item.noellesroles.ninja_knife.desc": "忍者的近战武器，右键立即刺杀目标，无声且消耗品。",
-  "item.noellesroles.ninja_shuriken.desc": "忍者的远程武器，右键射击，无声且消耗品。"
+  "item.noellesroles.ninja_shuriken.desc": "忍者的远程武器，长按右键 0.25s 发射，无声且消耗品。"
 }
