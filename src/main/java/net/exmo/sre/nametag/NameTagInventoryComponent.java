@@ -117,7 +117,7 @@ public class NameTagInventoryComponent implements RoleComponent {
         if (CurrentNameTag != null && !CurrentNameTag.isEmpty() && !CurrentNameTag.isBlank()) {
             toAddNameTags.add(Component.translatable(CurrentNameTag));
         }
-        if (nameTags.size() > 0) {
+        if (!toAddNameTags.isEmpty()) {
             return ComponentUtils.formatList(toAddNameTags, (t) -> {
                 return Component.literal(" ").append(t);
             }).copy().append(" ");
