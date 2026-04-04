@@ -573,7 +573,7 @@ public class ModEventsRegister {
             return false;
         });
         // 不屈修饰符：一次性免疫被平民误杀；杀手阵营对杀手攻击免疫
-        AllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
+        AfterShieldAllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
             if (victim == null || victim.level().isClientSide())
                 return true;
 
@@ -589,7 +589,7 @@ public class ModEventsRegister {
             var killerRole = killer != null ? gameWorld.getRole(killer) : null;
 
             // 若受害者为杀手阵营，且攻击者也为杀手阵营，则免疫此杀戮
-            if (victimRole != null && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(victimRole)) {
+            if (victimRole != null && !victimRole.isInnocent() && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(victimRole)) {
                 if (killer != null && killerRole != null && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(killerRole)) {
                     if (victim instanceof ServerPlayer sp) {
                         sp.displayClientMessage(Component.translatable("message.sre.unyielding.immune_killer")

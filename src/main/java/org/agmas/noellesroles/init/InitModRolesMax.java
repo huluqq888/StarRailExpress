@@ -242,7 +242,7 @@ public class InitModRolesMax {
         Harpymodloader.setRoleMaximum(ModRoles.GLITCH_ROBOT_ID, NoellesRolesConfig.HANDLER.instance().glitchRobotMax);
         Harpymodloader.setRoleMaximum(ModRoles.GHOST_ID, NoellesRolesConfig.HANDLER.instance().ghostMax);
         Harpymodloader.setRoleMaximum(ModRoles.THIEF_ID, 1);
-        Harpymodloader.setRoleMaximum(ModRoles.MERCENARY_ID, 1);
+        Harpymodloader.setRoleMaximum(ModRoles.MERCENARY_ID, 0);
         Harpymodloader.setRoleMaximum(ModRoles.BANDIT_ID, 1);
         Harpymodloader.setRoleMaximum(ModRoles.BOMBER_ID, 1);
         Harpymodloader.setRoleMaximum(ModRoles.OLDMAN_ID, 1);
