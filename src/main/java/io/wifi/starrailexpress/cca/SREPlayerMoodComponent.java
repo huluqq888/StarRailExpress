@@ -193,8 +193,7 @@ public class SREPlayerMoodComponent implements RoleComponent, ServerTickingCompo
         if (shouldSync)
             this.sync();
 
-        // 根据情绪值调整玩家速度
-        updatePlayerMovementSpeed();
+
     }
 
     public float getMood() {
