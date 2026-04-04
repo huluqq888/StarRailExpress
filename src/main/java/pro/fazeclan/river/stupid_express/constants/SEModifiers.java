@@ -420,13 +420,23 @@ public class SEModifiers {
             if (modifier.equals(VIGOROUS)) {
                 if (player instanceof ServerPlayer sp) {
                     // 给玩家长期的体力提升/恢复效果（通过已有 ModEffects）
-                    sp.addEffect(new MobEffectInstance(ModEffects.STAMINA_BOOST, 10000000, 0, true, false, false));
-                    sp.addEffect(new MobEffectInstance(ModEffects.STAMINA_RECOVERY, 10000000, 0, true, false, false));
+                    sp.addEffect(new MobEffectInstance(ModEffects.STAMINA_BOOST, 10000000, 0, false, false, false));
+                    sp.addEffect(new MobEffectInstance(ModEffects.STAMINA_RECOVERY, 10000000, 0, false, false, false));
                 }
             }
             if (modifier.equals(UNYIELDING)) {
                 // 分配时重置一次性免疫标记（允许新一轮免疫）
                 UNYIELDING_IMMUNITY_USED.remove(player.getUUID());
+                // 如果玩家当前为中立阵营，则给予二级体力提升效果
+                if (player instanceof ServerPlayer sp) {
+                    var gameComponent = SREGameWorldComponent.KEY.get(sp.serverLevel());
+                    if (gameComponent != null) {
+                        var role = gameComponent.getRole(player);
+                        if (role != null && role.isNeutrals()) {
+                            sp.addEffect(new MobEffectInstance(ModEffects.STAMINA_BOOST, 10000000, 1, false, false, false));
+                        }
+                    }
+                }
             }
 
         }));
