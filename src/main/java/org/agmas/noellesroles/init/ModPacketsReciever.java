@@ -334,7 +334,7 @@ public class ModPacketsReciever {
 
         entity.setPos(player.getEyePosition().add(0, 0, 0));
         entity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, 1.3f, 1.0f);
-        // entity.setOwner(player);
+        entity.setOwner(player);
         player.level().addFreshEntity(entity);
         player.swing(InteractionHand.MAIN_HAND);
         ServerLevel serverLevel = player.serverLevel();
