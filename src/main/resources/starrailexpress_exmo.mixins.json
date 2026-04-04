@@ -8,8 +8,8 @@
     "defaultRequire": 1
   },
   "client": [
+    "client.HttpTextureMixin",
     "client.LoadingScreenMixin",
-    "client.SkinManagerFixer",
     "client.VolumeGetMixin"
   ]
 }
