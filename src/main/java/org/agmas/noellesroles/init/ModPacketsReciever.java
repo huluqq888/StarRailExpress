@@ -325,11 +325,13 @@ public class ModPacketsReciever {
             && cooldowns.get(tk).endTime - cooldowns1.tickCount <= 20)
           return;
         if (!player.isCreative())
-          player.getMainHandItem().shrink(1);
+          mainHandItem.shrink(1);
         if (!cooldowns1.isOnCooldown(tk)) {
           cooldowns1.addCooldown(tk, 20);
         }
-        ThrowingKnifeEntity entity = new ThrowingKnifeEntity(ModEntities.THROWING_KNIFE, player.level());
+        ThrowingKnifeEntity entity = new ThrowingKnifeEntity(ModEntities.THROWING_KNIFE, player, player.level(),
+            tk.getDefaultInstance());
+
         entity.setPos(player.getEyePosition().add(0, 0, 0));
         entity.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, 1.3f, 1.0f);
         entity.setOwner(player);
@@ -502,8 +504,8 @@ public class ModPacketsReciever {
 
           // 模仿者使用广播员能力
           if (gameWorldComponent.isRole(context.player(), ModRoles.IMITATOR)) {
-            org.agmas.noellesroles.roles.imitator.ImitatorPlayerComponent imitComp =
-                    org.agmas.noellesroles.component.ModComponents.IMITATOR.get(context.player());
+            org.agmas.noellesroles.roles.imitator.ImitatorPlayerComponent imitComp = org.agmas.noellesroles.component.ModComponents.IMITATOR
+                .get(context.player());
             if (!payload.onlySave()) {
               imitComp.useMessageAbility(context.player(), payload.message());
             }
@@ -581,7 +583,7 @@ public class ModPacketsReciever {
     });
     ServerPlayNetworking.registerGlobalReceiver(RecorderC2SPacket.TYPE, RecorderC2SPacket::handle);
     ServerPlayNetworking.registerGlobalReceiver(MercenaryContractSignC2SPacket.TYPE,
-      MercenaryContractSignC2SPacket::handle);
+        MercenaryContractSignC2SPacket::handle);
 
     // 消防斧攻击包处理
     ServerPlayNetworking.registerGlobalReceiver(FireAxeStabPayload.ID, (payload, context) -> {
@@ -688,6 +690,23 @@ public class ModPacketsReciever {
           org.agmas.noellesroles.packet.WaterGhostUseSkillC2SPacket.handle(payload, context);
           ConfigWorldComponent.onPlayerUsedSkill(context.player());
         });
+
+    // 苦力怕技能包处理
+    ServerPlayNetworking.registerGlobalReceiver(org.agmas.noellesroles.RicesRoleRhapsody.CREEPER_ABILITY_PACKET, (payload, context) -> {
+      ServerPlayer player = context.player();
+      SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY.get(player.level());
+
+      if (!gameWorldComponent.isSkillAvailable) {
+        player.displayClientMessage(
+            Component.translatable("message.tip.skill_disabled").withStyle(ChatFormatting.RED), true);
+        return;
+      }
+
+      if (gameWorldComponent.isRole(player, ModRoles.CREEPER)) {
+        CreeperPlayerComponent creeperComponent = CreeperPlayerComponent.KEY.get(player);
+        creeperComponent.ignite();
+      }
+    });
   }
 
 }

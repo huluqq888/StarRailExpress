@@ -2,14 +2,16 @@ package org.agmas.noellesroles.entity;
 
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
@@ -17,14 +19,22 @@ import net.minecraft.world.phys.Vec3;
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.init.ModItems;
 
-public class ThrowingKnifeEntity extends Arrow {
+public class ThrowingKnifeEntity extends AbstractArrow {
 
-    public ThrowingKnifeEntity(EntityType<? extends Arrow> entityType, Level level) {
+    private ItemStack it = null;
+
+    public ThrowingKnifeEntity(EntityType<? extends AbstractArrow> entityType, Level level) {
         super(entityType, level);
+        it = ModItems.THROWING_KNIFE.getDefaultInstance();
         this.setNoGravity(true);
     }
 
-
+    public ThrowingKnifeEntity(EntityType<? extends AbstractArrow> entityType, LivingEntity livingEntity, Level level,
+            ItemStack itemStack) {
+        super(entityType, livingEntity, level, itemStack, null);
+        it = itemStack.copy();
+        this.setNoGravity(true);
+    }
 
     @Override
     public boolean isPickable() {
@@ -58,8 +68,16 @@ public class ThrowingKnifeEntity extends Arrow {
                     serverLevel.playSound(player, location.x, location.y, location.z, SoundEvents.CHAIN_HIT,
                             SoundSource.PLAYERS, 1.0f, 1.0f);
                 });
+                ResourceLocation deathReason = Noellesroles.id("throwing_knife_hit");
+                if (it != null && !it.isEmpty()) {
+                    deathReason = BuiltInRegistries.ITEM.getKey(it.getItem());
+                    if (deathReason == null) {
+                        deathReason = Noellesroles.id("throwing_knife_hit");
+                        ;
+                    }
+                }
                 GameUtils.killPlayer(serverPlayer, true, (ServerPlayer) getOwner(),
-                        Noellesroles.id("throwing_knife_hit"));
+                        deathReason);
                 this.remove(RemovalReason.KILLED);
             }
         }
@@ -67,14 +85,14 @@ public class ThrowingKnifeEntity extends Arrow {
 
     @Override
     protected ItemStack getDefaultPickupItem() {
-        return ItemStack.EMPTY;
+        return ModItems.THROWING_KNIFE.getDefaultInstance();
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         super.addAdditionalSaveData(compoundTag);
     }
-// @Override
+    // @Override
     // protected Item getDefaultItem() {
     // return ModItems.THROWING_KNIFE;
     // }

@@ -293,7 +293,9 @@ public class GameUtilsCommand {
                   })))
               .then(Commands.literal("blackout").executes((context) -> {
                 return executeBlackout(context, -1);
-              }).then(Commands.literal("stop").executes((context) -> {
+              }).then(Commands.argument("duration", IntegerArgumentType.integer(0)).executes((context) -> {
+                return executeBlackout(context, IntegerArgumentType.getInteger(context, "duration"));
+              })).then(Commands.literal("stop").executes((context) -> {
                 return executeBlackout(context, 0);
               })))
               .then(Commands.literal("psycho").executes((context) -> {
@@ -354,7 +356,7 @@ public class GameUtilsCommand {
     GameUtils.killPlayer(victim, spawnBody, killer, deathReasonRL, force);
     context.getSource()
         .sendSuccess(() -> Component.translatable("Killed player %s by %s with reason %s (Spawn body: %s)",
-            victim.getDisplayName(), (killer == null ? Component.literal("System") : killer.getDisplayName()),
+            victim.getName(), (killer == null ? Component.literal("System") : killer.getName()),
             Component.translatable("death_reason." + deathReasonT), (spawnBody ? "Yes" : "No")), true);
     return 1;
   }
@@ -388,7 +390,11 @@ public class GameUtilsCommand {
   public static int executeBlackout(CommandContext<CommandSourceStack> context, int time) {
     var wbc = SREWorldBlackoutComponent.KEY.get(context.getSource().getLevel());
     if (time != 0) {
-      wbc.triggerBlackout();
+      if (time == 0) {
+        wbc.triggerBlackout(true);
+      } else {
+        wbc.triggerBlackout(true, time);
+      }
       context.getSource()
           .sendSuccess(() -> Component.translatable("Triggered Blackout!"), true);
 

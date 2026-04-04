@@ -59,11 +59,23 @@ public class RoleInitialItems {
     }
 
     /**
-     * 初始化初始物品映射
+     * 初始化初始物品映射，职业的初始物品加在这里。
      */
     public static void initializeInitialItems() {
         INITIAL_ITEMS_MAP.clear();
 
+        {
+            // baseball
+            List<Supplier<ItemStack>> items = new ArrayList<>();
+            items.add(() -> TMMItems.BAT.getDefaultInstance());
+            INITIAL_ITEMS_MAP.put(ModRoles.BASEBALL_PLAYER, items);
+        }
+        {
+            // 最好的小脑
+            List<Supplier<ItemStack>> items = new ArrayList<>();
+            items.add(() -> TMMItems.GRENADE.getDefaultInstance());
+            INITIAL_ITEMS_MAP.put(ModRoles.BEST_VIGILANTE, items);
+        }
         {
             // FURANDORU
             List<Supplier<ItemStack>> items = new ArrayList<>();

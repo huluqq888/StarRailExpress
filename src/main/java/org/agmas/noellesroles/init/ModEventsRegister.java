@@ -573,7 +573,7 @@ public class ModEventsRegister {
             return false;
         });
         // 不屈修饰符：一次性免疫被平民误杀；杀手阵营对杀手攻击免疫
-        AllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
+        AfterShieldAllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
             if (victim == null || victim.level().isClientSide())
                 return true;
 
@@ -589,7 +589,7 @@ public class ModEventsRegister {
             var killerRole = killer != null ? gameWorld.getRole(killer) : null;
 
             // 若受害者为杀手阵营，且攻击者也为杀手阵营，则免疫此杀戮
-            if (victimRole != null && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(victimRole)) {
+            if (victimRole != null && !victimRole.isInnocent() && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(victimRole)) {
                 if (killer != null && killerRole != null && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(killerRole)) {
                     if (victim instanceof ServerPlayer sp) {
                         sp.displayClientMessage(Component.translatable("message.sre.unyielding.immune_killer")
@@ -808,11 +808,11 @@ public class ModEventsRegister {
                         return InteractionResult.FAIL;
                     RoleUtils.insertStackInFreeSlot(player, fkit.copy());
                     player.displayClientMessage(
-                            Component.translatable("item.noellesroles.handcuffs.put_off", target.getDisplayName())
+                            Component.translatable("item.noellesroles.handcuffs.put_off", target.getName())
                                     .withStyle(ChatFormatting.GREEN),
                             true);
                     target.displayClientMessage(Component
-                            .translatable("item.noellesroles.handcuffs.reciever_put_off", player.getDisplayName())
+                            .translatable("item.noellesroles.handcuffs.reciever_put_off", player.getName())
                             .withStyle(ChatFormatting.GREEN), true);
                     return InteractionResult.SUCCESS;
                 }
@@ -1130,7 +1130,7 @@ public class ModEventsRegister {
                     } else {
                         p.getCooldowns().addCooldown(Items.BARRIER, 60 * 20);
                         p.displayClientMessage(
-                                Component.translatable("message.monitor.killer_killed", victim.getDisplayName())
+                                Component.translatable("message.monitor.killer_killed", victim.getName())
                                         .withStyle(ChatFormatting.AQUA),
                                 true);
                     }
@@ -1165,7 +1165,7 @@ public class ModEventsRegister {
                     mercenary.setForcedTarget(killer);
                     victim.displayClientMessage(
                             Component.translatable("message.noellesroles.mercenary.new_forced_target",
-                                            killer.getDisplayName())
+                                            killer.getName())
                                     .withStyle(ChatFormatting.RED),
                             true);
                 }
@@ -1265,10 +1265,10 @@ public class ModEventsRegister {
                                             GameReplayUtils.getReplayPlayerDisplayText(p, true),
                                             GameReplayUtils.getReplayPlayerDisplayText(player, true)));
                             p.displayClientMessage(Component.translatable(
-                                    "hud.noellesroles.star.dead.life_and_death_shape", player.getDisplayName())
+                                    "hud.noellesroles.star.dead.life_and_death_shape", player.getName())
                                     .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD), true);
                             player.displayClientMessage(Component.translatable(
-                                    "hud.noellesroles.star.dead.life_and_death_shape.victim", p.getDisplayName())
+                                    "hud.noellesroles.star.dead.life_and_death_shape.victim", p.getName())
                                     .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD), true);
                             GameUtils.killPlayer(p, true, killer, deathReason);
                             MCItemsUtils.clearItem(player, ModItems.LIFE_AND_DEATH_SHAPE, 1);

@@ -30,7 +30,6 @@ import org.ladysnake.cca.api.v3.entity.EntityComponentInitializer;
 import org.ladysnake.cca.api.v3.entity.RespawnCopyStrategy;
 import org.ladysnake.cca.api.v3.world.WorldComponentFactoryRegistry;
 import org.ladysnake.cca.api.v3.world.WorldComponentInitializer;
-import org.agmas.noellesroles.component.NinjaPlayerComponent;
 /**
  * Cardinal Components API 组件注册
  *
@@ -208,9 +207,9 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "clockmaker"),
       ClockmakerPlayerComponent.class);
 
-  public static final ComponentKey<BestVigilantePlayerComponent> BEST_VIGILANTE = ComponentRegistry.getOrCreate(
-      ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "best_vigilante"),
-      BestVigilantePlayerComponent.class);
+  public static final ComponentKey<CreeperPlayerComponent> CREEPER = ComponentRegistry.getOrCreate(
+      ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "creeper"),
+      CreeperPlayerComponent.class);
 
   public static final ComponentKey<AccountantPlayerComponent> ACCOUNTANT = AccountantPlayerComponent.KEY;
 
@@ -474,10 +473,10 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
         .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
         .end(ClockmakerPlayerComponent::new);
 
-    // 注册更好的义警组件
-    registry.beginRegistration(Player.class, BEST_VIGILANTE)
+    // 注册苦力怕组件
+    registry.beginRegistration(Player.class, CREEPER)
         .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
-        .end(BestVigilantePlayerComponent::new);
+        .end(CreeperPlayerComponent::new);
 
     // 注册远征队组件
     registry.beginRegistration(Player.class, EXPEDITION)

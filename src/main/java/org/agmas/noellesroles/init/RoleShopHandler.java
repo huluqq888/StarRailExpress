@@ -485,6 +485,7 @@ public class RoleShopHandler {
       // 忍者商店
       var NINJA_SHOP = new ArrayList<ShopEntry>();
 
+
       // 苦无 - 130金币
       NINJA_SHOP.add(new ShopEntry(ModItems.NINJA_KNIFE.getDefaultInstance(), 130, ShopEntry.Type.WEAPON));
 
@@ -494,7 +495,7 @@ public class RoleShopHandler {
       // 关灯 - 50金币
       NINJA_SHOP.add(new ShopEntry(TMMItems.BLACKOUT.getDefaultInstance(), 50, ShopEntry.Type.TOOL) {
         public boolean onBuy(@NotNull Player player) {
-          return SREPlayerShopComponent.useBlackout(player);
+          return SREPlayerShopComponent.useBlackoutWithMultiplier(player, 0.4);
         }
       });
 
@@ -793,7 +794,7 @@ public class RoleShopHandler {
                 .withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.GOLD),
                 Component
                     .translatable("item.written_book.per_role_content",
-                        p.getDisplayName().copy().withStyle(ChatFormatting.DARK_GRAY),
+                        p.getName().copy().withStyle(ChatFormatting.DARK_GRAY),
                         RoleUtils.getRoleOrModifierNameWithColor(gameWorldComponent.getRole(p)))
                     .withStyle(ChatFormatting.DARK_AQUA));
             var content = new Filterable<Component>(ct, Optional.of(ct));

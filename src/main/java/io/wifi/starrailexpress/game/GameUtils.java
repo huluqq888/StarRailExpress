@@ -256,14 +256,6 @@ public class GameUtils {
         SREGameWorldComponent component = SREGameWorldComponent.KEY.get(world);
         SREWorldBlackoutComponent.KEY.get(world).reset();
         component.setGameStatus(SREGameWorldComponent.GameStatus.STOPPING);
-        if (AutoShutdownWhenNotRunningCommand.autoShutdownWhenGameNotRunning) {
-            world.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("sre.shutdown.waring"),
-                    false);
-
-            serverAsynTaskLists.add(new ServerTaskInfoClasses.SchedulerTask(5 * 20, () -> {
-                world.getServer().halt(true);
-            }));
-        }
     }
 
     private static void executeFunction(CommandSourceStack source, String function) {
@@ -381,6 +373,9 @@ public class GameUtils {
                 cooldowns.addCooldown(item,
                         (Integer) SAFE_TIME_COOLDOWN);
             });
+            cooldowns.addCooldown(ModItems.THROWING_KNIFE, SAFE_TIME_COOLDOWN);
+            cooldowns.addCooldown(ModItems.NINJA_KNIFE, SAFE_TIME_COOLDOWN);
+            cooldowns.addCooldown(ModItems.NINJA_SHURIKEN, SAFE_TIME_COOLDOWN);
             cooldowns.addCooldown(Items.TRIDENT, SAFE_TIME_COOLDOWN);
             cooldowns.addCooldown(TMMItems.GRENADE, SAFE_TIME_COOLDOWN);
             cooldowns.addCooldown(TMMItems.PSYCHO_MODE, SAFE_TIME_COOLDOWN);
@@ -570,7 +565,7 @@ public class GameUtils {
                     List<Component> text = new ArrayList<>();
                     UnaryOperator<Style> stylizer = style -> style.withItalic(false).withColor(letterColor);
 
-                    Component displayName = serverPlayerEntity.getDisplayName();
+                    Component displayName = serverPlayerEntity.getName();
                     String string = displayName != null ? displayName.getString()
                             : serverPlayerEntity.getName().getString();
                     if (string.charAt(string.length() - 1) == '\uE780') { // remove ratty supporter icon
@@ -638,6 +633,7 @@ public class GameUtils {
         world.setWeatherParameters(6000, 0, false, false);
         serverTaskQueue.clear();
         serverAsynTaskLists.clear();
+
         isStartingGame = false;
         SREGameRoundEndComponent roundEnd = SREGameRoundEndComponent.KEY.get(world);
         RoleMethodDispatcher.onEndGame(world);
@@ -823,6 +819,17 @@ public class GameUtils {
                 .get(world.getServer().getScoreboard());
         scoreboardComponent.reset();
         roundEnd.sync();
+
+        if (AutoShutdownWhenNotRunningCommand.autoShutdownWhenGameNotRunning) {
+            world.getServer().getPlayerList().broadcastSystemMessage(
+                    Component.translatable("\n\n\n\n%s\n",
+                            Component.translatable("sre.shutdown.waring", 10).withStyle(ChatFormatting.YELLOW)),
+                    false);
+
+            serverTaskQueue.add(new ServerTaskInfoClasses.SchedulerTask(10 * 20, () -> {
+                world.getServer().stopServer();
+            }));
+        }
     }
 
     public static void resetPlayer(ServerPlayer player) {
