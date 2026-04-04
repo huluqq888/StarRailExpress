@@ -108,7 +108,7 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
 
         // 播放TNT点燃声音
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.TNT_PRIMED, SoundSource.MASTER, 1.0F, 1.0F);
+                SoundEvents.TNT_PRIMED, SoundSource.MASTER, 2.0F, 1.0F);
 
         // this.sync();
         return true;
@@ -136,7 +136,7 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
 
         // 播放爆炸声音
         player.level().playSound(null, pos.x, pos.y, pos.z,
-                SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4.0F, 1.0F);
+                SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4.0F, 1.0F);
     }
 
     /**
