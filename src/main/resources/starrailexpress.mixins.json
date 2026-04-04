@@ -20,6 +20,7 @@
     "entity.player.ToiletPoisonMixin",
     "chat.PlayerPrefixMixin",
     "gui.TalkChatMixin",
+    "gui.CommonTalkChatMixin",
     "item.FoodItemMixin",
     "item.ItemStackMixin",
     "item.UseItemProgressionMixin",
