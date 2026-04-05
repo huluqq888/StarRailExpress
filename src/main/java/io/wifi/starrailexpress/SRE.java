@@ -173,7 +173,6 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             SyncMapConfigPayload.sendToAllPlayers();
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            Scheduler.shutdown();
             MysqlPlayerDataStore.shutdown();
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
