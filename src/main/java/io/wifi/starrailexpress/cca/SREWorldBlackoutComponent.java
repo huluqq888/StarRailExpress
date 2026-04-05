@@ -35,6 +35,8 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
     public final List<BlackoutDetails> blackouts = new ArrayList<>();
     public int blackOutRemainingTicks = 0;
 
+
+
     public SREWorldBlackoutComponent(Level world) {
         this.world = world;
     }
@@ -74,7 +76,9 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
         return triggerBlackout(true);
     }
 
+
     public boolean triggerBlackout(boolean haveSound, int duration) {
+
         for (var pos : GameUtils.resetPoints) {
             BlockState state = this.world.getBlockState(pos);
             if (!state.hasProperty(BlockStateProperties.LIT) || !state.hasProperty(TMMProperties.ACTIVE))
@@ -130,6 +134,7 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
         for (BlackoutDetails detail : this.blackouts)
             list.add(detail.writeToNbt());
         tag.put("blackouts", list);
+
     }
 
     @Override
@@ -140,6 +145,7 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
             detail.init(this.world);
             this.blackouts.add(detail);
         }
+
     }
 
     public static class BlackoutDetails {
