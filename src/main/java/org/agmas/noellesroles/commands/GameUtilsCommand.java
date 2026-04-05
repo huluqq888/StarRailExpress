@@ -7,9 +7,9 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.replay.GameReplayUtils;
 import io.wifi.starrailexpress.cca.*;
+import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.GameUtils.WinStatus;
 import io.wifi.starrailexpress.game.MapResetManager;
@@ -38,6 +38,8 @@ import org.agmas.noellesroles.utils.MapScannerManager;
 import org.jetbrains.annotations.Nullable;
 import pro.fazeclan.river.stupid_express.StupidExpress;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
@@ -517,7 +519,7 @@ public class GameUtilsCommand {
   }
 
   public static class DeathReasonSuggestions {
-    private static final List<ResourceLocation> CUSTOM_DEATH_REASONS = Arrays.asList(
+    private static final HashSet<ResourceLocation> CUSTOM_DEATH_REASONS = new HashSet<>(Set.of(
         Noellesroles.id("voodoo"),
         Noellesroles.id("shot_innocent"),
         Noellesroles.id("insane_killer_death"),
@@ -531,29 +533,40 @@ public class GameUtilsCommand {
         Noellesroles.id("gamble_self_kill"),
         Noellesroles.id("wayfarer_error"),
         Noellesroles.id("nianshou_firecrackers"),
-        SRE.id("death_afk"),
-        SRE.id("disconnected"),
-        SRE.id("bat_hit"),
-        SRE.id("fell_out_of_train"),
-        SRE.id("generic"),
-        SRE.id("grenade"),
-        SRE.id("gun_shot"),
-        SRE.id("knife_stab"),
-        SRE.id("poison"),
-        SRE.id("revolver_shot"),
-        SRE.id("derringer_shot"),
         StupidExpress.id("broken_heart"),
         StupidExpress.id("failed_initiation"),
         StupidExpress.id("allergist"),
         StupidExpress.id("failed_ignite"),
-        StupidExpress.id("ignited"));
+        StupidExpress.id("ignited")));
+
+    public static Set<ResourceLocation> getAllDeathReasons() {
+      Set<ResourceLocation> set = new HashSet<>();
+      Field[] fields = GameConstants.DeathReasons.class.getDeclaredFields();
+      for (Field field : fields) {
+        if (Modifier.isStatic(field.getModifiers())
+            && field.getType() == ResourceLocation.class) {
+          try {
+            ResourceLocation value = (ResourceLocation) field.get(null);
+            set.add(value);
+          } catch (IllegalAccessException e) {
+            // 理论上静态字段可访问，若发生异常则忽略
+            e.printStackTrace();
+          }
+        }
+      }
+      return set;
+    }
 
     public static CompletableFuture<Suggestions> suggestDeathReasons(CommandContext<CommandSourceStack> context,
         SuggestionsBuilder builder) {
       String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
       Set<String> suggestions = new HashSet<>();
-      // 添加自定义 ID 到 Set
+      // 添加自定义 ID 到 Sety
 
+      getAllDeathReasons()
+          .stream().map(ResourceLocation::toString)
+          .filter(id -> id.toLowerCase(Locale.ROOT).startsWith(remaining))
+          .forEach(suggestions::add);
       CUSTOM_DEATH_REASONS.stream()
           .map(ResourceLocation::toString)
           .filter(id -> id.toLowerCase(Locale.ROOT).startsWith(remaining))
