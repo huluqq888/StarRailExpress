@@ -172,6 +172,10 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             REPLAY_MANAGER = new GameReplayManager(server);
             SyncMapConfigPayload.sendToAllPlayers();
         });
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            Scheduler.shutdown();
+            MysqlPlayerDataStore.shutdown();
+        });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             SRE.isLobby = SREConfig.instance().isLobby;
             sender.sendPacket(new IsLobbyConfigPayload(SRE.isLobby));
@@ -269,7 +273,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             }
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            SREPlayerStatsComponent.KEY.get(handler.player).flushDatabaseSyncBlocking();
+            SREPlayerStatsComponent.KEY.get(handler.player).flushDatabaseAsync();
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(handler.player.level());
             if (REPLAY_MANAGER != null) {
                 var role = gameWorldComponent.getRole(handler.player);
