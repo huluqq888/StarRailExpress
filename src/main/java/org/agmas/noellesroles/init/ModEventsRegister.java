@@ -541,7 +541,7 @@ public class ModEventsRegister {
         }
     }
 
-    private static boolean isMJVerifyEnabled = false;
+    public static boolean isMJVerifyEnabled = false;
 
     public static void registerEvents() {
         THEventHandler.registerEvents();
