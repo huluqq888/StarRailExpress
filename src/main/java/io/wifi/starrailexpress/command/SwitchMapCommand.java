@@ -83,15 +83,16 @@ public class SwitchMapCommand {
         GameUtils.serverTaskQueue.add(new ServerTaskInfoClasses.SchedulerTask(20, () -> {
           if (MapManager.loadMap(serverWorld, mapName)) {
             playerList.broadcastSystemMessage(
-                Component.translatable("Reseting and scaning all maps...\nNow: %s [%s / %s]", mapName, now, total),
+                Component.translatable("Reseting and scaning all maps...\nNow: %s [%s / %s]\nReseting maps...", mapName,
+                    now, total),
                 false);
-
+            GameUtils.serverTaskQueue
+                .addFirst(new ServerTaskInfoClasses.FullTrainResetTask(areas, serverWorld, null, 0, false));
           } else {
             playerList.broadcastSystemMessage(
                 Component.translatable("Reseting and scaning map %s failed. [%s / %s]", mapName, now, total), false);
           }
         }));
-        GameUtils.serverTaskQueue.add(new ServerTaskInfoClasses.FullTrainResetTask(areas, serverWorld, null, 0,false));
         GameUtils.serverTaskQueue.add(new ServerTaskInfoClasses.SchedulerTask(20, () -> {
           playerList.broadcastSystemMessage(
               Component.translatable("Scanning points..."),
