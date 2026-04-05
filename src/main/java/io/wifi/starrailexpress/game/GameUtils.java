@@ -88,6 +88,7 @@ public class GameUtils {
     public static ArrayList<ServerTaskInfoClasses.ServerTaskInfo> serverTaskQueue = new ArrayList<>();
     public static ArrayList<ServerTaskInfoClasses.ServerTaskInfo> serverAsynTaskLists = new ArrayList<>();
     public static boolean isStartingGame = false;
+
     public static void limitPlayerToBox(ServerPlayer player, AABB box) {
         Vec3 playerPos = player.position();
         Vec3 teleportPos = playerPos;
@@ -824,7 +825,7 @@ public class GameUtils {
                     Component.translatable("\n\n\n\n%s\n",
                             Component.translatable("sre.shutdown.waring", 10).withStyle(ChatFormatting.YELLOW)),
                     false);
-
+            AutoShutdownWhenNotRunningCommand.autoShutdownWhenGameNotRunning = false;
             serverTaskQueue.add(new ServerTaskInfoClasses.SchedulerTask(10 * 20, () -> {
                 world.getServer().halt(false);
             }));
