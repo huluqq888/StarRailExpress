@@ -292,11 +292,11 @@ public class GameUtilsCommand {
                     return 1;
                   })))
               .then(Commands.literal("blackout").executes((context) -> {
-                return executeBlackout(context, -1);
+                return executeBlackout(context, 0);
               }).then(Commands.argument("duration", IntegerArgumentType.integer(0)).executes((context) -> {
                 return executeBlackout(context, IntegerArgumentType.getInteger(context, "duration"));
               })).then(Commands.literal("stop").executes((context) -> {
-                return executeBlackout(context, 0);
+                return executeBlackout(context, -1);
               })))
               .then(Commands.literal("psycho").executes((context) -> {
                 return executePsycho(context, -1);
