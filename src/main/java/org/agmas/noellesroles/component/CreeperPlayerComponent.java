@@ -107,9 +107,9 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
         ignited = true;
         igniteTimeLeft = EXPLODE_TIME;
 
-        // 播放TNT点燃声音
+        // 播放苦力怕引燃声音
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.TNT_PRIMED, SoundSource.MASTER, 2.0F, 1.0F);
+            SoundEvents.CREEPER_PRIMED, SoundSource.MASTER, 2.0F, 1.0F);
 
         // this.sync();
         return true;
@@ -141,9 +141,9 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
             }
         }
 
-        // 播放爆炸声音
+        // 播放苦力怕爆炸声音
         player.level().playSound(null, pos.x, pos.y, pos.z,
-                SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4.0F, 1.0F);
+            SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4.0F, 1.0F);
 
         // 让引燃者自爆死亡，死因为自爆
         io.wifi.starrailexpress.game.GameUtils.killPlayer(player, true, player,
