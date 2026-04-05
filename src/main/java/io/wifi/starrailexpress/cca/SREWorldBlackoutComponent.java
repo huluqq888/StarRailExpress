@@ -34,7 +34,7 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
     private final Level world;
     public final List<BlackoutDetails> blackouts = new ArrayList<>();
     public int blackOutRemainingTicks = 0;
-    public  int cooldown = 0;
+
 
 
     public SREWorldBlackoutComponent(Level world) {
@@ -75,18 +75,10 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
     public boolean triggerBlackout() {
         return triggerBlackout(true);
     }
-    public boolean triggerBlackout(boolean haveSound, int duration) {
-        return triggerBlackout(haveSound, duration,false);
-    }
 
-    public boolean triggerBlackout(boolean haveSound, int duration,boolean force) {
-        if (!force){
-            if (cooldown>0){
-                return false;
-            }else {
-                cooldown = GameConstants.getBlackoutCooldownGlobal();
-            }
-        }
+
+    public boolean triggerBlackout(boolean haveSound, int duration) {
+
         for (var pos : GameUtils.resetPoints) {
             BlockState state = this.world.getBlockState(pos);
             if (!state.hasProperty(BlockStateProperties.LIT) || !state.hasProperty(TMMProperties.ACTIVE))
@@ -142,7 +134,7 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
         for (BlackoutDetails detail : this.blackouts)
             list.add(detail.writeToNbt());
         tag.put("blackouts", list);
-        tag.putInt("cooldown", this.cooldown);
+
     }
 
     @Override
@@ -153,7 +145,7 @@ public class SREWorldBlackoutComponent implements ServerTickingComponent {
             detail.init(this.world);
             this.blackouts.add(detail);
         }
-        this.cooldown = tag.getInt("cooldown");
+
     }
 
     public static class BlackoutDetails {
