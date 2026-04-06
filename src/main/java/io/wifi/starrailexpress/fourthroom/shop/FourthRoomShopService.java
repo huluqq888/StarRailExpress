@@ -41,6 +41,7 @@ public final class FourthRoomShopService {
             case TEST_STRIP -> state.testStripCharges++;
             case STICKY_NOTE -> state.stickyNoteCharges++;
         }
+        manager.logPlayerRoomAction(playerId, "item", "购买了", manager.shopItemDisplayName(item), "", "花费 " + price + " 金币");
         data.setDirty(true);
         manager.syncMatchState();
         return true;
@@ -61,6 +62,7 @@ public final class FourthRoomShopService {
                     return false;
                 }
                 attacker.scorpionCharges--;
+                manager.logPlayerRoomAction(attackerId, "item", "使用了", manager.shopItemDisplayName(item), manager.playerName(targetId), "立即处决");
                 manager.eliminatePlayer(targetId, "scorpion");
                 return true;
             }
@@ -69,8 +71,10 @@ public final class FourthRoomShopService {
                     return false;
                 }
                 attacker.handgunCharges--;
+                manager.logPlayerRoomAction(attackerId, "item", "使用了", manager.shopItemDisplayName(item), manager.playerName(targetId), "");
                 if (target.bulletproofVestCharges > 0) {
                     target.bulletproofVestCharges--;
+                    manager.logPlayerRoomAction(targetId, "defense", "触发了", manager.shopItemDisplayName(FourthRoomShopItem.BULLETPROOF_VEST), "", "挡下手枪");
                     manager.sendPrivate(targetId, "Your bulletproof vest blocked a handgun shot.");
                 } else {
                     manager.eliminatePlayer(targetId, "handgun");
@@ -83,6 +87,7 @@ public final class FourthRoomShopService {
                 }
                 attacker.poisonMushroomCharges--;
                 target.pendingPoisonDeathTick = manager.currentTick() + 3L * 60L * 20L;
+                manager.logPlayerRoomAction(attackerId, "item", "使用了", manager.shopItemDisplayName(item), manager.playerName(targetId), "180 秒后生效");
                 return true;
             }
             default -> {

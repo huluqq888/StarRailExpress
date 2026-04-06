@@ -15,14 +15,17 @@ public record FourthRoomClientSnapshot(
         long serverTick,
         int rotationCount,
         long nextRotationTick,
+        long rotationIntervalTicks,
         boolean hasActiveTask,
         String activeTaskId,
         String activeTaskDescription,
         long taskDeadlineTick,
+        long taskDurationTicks,
         String winner,
         String winnerDisplayName,
         Viewer viewer,
         List<RoomPlayer> roomPlayers,
+        List<ActionView> roomActions,
         int roomTurnNumber,
         String activePlayerId,
         String activePlayerName) {
@@ -33,13 +36,16 @@ public record FourthRoomClientSnapshot(
             0L,
             0,
             0L,
+            0L,
             false,
             "",
             "",
             0L,
+            0L,
             "",
             "",
             Viewer.EMPTY,
+            List.of(),
             List.of(),
             1,
             "",
@@ -62,14 +68,17 @@ public record FourthRoomClientSnapshot(
                     getLong(root, "serverTick", 0L),
                     getInt(root, "rotationCount", 0),
                     getLong(root, "nextRotationTick", 0L),
+                    getLong(root, "rotationIntervalTicks", 0L),
                     getBoolean(root, "hasActiveTask", false),
                     getString(root, "activeTaskId"),
                     getString(root, "activeTaskDescription"),
                     getLong(root, "taskDeadlineTick", 0L),
+                    getLong(root, "taskDurationTicks", 0L),
                     getString(root, "winner"),
                     getString(root, "winnerDisplayName"),
                     parseViewer(root.getAsJsonObject("viewer")),
                     parseRoomPlayers(root.getAsJsonArray("roomPlayers")),
+                    parseRoomActions(root.getAsJsonArray("roomActions")),
                     getInt(root, "roomTurnNumber", 1),
                     getString(root, "activePlayerId"),
                     getString(root, "activePlayerName"));
@@ -87,6 +96,14 @@ public record FourthRoomClientSnapshot(
 
     public boolean inCardBattle() {
         return active && "CARD_BATTLE".equals(phase);
+    }
+
+    public int latestActionSequence() {
+        return roomActions.stream().mapToInt(ActionView::sequence).max().orElse(0);
+    }
+
+    public ActionView latestAction() {
+        return roomActions.stream().max(java.util.Comparator.comparingInt(ActionView::sequence)).orElse(null);
     }
 
     private static Viewer parseViewer(JsonObject object) {
@@ -209,6 +226,29 @@ public record FourthRoomClientSnapshot(
         return List.copyOf(result);
     }
 
+    private static List<ActionView> parseRoomActions(JsonArray array) {
+        List<ActionView> result = new ArrayList<>();
+        if (array == null) {
+            return result;
+        }
+        for (JsonElement element : array) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject object = element.getAsJsonObject();
+            result.add(new ActionView(
+                    getInt(object, "sequence", 0),
+                    getLong(object, "tick", 0L),
+                    getString(object, "category", "system"),
+                    getString(object, "actorName"),
+                    getString(object, "verb"),
+                    getString(object, "subject"),
+                    getString(object, "targetName"),
+                    getString(object, "detail")));
+        }
+        return List.copyOf(result);
+    }
+
     private static String getString(JsonObject object, String key) {
         return getString(object, key, "");
     }
@@ -315,5 +355,35 @@ public record FourthRoomClientSnapshot(
             boolean self,
             boolean currentTurn,
             int hiddenIdentityCount) {
+    }
+
+    public record ActionView(
+            int sequence,
+            long tick,
+            String category,
+            String actorName,
+            String verb,
+            String subject,
+            String targetName,
+            String detail) {
+        public String summary() {
+            StringBuilder builder = new StringBuilder();
+            if (!actorName.isBlank()) {
+                builder.append(actorName).append(' ');
+            }
+            if (!verb.isBlank()) {
+                builder.append(verb).append(' ');
+            }
+            if (!subject.isBlank()) {
+                builder.append(subject).append(' ');
+            }
+            if (!targetName.isBlank()) {
+                builder.append("对 ").append(targetName).append(' ');
+            }
+            if (!detail.isBlank()) {
+                builder.append(detail);
+            }
+            return builder.toString().trim();
+        }
     }
 }

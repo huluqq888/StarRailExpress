@@ -14,6 +14,8 @@ public final class FourthRoomRoomState {
     public final List<UUID> occupants = new ArrayList<>();
     public UUID activePlayerId;
     public int turnNumber = 1;
+    public int nextPublicActionSequence = 1;
+    public final List<FourthRoomPublicAction> publicActions = new ArrayList<>();
 
     public FourthRoomRoomState() {
     }
@@ -34,6 +36,12 @@ public final class FourthRoomRoomState {
             tag.putUUID("ActivePlayerId", activePlayerId);
         }
         tag.putInt("TurnNumber", turnNumber);
+        tag.putInt("NextPublicActionSequence", nextPublicActionSequence);
+        ListTag actionsTag = new ListTag();
+        for (FourthRoomPublicAction publicAction : publicActions) {
+            actionsTag.add(publicAction.save());
+        }
+        tag.put("PublicActions", actionsTag);
         return tag;
     }
 
@@ -46,6 +54,18 @@ public final class FourthRoomRoomState {
             roomState.activePlayerId = tag.getUUID("ActivePlayerId");
         }
         roomState.turnNumber = Math.max(1, tag.getInt("TurnNumber"));
+        roomState.nextPublicActionSequence = Math.max(1, tag.getInt("NextPublicActionSequence"));
+        for (Tag actionTag : tag.getList("PublicActions", Tag.TAG_COMPOUND)) {
+            if (actionTag instanceof CompoundTag compoundTag) {
+                roomState.publicActions.add(FourthRoomPublicAction.load(compoundTag));
+            }
+        }
+        if (roomState.publicActions.isEmpty()) {
+            roomState.nextPublicActionSequence = Math.max(1, roomState.nextPublicActionSequence);
+        } else {
+            int maxSequence = roomState.publicActions.stream().mapToInt(action -> action.sequence).max().orElse(0);
+            roomState.nextPublicActionSequence = Math.max(roomState.nextPublicActionSequence, maxSequence + 1);
+        }
         return roomState;
     }
 }

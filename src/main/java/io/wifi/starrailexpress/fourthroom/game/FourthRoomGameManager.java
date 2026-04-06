@@ -147,6 +147,12 @@ public final class FourthRoomGameManager {
             return false;
         }
         playerState.discardPile.add(instance);
+        logPlayerRoomAction(playerId,
+                card.isSkill() ? "skill" : "card",
+                "使用了",
+                cardDisplayName(card),
+                playerName(resolvedTarget),
+                instance.gold() ? "金卡" : "");
         data.setDirty(true);
         syncMatchState();
         return true;
@@ -158,6 +164,7 @@ public final class FourthRoomGameManager {
             return false;
         }
         drawCards(playerId, 1, false);
+        logPlayerRoomAction(playerId, "system", "结束了回合", "", "", "摸 1 张牌");
         roomManager.advanceTurn(playerState.roomId);
         resolveTurnEntry(playerState.roomId);
         syncMatchState();
@@ -175,6 +182,7 @@ public final class FourthRoomGameManager {
         }
         state.revealed.set(index, true);
         grantCoins(playerId, 2, "self_reveal");
+        logPlayerRoomAction(playerId, "reveal", "翻开了身份", shortBlockId(state.identityBlocks.get(index)), "", "+2 金币");
         broadcastReveal(playerId, state.identityBlocks.get(index));
         data.setDirty(true);
         syncMatchState();
@@ -359,6 +367,7 @@ public final class FourthRoomGameManager {
         if (targetState.lifeShield > 0) {
             targetState.lifeShield--;
             sendPrivate(targetId, "A life card blocked incoming damage.");
+            logRoomAction(targetState.roomId, "defense", playerName(targetId), "抵挡了伤害", "命格", "", "");
             data.setDirty(true);
             return;
         }
@@ -366,6 +375,7 @@ public final class FourthRoomGameManager {
             targetState.decoyArmed = false;
             UUID opponent = roomManager.getOpponent(targetId);
             if (opponent != null) {
+                logRoomAction(targetState.roomId, "defense", playerName(targetId), "发动了", "诱饵", playerName(opponent), "转移伤害");
                 inflictCardDamage(sourceId, opponent, "decoy:" + reason);
                 data.setDirty(true);
                 return;
@@ -374,6 +384,7 @@ public final class FourthRoomGameManager {
         int hiddenIdentityIndex = targetState.firstHiddenIdentityIndex();
         if (hiddenIdentityIndex >= 0) {
             targetState.revealed.set(hiddenIdentityIndex, true);
+            logRoomAction(targetState.roomId, "damage", playerName(targetId), "被打翻了一块身份", shortBlockId(targetState.identityBlocks.get(hiddenIdentityIndex)), "", "");
             broadcastReveal(targetId, targetState.identityBlocks.get(hiddenIdentityIndex));
         } else {
             eliminatePlayer(targetId, reason);
@@ -387,6 +398,7 @@ public final class FourthRoomGameManager {
             return;
         }
         state.alive = false;
+        logRoomAction(state.roomId, "damage", playerName(playerId), "被淘汰", reasonDisplay(reason), "", "");
         ServerPlayer player = level.getServer().getPlayerList().getPlayer(playerId);
         if (player != null) {
             player.stopRiding();
@@ -470,17 +482,21 @@ public final class FourthRoomGameManager {
         root.addProperty("serverTick", currentTick());
         root.addProperty("rotationCount", data.rotationCount);
         root.addProperty("nextRotationTick", data.nextRotationTick);
+        root.addProperty("rotationIntervalTicks", config.rotationIntervalSeconds * 20L);
         root.addProperty("activeTaskId", data.activeTaskId == null ? "" : data.activeTaskId);
         FourthRoomTaskType activeTask = FourthRoomTaskType.byId(data.activeTaskId);
         root.addProperty("activeTaskDescription", activeTask != null ? activeTask.description() : "");
         root.addProperty("hasActiveTask", taskScheduler.hasActiveTask());
         root.addProperty("taskDeadlineTick", data.taskDeadlineTick);
+        root.addProperty("taskDurationTicks", config.taskDurationSeconds * 20L);
         if (data.winner != null) {
             root.addProperty("winner", data.winner.name());
             root.addProperty("winnerDisplayName", teamDisplayName(data.winner));
         }
         JsonArray roomPlayers = new JsonArray();
         root.add("roomPlayers", roomPlayers);
+        JsonArray roomActions = new JsonArray();
+        root.add("roomActions", roomActions);
 
         FourthRoomPlayerState state = data.players.get(viewer.getUUID());
         if (state == null) {
@@ -557,6 +573,18 @@ public final class FourthRoomGameManager {
             if (roomState.activePlayerId != null) {
                 root.addProperty("activePlayerId", roomState.activePlayerId.toString());
                 root.addProperty("activePlayerName", playerName(roomState.activePlayerId));
+            }
+            for (FourthRoomPublicAction action : roomState.publicActions) {
+                JsonObject actionJson = new JsonObject();
+                actionJson.addProperty("sequence", action.sequence);
+                actionJson.addProperty("tick", action.tick);
+                actionJson.addProperty("category", action.category);
+                actionJson.addProperty("actorName", action.actorName);
+                actionJson.addProperty("verb", action.verb);
+                actionJson.addProperty("subject", action.subject);
+                actionJson.addProperty("targetName", action.targetName);
+                actionJson.addProperty("detail", action.detail);
+                roomActions.add(actionJson);
             }
             for (UUID occupantId : roomState.occupants) {
                 FourthRoomPlayerState occupant = data.players.get(occupantId);
@@ -733,7 +761,7 @@ public final class FourthRoomGameManager {
         };
     }
 
-    private String shopItemDisplayName(FourthRoomShopItem item) {
+    public String shopItemDisplayName(FourthRoomShopItem item) {
         return switch (item) {
             case SCORPION -> "蝎子";
             case HANDGUN -> "手枪";
@@ -780,9 +808,60 @@ public final class FourthRoomGameManager {
         };
     }
 
-    private String playerName(UUID playerId) {
+    public String playerName(UUID playerId) {
+        if (playerId == null) {
+            return "";
+        }
         ServerPlayer player = level.getServer().getPlayerList().getPlayer(playerId);
         return player != null ? player.getScoreboardName() : playerId.toString().substring(0, 8);
+    }
+
+    public void logPlayerRoomAction(UUID playerId, String category, String verb, String subject, String targetName, String detail) {
+        FourthRoomPlayerState state = data.players.get(playerId);
+        if (state == null) {
+            return;
+        }
+        logRoomAction(state.roomId, category, playerName(playerId), verb, subject, targetName, detail);
+    }
+
+    public void logRoomAction(int roomId, String category, String actorName, String verb, String subject, String targetName, String detail) {
+        FourthRoomRoomState roomState = data.rooms.get(roomId);
+        if (roomState == null) {
+            return;
+        }
+        FourthRoomPublicAction action = new FourthRoomPublicAction();
+        action.sequence = roomState.nextPublicActionSequence++;
+        action.tick = currentTick();
+        action.category = category == null || category.isBlank() ? "system" : category;
+        action.actorName = actorName == null ? "" : actorName;
+        action.verb = verb == null ? "" : verb;
+        action.subject = subject == null ? "" : subject;
+        action.targetName = targetName == null ? "" : targetName;
+        action.detail = detail == null ? "" : detail;
+        roomState.publicActions.add(action);
+        while (roomState.publicActions.size() > 12) {
+            roomState.publicActions.removeFirst();
+        }
+        data.setDirty(true);
+    }
+
+    private String shortBlockId(String blockId) {
+        if (blockId == null || blockId.isBlank()) {
+            return "未知方块";
+        }
+        int separator = blockId.indexOf(':');
+        return separator >= 0 ? blockId.substring(separator + 1) : blockId;
+    }
+
+    private String reasonDisplay(String reason) {
+        return switch (reason) {
+            case "scorpion" -> "蝎子";
+            case "handgun" -> "手枪";
+            case "poison_mushroom" -> "毒蘑菇";
+            case "point_kill" -> "点杀";
+            case "death_card" -> "死亡卡";
+            default -> reason == null ? "未知原因" : reason;
+        };
     }
 
     private void broadcastReveal(UUID playerId, String blockId) {
@@ -804,6 +883,9 @@ public final class FourthRoomGameManager {
             resetCardsForRound(playerState);
         }
         roomManager.teleportAlivePlayersToLobby();
+        for (FourthRoomRoomState roomState : data.rooms.values()) {
+            logRoomAction(roomState.roomId, "system", "系统", "开始房间轮换", "", "", "");
+        }
         data.setDirty(true);
         broadcast("Rotation " + data.rotationCount + " started.");
         syncMatchState();
@@ -815,6 +897,9 @@ public final class FourthRoomGameManager {
         data.phase = FourthRoomPhase.CARD_BATTLE;
         data.nextRotationTick = currentTick() + config.rotationIntervalSeconds * 20L;
         taskScheduler.scheduleNextTask(currentTick());
+        for (FourthRoomRoomState roomState : data.rooms.values()) {
+            logRoomAction(roomState.roomId, "system", "系统", "新一轮对局开始", "", "", "");
+        }
         data.setDirty(true);
         syncMatchState();
     }

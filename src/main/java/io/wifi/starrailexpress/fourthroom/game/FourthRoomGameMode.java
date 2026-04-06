@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.List;
 
 public final class FourthRoomGameMode extends GameMode {
+
     public FourthRoomGameMode(ResourceLocation identifier) {
         super(identifier, 45, 2);
     }
