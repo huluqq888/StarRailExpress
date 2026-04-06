@@ -141,7 +141,7 @@ public class SEModifiers {
             null,
             null,
             false,
-            true));
+            true)).setMax(0);
 
         // 新增修饰符：矫健（体力上限更多、恢复更快）
         public static SREModifier VIGOROUS = HMLModifiers.registerModifier(new SREModifier(
