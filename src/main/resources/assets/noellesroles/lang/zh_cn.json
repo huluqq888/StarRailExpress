@@ -613,7 +613,7 @@
   "message.noellesroles.defibrillator.protected": "你被使用了心脏起搏器！如果在120秒内死亡，你将在30秒后复活。",
   "message.noellesroles.defibrillator.must_target_alive": "只能对存活的玩家使用心脏起搏器！",
   "message.noellesroles.defibrillator.already_protected": "该玩家已经有心脏起搏器保护了！",
-  "message.noellesroles.defibrillator.revived": "你复活了 %s！",
+  "message.noellesroles.defibrillator.revived": "你复活了！",
   "message.noellesroles.defibrillator.you_revived": "你的使命还没结束！",
   "message.noellesroles.defibrillator.too_late": "这具尸体已经死亡太久了，无法复活！",
   "message.noellesroles.defibrillator.player_not_found": "无法找到该尸体对应的玩家！",

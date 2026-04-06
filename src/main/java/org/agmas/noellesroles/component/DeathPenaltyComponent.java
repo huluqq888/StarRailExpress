@@ -220,6 +220,8 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
         }
         if (tag.contains("pos", CompoundTag.TAG_COMPOUND)) {
             this.limitPos = SRENBTUtils.tagToVec3(tag.getCompound("pos"));
+        } else {
+            this.limitPos = null;
         }
     }
 
