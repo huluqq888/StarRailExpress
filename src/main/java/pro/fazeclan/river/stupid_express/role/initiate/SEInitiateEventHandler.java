@@ -192,6 +192,7 @@ public class SEInitiateEventHandler {
             clearAllKnives(killer);
 
             StupidRoleUtils.changeRole(killer, role, true);
+            StupidRoleUtils.changeRole(victim, SERoles.AMNESIAC, true);
             SREPlayerShopComponent.KEY.get(killer).addToBalance(100);
             StupidRoleUtils.sendWelcomeAnnouncement((ServerPlayer) killer);
             return true;
