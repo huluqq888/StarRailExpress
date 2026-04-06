@@ -590,11 +590,9 @@ public class ModEventsRegister {
 
             // 若受害者为杀手阵营，且攻击者也为杀手阵营，则免疫此杀戮（要求双方均为非中立）
             if (victimRole != null && !victimRole.isInnocent()
-                    && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(victimRole)
-                    && !victimRole.isNeutrals()) {
+                    && victimRole.isCanUseKiller()) {
                 if (killer != null && killer != victim && killerRole != null
-                    && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(killerRole)
-                    && !killerRole.isNeutrals() && !killerRole.isNeutralForKiller()) {
+                    && victimRole.isCanUseKiller()) {
                     {
                         if (victim instanceof ServerPlayer sp) {
                             sp.displayClientMessage(Component.translatable("message.sre.unyielding.immune_killer")
