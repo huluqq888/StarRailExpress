@@ -108,6 +108,8 @@ public class InstinctRenderer {
             if (hasInstinct) {
                 var deathPenalty = org.agmas.noellesroles.component.ModComponents.DEATH_PENALTY.get(self);
                 if (deathPenalty.hasPenalty()) {
+                    if (deathPenalty.limitCameraUUID != null)
+                        return -2;
                     if (target instanceof Player target_player) {
                         if (target_player.isSpectator())
                             return -2;

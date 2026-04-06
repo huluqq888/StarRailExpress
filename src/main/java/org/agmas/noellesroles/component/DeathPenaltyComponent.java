@@ -7,9 +7,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+
 import org.agmas.noellesroles.role.ModRoles;
+import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 
 import java.util.UUID;
@@ -19,6 +24,8 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
     public long penaltyExpiry = 0;
     public UUID limitCameraUUID = null;
     public boolean chatEnabled = false;
+
+    public static ComponentKey<DeathPenaltyComponent> KEY = ModComponents.DEATH_PENALTY;
 
     public void clearAll() {
         this.init();
@@ -35,10 +42,18 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
             if (this.penaltyExpiry < 0) {
                 SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
                 if (limitCameraUUID != null) {
-                    Player cameraPlayer = this.player.level().getPlayerByUUID(limitCameraUUID);
-                    if (cameraPlayer != null && GameUtils.isPlayerAliveAndSurvival(cameraPlayer)) {
-                        return;
+                    Level level = this.player.level();
+                    if (level instanceof ServerLevel serverLevel) {
+                        Entity cameraEntity = serverLevel.getEntity(limitCameraUUID);
+                        if (cameraEntity != null && cameraEntity.isAlive() && !(cameraEntity instanceof ServerPlayer)) {
+                            return;
+                        }
+                        if (cameraEntity instanceof ServerPlayer cameraPlayer
+                                && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(cameraPlayer)) {
+                            return;
+                        }
                     }
+
                 }
                 // boolean INSANE_alive = false;
                 boolean CONSPIRATOR_alive = false;
@@ -158,12 +173,24 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
 
     @Override
     public void serverTick() {
+        if (!SREGameWorldComponent.KEY.get(this.player.level()).isRunning()) {
+            if (this.hasPenalty()) {
+                this.clear();
+            }
+            return;
+        }
+        this.check();
         if (player != null) {
             if (player instanceof ServerPlayer sp) {
                 if (limitCameraUUID != null) {
                     if (!sp.getCamera().getUUID().equals(limitCameraUUID)) {
-                        var target = sp.level().getPlayerByUUID(limitCameraUUID);
-                        if (target != null && GameUtils.isPlayerAliveAndSurvival(target)) {
+                        var target = sp.serverLevel().getEntity(limitCameraUUID);
+                        boolean flag = target != null && target.isAlive();
+                        // ()
+                        if (target instanceof ServerPlayer cp && !GameUtils.isPlayerAliveAndSurvival(cp)) {
+                            flag = false;
+                        }
+                        if (flag) {
                             sp.setCamera(target);
                         } else {
                             sp.setCamera(null);
@@ -173,7 +200,7 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
             }
         }
     }
-    
+
     @Override
     public void writeToNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
     }

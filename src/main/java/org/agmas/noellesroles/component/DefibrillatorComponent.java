@@ -1,14 +1,25 @@
 package org.agmas.noellesroles.component;
 
 import io.wifi.starrailexpress.api.RoleComponent;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.compat.TrainVoicePlugin;
+import io.wifi.starrailexpress.entity.PlayerBodyEntity;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
 
-public class DefibrillatorComponent implements RoleComponent {
+import org.agmas.noellesroles.init.ModEffects;
+import org.ladysnake.cca.api.v3.component.tick.ClientTickingComponent;
+import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
+
+public class DefibrillatorComponent implements RoleComponent, ServerTickingComponent, ClientTickingComponent {
     private final Player player;
     public long protectionExpiry = 0;
     public boolean isDead = false;
@@ -39,7 +50,23 @@ public class DefibrillatorComponent implements RoleComponent {
         this.resurrectionTime = player.level().getGameTime() + resurrectionDelayTicks;
         this.corpseEntityId = corpseId;
         this.deathPos = pos;
+
         ModComponents.DEFIBRILLATOR.sync(player);
+    }
+
+    public static PlayerBodyEntity findPlayerBodyEntity(ServerPlayer serverPlayer) {
+        // 移除尸体
+        if (serverPlayer.serverLevel() instanceof ServerLevel slevel) {
+            var entities = slevel.getAllEntities();
+            for (var bentity : entities) {
+                if (bentity instanceof PlayerBodyEntity body) {
+                    if (body.getPlayerUuid().equals(serverPlayer.getUUID())) {
+                        return body;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -84,12 +111,81 @@ public class DefibrillatorComponent implements RoleComponent {
             tag.putDouble("deathZ", this.deathPos.z);
         }
     }
-    
+
     @Override
     public void writeToNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
     }
 
     @Override
     public void readFromNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
+    }
+
+    @Override
+    public void serverTick() {
+        if (!SREGameWorldComponent.KEY.get(this.player.level()).isRunning())
+            return;
+        if (!(player instanceof ServerPlayer serverPlayer))
+            return;
+        if (this.isDead && player.isSpectator()
+                && player.level().getGameTime() >= this.resurrectionTime) {
+            // 复活逻辑
+            DeathPenaltyComponent.KEY.get(serverPlayer).init();
+
+            if (this.deathPos != null) {
+                serverPlayer.teleportTo(this.deathPos.x, this.deathPos.y, this.deathPos.z);
+            }
+            serverPlayer.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
+
+            player.setHealth(player.getMaxHealth());
+
+            var bd = findPlayerBodyEntity(serverPlayer);
+            if (bd != null)
+                bd.discard();
+            
+            TrainVoicePlugin.resetPlayer(player.getUUID());
+            this.init();
+
+            player.displayClientMessage(Component.translatable("message.noellesroles.defibrillator.revived"),
+                    true);
+        }
+
+    }
+
+    @Override
+    public void clientTick() {
+        if (!SREGameWorldComponent.KEY.get(this.player.level()).isRunning())
+            return;
+        if (this.isDead && player.isSpectator()) {
+            if (player.level().getGameTime() % 20 == 0) {
+                player.displayClientMessage(Component.translatable("message.noellesroles.doctor.about_to_revive",
+                        (this.resurrectionTime - this.player.level().getGameTime()) % 20), true);
+            }
+            if (player.level().getGameTime() % 30 == 0) {
+                player.addEffect(new MobEffectInstance(
+                        ModEffects.MOVE_BANED,
+                        (int) (40), // 持续时间（tick）
+                        0, // 等级（0 = 速度 I）
+                        false, // ambient（环境效果，如信标）
+                        true, // showParticles（显示粒子）
+                        true // showIcon（显示图标）
+                ));
+                player.addEffect(new MobEffectInstance(
+                        ModEffects.USED_BANED,
+                        (int) (40), // 持续时间（tick）
+                        0, // 等级（0 = 速度 I）
+                        false, // ambient（环境效果，如信标）
+                        true, // showParticles（显示粒子）
+                        true // showIcon（显示图标）
+                ));
+                // addEffect(new MobEffectInstance(
+                // MobEffects.GLOWING,
+                // (int) (duration * 20), // 持续时间（tick）
+                // 0, // 等级（0 = 速度 I）
+                // false, // ambient（环境效果，如信标）
+                // true, // showParticles（显示粒子）
+                // true // showIcon（显示图标）
+                // ));
+            }
+        }
     }
 }

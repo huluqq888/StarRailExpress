@@ -1,9 +1,19 @@
 package org.agmas.noellesroles.component;
 
 import io.wifi.starrailexpress.api.RoleComponent;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+
+import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
@@ -42,6 +52,72 @@ public class LocksmithInspirationComponent implements RoleComponent, ServerTicki
 
     @Override
     public void serverTick() {
+        SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
+        if (!gameWorldComponent.isRunning()) {
+            return;
+        }
+        if (player instanceof ServerPlayer sp) {
+            tickLocksmithInspiration(sp, gameWorldComponent);
+        }
+
+    }
+
+    private static void tickLocksmithInspiration(ServerPlayer player, SREGameWorldComponent gameWorldComponent) {
+        if (!gameWorldComponent.isRole(player, ModRoles.LOCKSMITH))
+            return;
+        LocksmithInspirationComponent component = ModComponents.LOCKSMITH_INSPIRATION.get(player);
+        if (!GameUtils.isPlayerAliveAndSurvival(player)) {
+            if (component.getObservingDoorTicks() > 0) {
+                component.setObservingDoorTicks(0);
+            }
+            return;
+        }
+
+        if (component.getInspirationPoints() >= LocksmithInspirationComponent.MAX_POINTS) {
+            if (component.getObservingDoorTicks() > 0) {
+                component.setObservingDoorTicks(0);
+            }
+            return;
+        }
+
+        if (!isLookingAtDoor(player)) {
+            if (component.getObservingDoorTicks() > 0) {
+                component.setObservingDoorTicks(0);
+            }
+            return;
+        }
+
+        int ticks = component.incrementObservingDoorTicks();
+        if (ticks >= LocksmithInspirationComponent.OBSERVE_TICKS_REQUIRED) {
+            component.setObservingDoorTicks(0);
+            component.addInspiration(1);
+        }
+    }
+
+    private static final double LOCKSMITH_OBSERVE_DISTANCE = 4.0D;
+
+    private static boolean isLookingAtDoor(ServerPlayer player) {
+        HitResult hitResult = player.pick(LOCKSMITH_OBSERVE_DISTANCE, 0.0F, false);
+        if (hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult blockHitResult)) {
+            return false;
+        }
+        return isDoorBlock(player.level(), blockHitResult.getBlockPos());
+    }
+
+    private static boolean isDoorBlock(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        Block block = state.getBlock();
+
+        if (block instanceof DoorBlock) {
+            return true;
+        }
+        if (level.getBlockEntity(pos) instanceof io.wifi.starrailexpress.block_entity.DoorBlockEntity) {
+            return true;
+        }
+        if (level.getBlockEntity(pos.below()) instanceof io.wifi.starrailexpress.block_entity.DoorBlockEntity) {
+            return true;
+        }
+        return level.getBlockEntity(pos.above()) instanceof io.wifi.starrailexpress.block_entity.DoorBlockEntity;
     }
 
     public int getInspirationPoints() {

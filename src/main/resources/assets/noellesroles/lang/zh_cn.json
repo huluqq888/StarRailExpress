@@ -620,6 +620,7 @@
   "message.noellesroles.antidote_reagent.poisoned": "%s 中毒了！",
   "message.noellesroles.antidote_reagent.safe": "%s 没有中毒。",
   "message.noellesroles.doctor.penalty": "由于医生存活，你在死后45秒内无法使用杀手直觉且视野受限！",
+  "message.noellesroles.doctor.about_to_revive": "你将在 %ss 后复活。",
   "==================== 死亡后限制 ====================": "",
   "message.noellesroles.penalty.limit.god_job_couple": "由于阴谋家存活，在阴谋家存活期间，你无法使用杀手直觉且视野受限！",
   "message.noellesroles.penalty.limit.loose_end": "由于此时为难民时刻，你可能复活，所以你无法使用杀手直觉且视野受限。",

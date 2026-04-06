@@ -10,9 +10,7 @@ import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.compat.TrainVoicePlugin;
 import io.wifi.starrailexpress.entity.NoteEntity;
-import io.wifi.starrailexpress.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.event.*;
 import io.wifi.starrailexpress.event.AllowShootRevolverDrop.ShouldDropResult;
 import io.wifi.starrailexpress.game.GameConstants;
@@ -52,11 +50,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
@@ -106,7 +100,6 @@ public class ModEventsRegister {
     private static AttributeModifier noJumpingAttribute = new AttributeModifier(
             Noellesroles.id("no_jumping"), -1.0f, AttributeModifier.Operation.ADD_VALUE);
     private static final Map<UUID, Vec3> oldmanPigRidePositions = new HashMap<>();
-    private static final double LOCKSMITH_OBSERVE_DISTANCE = 4.0D;
     // private static AttributeModifier oldmanAttribute = new AttributeModifier(
     // Noellesroles.id("oldman"), -0.4f, AttributeModifier.Operation.ADD_VALUE);
     // private static AttributeModifier windYaoseScaleAttribute = new
@@ -1568,77 +1561,25 @@ public class ModEventsRegister {
             handleGlitchRobotDeath(victim);
         });
 
-        // 服务器Tick事件 - 处理复活/老人跑步事件
+        // 服务器Tick事件 - 老人的猪的处理
+        // 复活已经移动到 DefibrillatorComponent 中
+        // 锁匠已经移动到 LocksmithInspirationComponent 中
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             var gameWorldComponent = SREGameWorldComponent.KEY.maybeGet(server.overworld()).orElse(null);
             if (gameWorldComponent == null || !gameWorldComponent.isRunning()) {
                 return;
             }
-
-            for (ServerLevel level : server.getAllLevels()) {
-                for (var entity : level.getAllEntities()) {
-                    if (!(entity instanceof Pig pig)) {
-                        continue;
-                    }
-                    if (!pig.getTags().contains(RoleShopHandler.OLDMAN_EASTER_EGG_PIG_NO_STEP_TAG)) {
-                        continue;
-                    }
+            {
+                ServerLevel level = server.overworld();
+                List<? extends Pig> pigs = level.getEntities(EntityTypeTest.forExactClass(Pig.class),
+                        (pig) -> pig.getTags().contains(RoleShopHandler.OLDMAN_EASTER_EGG_PIG_NO_STEP_TAG));
+                for (Pig pig : pigs) {
                     if (pig.getControllingPassenger() == null) {
                         oldmanPigRidePositions.remove(pig.getUUID());
                         continue;
                     }
-
                     pig.setJumping(false);
-                    Vec3 currentPos = pig.position();
-                    Vec3 lastPos = oldmanPigRidePositions.put(pig.getUUID(), currentPos);
-                    if (lastPos == null) {
-                        continue;
-                    }
-
-                    if (currentPos.y - lastPos.y > 0.55D) {
-                        pig.moveTo(lastPos.x, lastPos.y, lastPos.z, pig.getYRot(), pig.getXRot());
-                        pig.setDeltaMovement(Vec3.ZERO);
-                    }
                 }
-            }
-
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                DefibrillatorComponent component = ModComponents.DEFIBRILLATOR.get(player);
-                if (component.isDead && player.isSpectator()
-                        && player.level().getGameTime() >= component.resurrectionTime) {
-                    // 复活逻辑
-                    if (component.deathPos != null) {
-                        player.teleportTo(component.deathPos.x, component.deathPos.y, component.deathPos.z);
-                    }
-                    player.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
-
-                    player.setHealth(player.getMaxHealth());
-
-                    // 移除尸体
-                    if (player.level() instanceof ServerLevel slevel) {
-                        var entities = slevel.getAllEntities();
-                        for (var bentity : entities) {
-                            if (bentity instanceof PlayerBodyEntity body) {
-                                if (body.getPlayerUuid().equals(player.getUUID())) {
-                                    body.discard();
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    TrainVoicePlugin.resetPlayer(player.getUUID());
-                    component.init();
-
-                    player.displayClientMessage(Component.translatable("message.noellesroles.defibrillator.revived"),
-                            true);
-                }
-
-                // 检查死亡惩罚过期
-                DeathPenaltyComponent penaltyComponent = ModComponents.DEATH_PENALTY.get(player);
-                penaltyComponent.check();
-
-                // 锁匠灵感：持续观察门15秒可获得1点（上限18）
-                tickLocksmithInspiration(player, gameWorldComponent);
             }
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -1646,16 +1587,6 @@ public class ModEventsRegister {
             final ServerPlayer p = handler.player;
             SREPlayerStatsComponent.KEY.get(p).joinLoadFromFile();
         });
-
-        // 示例：监听是否能看到毒药
-        // CanSeePoison.EVENT.register((player) -> {
-        // StarGameWorldComponent gameWorld =
-        // StarGameWorldComponent.KEY.get(player.getWorld());
-        // if (gameWorld.isRole(player, ModRoles.YOUR_ROLE)) {
-        // return true;
-        // }
-        // return false;
-        // });
     }
 
     public static void registerPredicate() {
@@ -1757,61 +1688,6 @@ public class ModEventsRegister {
                 "noellesroles:passbook",
                 "minecraft:written_book"));
 
-    }
-
-    private static void tickLocksmithInspiration(ServerPlayer player, SREGameWorldComponent gameWorldComponent) {
-        LocksmithInspirationComponent component = ModComponents.LOCKSMITH_INSPIRATION.get(player);
-
-        if (!gameWorldComponent.isRole(player, ModRoles.LOCKSMITH) || !GameUtils.isPlayerAliveAndSurvival(player)) {
-            if (component.getObservingDoorTicks() > 0) {
-                component.setObservingDoorTicks(0);
-            }
-            return;
-        }
-
-        if (component.getInspirationPoints() >= LocksmithInspirationComponent.MAX_POINTS) {
-            if (component.getObservingDoorTicks() > 0) {
-                component.setObservingDoorTicks(0);
-            }
-            return;
-        }
-
-        if (!isLookingAtDoor(player)) {
-            if (component.getObservingDoorTicks() > 0) {
-                component.setObservingDoorTicks(0);
-            }
-            return;
-        }
-
-        int ticks = component.incrementObservingDoorTicks();
-        if (ticks >= LocksmithInspirationComponent.OBSERVE_TICKS_REQUIRED) {
-            component.setObservingDoorTicks(0);
-            component.addInspiration(1);
-        }
-    }
-
-    private static boolean isLookingAtDoor(ServerPlayer player) {
-        HitResult hitResult = player.pick(LOCKSMITH_OBSERVE_DISTANCE, 0.0F, false);
-        if (hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult blockHitResult)) {
-            return false;
-        }
-        return isDoorBlock(player.level(), blockHitResult.getBlockPos());
-    }
-
-    private static boolean isDoorBlock(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        Block block = state.getBlock();
-
-        if (block instanceof DoorBlock) {
-            return true;
-        }
-        if (level.getBlockEntity(pos) instanceof io.wifi.starrailexpress.block_entity.DoorBlockEntity) {
-            return true;
-        }
-        if (level.getBlockEntity(pos.below()) instanceof io.wifi.starrailexpress.block_entity.DoorBlockEntity) {
-            return true;
-        }
-        return level.getBlockEntity(pos.above()) instanceof io.wifi.starrailexpress.block_entity.DoorBlockEntity;
     }
 
 }
