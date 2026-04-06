@@ -62,7 +62,7 @@ public class StarRailMurderGameMode extends GameMode {
     public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> players) {
         // if (!Harpymodloader.isMojangVerify) {
-        //     return;
+        // return;
         // }
         GameInitializeEvent.EVENT.invoker().initializeGame(serverWorld, gameWorldComponent, players);
 
@@ -190,13 +190,13 @@ public class StarRailMurderGameMode extends GameMode {
         int killerMods = (int) allModifiers.stream().filter(modifier -> modifier.killerOnly).count();
         Collections.shuffle(allModifiers);
 
+        ArrayList<ServerPlayer> shuffledPlayers = new ArrayList<>(players);
         for (var mod : allModifiers) {
+            Collections.shuffle(shuffledPlayers);
+            Collections.shuffle(shuffledPlayers);
 
             int playersAssigned = 0;
             int specificDesiredRoleCount = desiredModifierCount;
-
-            ArrayList<ServerPlayer> shuffledPlayers = new ArrayList<>(players);
-            Collections.shuffle(shuffledPlayers);
 
             if (mod.killerOnly) {
                 specificDesiredRoleCount = (int) Math.floor(Math.floor((double) players.size() / 7) / killerMods);
