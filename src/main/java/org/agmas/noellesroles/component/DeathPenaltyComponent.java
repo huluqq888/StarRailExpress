@@ -276,7 +276,8 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
                             sp.setCamera(null);
                         }
                     }
-                } else if (limitPos != null) {
+                }
+                if (limitPos != null || limitCameraUUID != null) {
                     if (!player.hasEffect(ModEffects.MOVE_BANED) || player.level().getGameTime() % 30 == 0) {
                         if (player.distanceToSqr(limitPos) >= 2) {
                             player.teleportTo(limitPos.x, limitPos.y, limitPos.z);
