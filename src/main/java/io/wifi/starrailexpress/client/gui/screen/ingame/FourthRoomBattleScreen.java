@@ -35,6 +35,7 @@ public final class FourthRoomBattleScreen extends Screen {
     private final Map<String, Float> cardPresence = new HashMap<>();
     private final Map<String, Float> cardHoverAmounts = new HashMap<>();
     private final Map<Integer, Float> actionRevealAmounts = new HashMap<>();
+    private final Map<String, int[]> peekCardPositions = new HashMap<>();
 
     private int lastSnapshotVersion = -1;
     private float introProgress;
@@ -114,8 +115,8 @@ public final class FourthRoomBattleScreen extends Screen {
         renderShopTray(graphics, snapshot, mouseX, mouseY);
         renderTableSurface(graphics, snapshot);
         renderSelectedPreview(graphics, snapshot, mouseX, mouseY);
-        renderPeek(graphics, snapshot, mouseX, mouseY);
         renderHand(graphics, snapshot, mouseX, mouseY);
+        renderPeek(graphics, snapshot, mouseX, mouseY);
         renderBanners(graphics);
         renderHoverTooltip(graphics, mouseX, mouseY);
     }
@@ -537,19 +538,22 @@ public final class FourthRoomBattleScreen extends Screen {
     private void renderPeek(GuiGraphics graphics, FourthRoomClientSnapshot snapshot, int mouseX, int mouseY) {
         List<FourthRoomClientSnapshot.PeekCard> peekCards = snapshot.viewer().peekCards();
         if (peekCards.isEmpty()) {
+            peekCardPositions.clear();
             return;
         }
         int centerX = width / 2;
-        int centerY = height - 250; // Above hand
-        int spread = 100; // Random spread radius
+        int centerY = height / 2;
+        int spread = 120;
         for (int i = 0; i < peekCards.size(); i++) {
             FourthRoomClientSnapshot.PeekCard card = peekCards.get(i);
-            // Random position within spread
-            int offsetX = (int) ((Math.random() - 0.5) * spread * 2);
-            int offsetY = (int) ((Math.random() - 0.5) * spread * 2);
-            int cardX = centerX + offsetX;
-            int cardY = centerY + offsetY;
-            drawPeekCard(graphics, card, cardX, cardY, mouseX, mouseY);
+            String key = card.id() + "_" + i;
+            if (!peekCardPositions.containsKey(key)) {
+                int offsetX = (int) ((Math.random() - 0.5) * spread * 2);
+                int offsetY = (int) ((Math.random() - 0.5) * spread);
+                peekCardPositions.put(key, new int[]{centerX + offsetX, centerY + offsetY});
+            }
+            int[] pos = peekCardPositions.get(key);
+            drawPeekCard(graphics, card, pos[0], pos[1], mouseX, mouseY);
         }
     }
 
@@ -660,7 +664,7 @@ public final class FourthRoomBattleScreen extends Screen {
 
         graphics.pose().pushPose();
         graphics.pose().translate(centerX, bottomY, 20.0F);
-        graphics.pose().scale(0.5F, 0.5F, 1.0F);
+        graphics.pose().scale(0.7F, 0.7F, 1.0F);
 
         int left = -CARD_WIDTH / 2;
         int top = -CARD_HEIGHT;

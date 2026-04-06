@@ -385,6 +385,7 @@ public final class FourthRoomGameManager {
             state.peekCache.add(state.drawPile.get(index).cardId());
         }
         data.setDirty(true);
+        syncMatchState();
     }
 
     public void inflictCardDamage(UUID sourceId, UUID targetId, String reason) {
