@@ -152,6 +152,7 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
             this.limitPos = pos;
             sp.teleportTo(pos.x, pos.y, pos.z);
         }
+        this.limitCameraUUID = null;
         this.morePenalty = morePenalty;
         sync();
     }
@@ -178,6 +179,7 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
             this.limitCameraUUID = cameraEntity.getUUID();
             sp.setCamera(cameraEntity);
         }
+        this.limitPos = null;
         this.morePenalty = morePenalty;
         sync();
     }
@@ -284,11 +286,15 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
                         }
                     }
                 }
-                if (limitPos != null || limitCameraUUID != null) {
-                    if (!player.hasEffect(ModEffects.MOVE_BANED) || player.level().getGameTime() % 30 == 0) {
+                if (limitPos != null) {
+                    if (player.level().getGameTime() % 20 == 0) {
                         if (player.distanceToSqr(limitPos) >= 2) {
                             player.teleportTo(limitPos.x, limitPos.y, limitPos.z);
                         }
+                    }
+                }
+                if (limitPos != null || limitCameraUUID != null) {
+                    if (!player.hasEffect(ModEffects.MOVE_BANED) || player.level().getGameTime() % 30 == 0) {
                         player.addEffect(new MobEffectInstance(
                                 ModEffects.MOVE_BANED,
                                 (int) (40), // 持续时间（tick）
@@ -322,7 +328,7 @@ public class DeathPenaltyComponent implements RoleComponent, ServerTickingCompon
 
     @Override
     public void clientTick() {
-        if (limitPos != null) {
+        if (limitPos != null && limitCameraUUID == null) {
             if (player.distanceToSqr(limitPos) >= 1) {
                 player.setPos(limitPos);
             }
