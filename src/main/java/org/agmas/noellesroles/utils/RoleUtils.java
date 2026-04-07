@@ -202,7 +202,7 @@ public class RoleUtils extends MCItemsUtils {
     public static void sendWelcomeAnnouncement(ServerPlayer player) {
         SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
                 .get(player.level());
-        final var size = gameWorldComponent.getAllKillerTeamPlayers().size();
+        final var size = gameWorldComponent.getAllKillerPlayers().size();
         ServerPlayNetworking.send(player, new AnnounceWelcomePayload(
                 gameWorldComponent.getRole(player).getIdentifier().toString(), size, 0));
     }

@@ -211,6 +211,10 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
                         crgmwcca.autoSelect(p);
                     }
                 }
+                for (ServerPlayer p : serverWorld
+                        .getPlayers((p) -> GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p))) {
+                    RoleUtils.sendWelcomeAnnouncement(p);
+                }
                 roleSelectTimeout = -1;
             }
         }

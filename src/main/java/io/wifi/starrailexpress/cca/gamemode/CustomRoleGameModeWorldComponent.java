@@ -166,7 +166,6 @@ public class CustomRoleGameModeWorldComponent implements AutoSyncedComponent {
                     .translatable("gui.noellesroles.gambler.selected", RoleUtils.getRoleOrModifierNameWithColor(role))
                     .withStyle(ChatFormatting.GOLD), true);
             RoleUtils.changeRole(player, role);
-            RoleUtils.sendWelcomeAnnouncement(player);
             this.available_roles.remove(role);
         } else {
             player.displayClientMessage(Component
@@ -180,7 +179,6 @@ public class CustomRoleGameModeWorldComponent implements AutoSyncedComponent {
         ArrayList<ResourceLocation> roles = crgmtpcca.getAvailableRoles();
         if (roles.isEmpty()) {
             RoleUtils.changeRole(player, TMMRoles.CIVILIAN);
-            RoleUtils.sendWelcomeAnnouncement(player);
             return;
         } else {
             playerSelectedRole(player, roles.getFirst());
