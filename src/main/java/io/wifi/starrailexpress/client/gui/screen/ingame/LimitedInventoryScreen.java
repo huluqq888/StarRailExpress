@@ -13,6 +13,7 @@ import io.wifi.starrailexpress.util.ShopEntry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -32,7 +33,11 @@ import net.minecraft.world.item.ItemStack;
 
 import org.agmas.noellesroles.client.screen.GameManagementScreen;
 import org.agmas.noellesroles.client.screen.GuessRoleScreen;
+import org.agmas.noellesroles.client.screen.LootInfoScreen;
 import org.agmas.noellesroles.client.screen.RoleIntroduceScreen;
+import org.agmas.noellesroles.packet.Loot.LootDataRefreshC2SPacket;
+import org.agmas.noellesroles.packet.Loot.LootPoolsInfoCheckC2SPacket;
+import org.agmas.noellesroles.utils.lottery.LotteryManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -141,6 +146,19 @@ public class LimitedInventoryScreen extends LimitedHandledScreen<InventoryMenu> 
                                     .getRole(this.minecraft.player);
                             var screen = new RoleIntroduceScreen(this, role);
                             this.minecraft.setScreen(screen);
+                            toggleViewMenu(false);
+                        }).bounds(width - menuButtonWidth, startY - menuButtonHeight, menuButtonWidth, menuButtonHeight)
+                        .build();
+                this.menuSelections.add(btn1);
+                startY -= menuButtonHeight;
+            }
+            {
+                // 抽卡页面
+                var btn1 = org.agmas.noellesroles.client.widget.custom_button.ModernButton
+                        .builder(Component.translatable("screen.limited_inventory.menu.loot_screen"), (btn) -> {
+                            if (LotteryManager.getInstance().getLotteryPools().isEmpty())
+                                ClientPlayNetworking.send(new LootPoolsInfoCheckC2SPacket());
+                            this.minecraft.setScreen(new LootInfoScreen(0, 0, 0,this));
                             toggleViewMenu(false);
                         }).bounds(width - menuButtonWidth, startY - menuButtonHeight, menuButtonWidth, menuButtonHeight)
                         .build();

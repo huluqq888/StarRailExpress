@@ -13,7 +13,7 @@ import java.util.List;
  * 抽奖信息页发包
  * <p>
  *     NOTE:
- *      虽然目前为空，但是服务器有轮换卡池、up卡池，需要将卡池信息发给客户端用于显示
+ *      服务器有轮换卡池、up卡池，需要将卡池信息发给客户端用于显示
  * </p>
  */
 public record LootPoolsInfoCheckS2CPacket(List<Integer> poolIDs) implements CustomPacketPayload {

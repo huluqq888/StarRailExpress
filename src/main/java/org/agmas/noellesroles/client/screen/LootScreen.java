@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -55,12 +56,13 @@ public class LootScreen extends AbstractPixelScreen {
     private final Pair<Integer, Integer> trueQualityAndId;
     private final ArrayList<Card> cards = new ArrayList<>();
     private final ArrayList<AbstractAnimation> animations = new ArrayList<>();
+    /* 定时器：用于抽卡结束之后缩放等定时操作 */
+    private List<TimerWidget> timerWidgets;
     /** 速度控制器：用于使用动画控制所有卡片移动 */
     private LootSpeedController speedController;
     /** 随机数源 */
     private RandomSource randomSource;
-    /* 定时器：用于抽卡结束之后缩放等定时操作 */
-    private List<TimerWidget> timerWidgets;
+    private Screen parentScreen;
     /** 是否正在抽卡 */
     private boolean isLooting = true;
     /** 最终卡片所在索引 */
@@ -212,9 +214,13 @@ public class LootScreen extends AbstractPixelScreen {
     }
 
     public LootScreen(int poolId, int quality, int ansID) {
+        this(poolId, quality, ansID, null);
+    }
+    public LootScreen(int poolId, int quality, int ansID, Screen parentScreen) {
         super(Component.empty());
         this.poolId = poolId;
         this.trueQualityAndId = new Pair<>(quality, ansID);
+        this.parentScreen = parentScreen;
     }
     @Override
     protected void init()
@@ -511,7 +517,7 @@ public class LootScreen extends AbstractPixelScreen {
             Minecraft minecraft = Minecraft.getInstance();
             String trueName = itemName.substring(itemName.indexOf('/') + 1);
             itemStack.set(SREDataComponentTypes.SKIN, trueName);
-            minecraft.setScreen(new DisplayItemScreen(itemStack, null));
+            minecraft.setScreen(new DisplayItemScreen(itemStack, parentScreen));
             return;
         }
         onClose();
@@ -538,6 +544,14 @@ public class LootScreen extends AbstractPixelScreen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    @Override
+    public void onClose() {
+        if (parentScreen != null && minecraft != null) {
+            minecraft.setScreen(parentScreen);
+            return;
+        }
+        super.onClose();
     }
 
 //    /**

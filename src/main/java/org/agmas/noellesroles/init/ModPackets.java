@@ -4,10 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import org.agmas.noellesroles.packet.*;
-import org.agmas.noellesroles.packet.Loot.LootMultiResultS2CPacket;
-import org.agmas.noellesroles.packet.Loot.LootPoolsInfoCheckS2CPacket;
-import org.agmas.noellesroles.packet.Loot.LootPoolsInfoS2CPacket;
-import org.agmas.noellesroles.packet.Loot.LootResultS2CPacket;
+import org.agmas.noellesroles.packet.Loot.*;
 import org.agmas.noellesroles.repack.BanditRevolverShootPayload;
 
 public class ModPackets {
@@ -98,9 +95,11 @@ public class ModPackets {
         // 注册抽奖网络包
         PayloadTypeRegistry.playS2C().register(LootResultS2CPacket.ID, LootResultS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(LootMultiResultS2CPacket.ID, LootMultiResultS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(LootPoolsInfoCheckS2CPacket.ID,
-                LootPoolsInfoCheckS2CPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(LootPoolsInfoCheckS2CPacket.ID, LootPoolsInfoCheckS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(LootPoolsInfoS2CPacket.ID, LootPoolsInfoS2CPacket.CODEC);
+
+        // 注册抽奖数据刷新网络包
+        PayloadTypeRegistry.playS2C().register(LootDataRefreshS2CPacket.ID, LootDataRefreshS2CPacket.CODEC);
 
         // 注册物品展示 ui网络包
         PayloadTypeRegistry.playS2C().register(DisplayItemS2CPacket.ID, DisplayItemS2CPacket.CODEC);

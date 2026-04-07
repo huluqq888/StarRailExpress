@@ -10,6 +10,7 @@ import io.wifi.starrailexpress.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.util.SREItemUtils;
+import io.wifi.starrailexpress.util.SkinManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -90,6 +91,8 @@ public class RicesRoleRhapsody implements ModInitializer {
     public static final CustomPacketPayload.Type<LootRequestC2SPacket> LOOT_REQUIRE_PACKET = LootRequestC2SPacket.ID;
     public static final CustomPacketPayload.Type<LootMultiRequestC2SPacket> LOOT_MULTI_REQUIRE_PACKET = LootMultiRequestC2SPacket.ID;
     public static final CustomPacketPayload.Type<LootPoolsInfoRequestC2SPacket> LOOT_POOLS_INFO_REQUEST_PACKET = LootPoolsInfoRequestC2SPacket.ID;
+    public static final CustomPacketPayload.Type<LootPoolsInfoCheckC2SPacket> LOOT_POOLS_INFO_CHECK_CLIENT_PACKET = LootPoolsInfoCheckC2SPacket.ID;
+    public static final CustomPacketPayload.Type<LootDataRefreshC2SPacket> LOOT_DATA_REFRESH_CLIENT_PACKET = LootDataRefreshC2SPacket.ID;
 
     @Override
     public void onInitialize() {
@@ -322,10 +325,14 @@ public class RicesRoleRhapsody implements ModInitializer {
 
         // 注册卡池信息请求包
         PayloadTypeRegistry.playC2S().register(LootPoolsInfoRequestC2SPacket.ID, LootPoolsInfoRequestC2SPacket.CODEC);
+        // 注册客户端请求卡池信息检查包
+        PayloadTypeRegistry.playC2S().register(LootPoolsInfoCheckC2SPacket.ID, LootPoolsInfoCheckC2SPacket.CODEC);
         // 注册抽奖请求包
         PayloadTypeRegistry.playC2S().register(LootRequestC2SPacket.ID, LootRequestC2SPacket.CODEC);
         // 注册五连抽请求包
         PayloadTypeRegistry.playC2S().register(LootMultiRequestC2SPacket.ID, LootMultiRequestC2SPacket.CODEC);
+        // 注册抽卡相关数据更新请求包
+        PayloadTypeRegistry.playC2S().register(LootDataRefreshC2SPacket.ID, LootDataRefreshC2SPacket.CODEC);
 
         // 撬锁
         ServerPlayNetworking.registerGlobalReceiver(LOCK_GAME_PACKET, (payload, context) -> {
@@ -1027,6 +1034,11 @@ public class RicesRoleRhapsody implements ModInitializer {
             ServerPlayNetworking.send(context.player(), new LootPoolsInfoS2CPacket(missingPools));
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(LOOT_POOLS_INFO_CHECK_CLIENT_PACKET, (payload, context) -> {
+            ServerPlayNetworking.send(context.player(), new LootPoolsInfoCheckS2CPacket(
+                    LotteryManager.getInstance().getPoolIDs()));
+        });
+
         // 处理抽奖请求包
         ServerPlayNetworking.registerGlobalReceiver(LOOT_REQUIRE_PACKET, (payload, context) -> {
             ServerPlayer player = context.player();
@@ -1076,6 +1088,13 @@ public class RicesRoleRhapsody implements ModInitializer {
             } else {
                 player.sendSystemMessage(Component.translatable("message.noellesroles.loot.limit", payload.poolID()));
             }
+        });
+
+        // 处理更新抽卡数据请求包
+        ServerPlayNetworking.registerGlobalReceiver(LOOT_DATA_REFRESH_CLIENT_PACKET, (payload, context) -> {
+            ServerPlayNetworking.send(context.player(), new LootDataRefreshS2CPacket(
+                    SkinManager.getCoinNum(context.player()), SkinManager.getLootChance(context.player()))
+            );
         });
     }
 

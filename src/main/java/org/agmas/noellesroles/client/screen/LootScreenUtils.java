@@ -2,6 +2,7 @@ package org.agmas.noellesroles.client.screen;
 
 import io.wifi.StarRailExpressID;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 
 public class LootScreenUtils {
@@ -33,5 +34,18 @@ public class LootScreenUtils {
             }
         }
         return ans;
+    }
+    public static ResourceLocation getCoinResourceLocation() {
+        return StarRailExpressID.watheId("textures/font/coin.png");
+    }
+    public static void openLootInfoScreen(Minecraft environment) {
+        if (environment != null) {
+            if (environment.screen instanceof LootInfoScreen) {
+                Screen screen = environment.screen;
+                environment.setScreen(screen);
+            }
+            else
+                environment.setScreen(new LootInfoScreen());
+        }
     }
 }

@@ -41,6 +41,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -440,7 +441,10 @@ public class NoellesrolesClient implements ClientModInitializer {
             final var client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
-                    client.setScreen(new LootScreen(payload.poolID(), payload.quality(), payload.ansID()));
+                    if (client.screen instanceof LootInfoScreen screen) {
+                        screen.setLotteryChance(screen.getLotteryChance() - 1);
+                    }
+                    client.setScreen(new LootScreen(payload.poolID(), payload.quality(), payload.ansID(), client.screen));
                 }
             });
         });
@@ -449,6 +453,9 @@ public class NoellesrolesClient implements ClientModInitializer {
             final var client = context.client();
             client.execute(() -> {
                 if (client.player != null) {
+                    if (client.screen instanceof LootInfoScreen screen) {
+                        screen.setLotteryChance(screen.getLotteryChance() - payload.results().size());
+                    }
                     client.setScreen(
                             new LootMultiScreen(payload.poolID(), payload.results(), Minecraft.getInstance().screen));
                 }
@@ -464,10 +471,38 @@ public class NoellesrolesClient implements ClientModInitializer {
                         requestPoolIDs.add(poolID);
                 }
                 if (requestPoolIDs.isEmpty() && client.player != null)
-                    client.setScreen(new LootInfoScreen());
+                    LootScreenUtils.openLootInfoScreen(client);
                 else {
                     // 缺失卡池信息，向服务器请求缺失的卡池信息
                     ClientPlayNetworking.send(new LootPoolsInfoRequestC2SPacket(requestPoolIDs));
+                }
+            });
+        });
+        // 注册抽奖界面网络包处理：接收并保存服务器卡池信息并显示界面
+        ClientPlayNetworking.registerGlobalReceiver(LootPoolsInfoS2CPacket.ID, (payload, context) -> {
+            for (LotteryManager.LotteryPool lotteryPool : payload.pools()) {
+                if (LotteryManager.getInstance().getLotteryPool(lotteryPool.getPoolID()) == null)
+                    LotteryManager.getInstance().addLotteryPool(lotteryPool);
+                else
+                    LotteryManager.getInstance().setLotteryPoolByID(lotteryPool.getPoolID(), lotteryPool);
+            }
+            // 将卡池按 id大小排序
+            LotteryManager.getInstance().sortPools();
+            final var client = context.client();
+            client.execute(() -> {
+                if (client.player != null)
+                    LootScreenUtils.openLootInfoScreen(client);
+            });
+        });
+
+        // 处理服务器抽奖数据更新包
+        ClientPlayNetworking.registerGlobalReceiver(LootDataRefreshS2CPacket.ID, (payload, context) -> {
+            final var client = context.client();
+            client.execute(() -> {
+                Minecraft minecraft  = Minecraft.getInstance();
+                if (minecraft.screen instanceof LootInfoScreen screen) {
+                    screen.setCoinNumber(payload.coinNumber());
+                    screen.setLotteryChance(payload.lootChance());
                 }
             });
         });
@@ -492,22 +527,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             });
 
         });
-        // 注册抽奖界面网络包处理：接收并保存服务器卡池信息并显示界面
-        ClientPlayNetworking.registerGlobalReceiver(LootPoolsInfoS2CPacket.ID, (payload, context) -> {
-            for (LotteryManager.LotteryPool lotteryPool : payload.pools()) {
-                if (LotteryManager.getInstance().getLotteryPool(lotteryPool.getPoolID()) == null)
-                    LotteryManager.getInstance().addLotteryPool(lotteryPool);
-                else
-                    LotteryManager.getInstance().setLotteryPoolByID(lotteryPool.getPoolID(), lotteryPool);
-            }
-            // 将卡池按 id大小排序
-            LotteryManager.getInstance().sortPools();
-            final var client = context.client();
-            client.execute(() -> {
-                if (client.player != null)
-                    client.setScreen(new LootInfoScreen());
-            });
-        });
+
         ClientPlayNetworking.registerGlobalReceiver(ToggleInsaneSkillC2SPacket.ID, (payload, context) -> {
             if (payload.toggle()) {
                 Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_BACK);
