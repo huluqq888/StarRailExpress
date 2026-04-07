@@ -7,15 +7,19 @@ import java.util.List;
 import java.util.UUID;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.commands.SetRoleCountCommand;
+import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
 import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
 import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.init.ModEffects;
+import org.agmas.noellesroles.utils.RoleUtils;
+
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.SpecialGameModeRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent.FactionCardType;
+import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeWorldComponent;
 import io.wifi.starrailexpress.event.AllowGameEnd;
@@ -40,6 +44,9 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
     @Override
     public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> players) {
+        (SRETrainWorldComponent.KEY.get(serverWorld))
+                .setTimeOfDay(SRETrainWorldComponent.TimeOfDay.MIDNIGHT);
+        gameWorldComponent.clearRoleMap();
         int safeTick = SREConfig.instance().customRoleModeForceSelectTime * 20;
         roleSelectTimeout = serverWorld.getGameTime() + safeTick;
         ArrayList<ServerPlayer> unassignedPlayers = new ArrayList<>(players);
@@ -54,9 +61,17 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
                     false, // showParticles - 不显示粒子
                     false // showIcon - 不显示图标
             ));
+            RoleUtils.sendWelcomeAnnouncement(player);
         }
         getRolesAndAssignTeams(serverWorld, gameWorldComponent, unassignedPlayers);
         gameWorldComponent.syncRoles();
+        int modifierRoleCount = (int) ((float) players.size()
+                * HarpyModLoaderConfig.HANDLER.instance().modifierMultiplier);
+        assignModifiers(modifierRoleCount, serverWorld, gameWorldComponent, players);
+        Harpymodloader.FORCED_MODDED_ROLE.clear();
+        Harpymodloader.FORCED_MODDED_ROLE_FLIP.clear();
+        Harpymodloader.FORCED_MODDED_MODIFIER.clear();
+        PlayerRoleWeightManager.ForcePlayerTeam.clear();
     }
 
     public void getRolesAndAssignTeams(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,

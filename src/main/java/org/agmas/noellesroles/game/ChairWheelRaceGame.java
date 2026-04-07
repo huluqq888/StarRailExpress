@@ -19,7 +19,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
-import org.agmas.harpymodloader.events.GameInitializeEvent;
 import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.entity.WheelchairEntity;
 import org.agmas.noellesroles.init.ModEffects;
@@ -123,7 +122,6 @@ public class ChairWheelRaceGame extends GameMode {
     @Override
     public void initializeGame(ServerLevel serverLevel, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> list) {
-        GameInitializeEvent.EVENT.invoker().initializeGame(serverLevel, gameWorldComponent, list);
         ((SRETrainWorldComponent) SRETrainWorldComponent.KEY.get(serverLevel))
                 .setTimeOfDay(SRETrainWorldComponent.TimeOfDay.DAY);
         isWin.clear();

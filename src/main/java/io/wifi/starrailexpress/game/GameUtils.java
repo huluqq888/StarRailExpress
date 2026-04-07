@@ -56,6 +56,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
+import org.agmas.harpymodloader.events.GameInitializeEvent;
 import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.role.ModRoles;
@@ -289,6 +290,7 @@ public class GameUtils {
 
         baseInitialize(serverWorld, gameComponent, readyPlayerList);
 
+        GameInitializeEvent.EVENT.invoker().initializeGame(serverWorld, gameComponent, readyPlayerList);
         // 先分配角色,然后再初始化回放管理器
         gameComponent.getGameMode().initializeGame(serverWorld, gameComponent, readyPlayerList);
 
