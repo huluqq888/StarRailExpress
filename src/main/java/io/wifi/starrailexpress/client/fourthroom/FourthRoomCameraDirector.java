@@ -79,7 +79,6 @@ public final class FourthRoomCameraDirector {
 
     public static void renderOverlay(GuiGraphics guiGraphics) {
         renderCinematicBars(guiGraphics);
-        renderTableHint(guiGraphics);
     }
 
     public static void clear() {
@@ -122,36 +121,6 @@ public final class FourthRoomCameraDirector {
         int color = ((int) (alpha * 220.0F) << 24);
         guiGraphics.fill(0, 0, screenWidth, barHeight, color);
         guiGraphics.fill(0, screenHeight - barHeight, screenWidth, screenHeight, color);
-    }
-
-    private static void renderTableHint(GuiGraphics guiGraphics) {
-        Minecraft minecraft = Minecraft.getInstance();
-        FourthRoomTableBlockEntity table = getLookedTable(minecraft);
-        if (table == null || table.linkedRoomId() < 0 || !FourthRoomClientState.snapshot().active()) {
-            return;
-        }
-        if (FourthRoomClientState.snapshot().viewer().roomId() != table.linkedRoomId()) {
-            return;
-        }
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        Component title = Component.literal("四号房牌桌对战");
-        Component subtitle = minecraft.screen instanceof FourthRoomBattleScreen
-                ? Component.literal("按 H 收起战术面板")
-                : Component.literal("按 H 打开战术面板");
-        Component phase = Component.literal(table.phase().isBlank() ? "卡牌对战" : table.phase());
-        int titleWidth = minecraft.font.width(title);
-        int subWidth = minecraft.font.width(subtitle);
-        int phaseWidth = minecraft.font.width(phase);
-        int width = Math.max(titleWidth, Math.max(subWidth, phaseWidth)) + 18;
-        int height = 32;
-        int x = (screenWidth - width) / 2;
-        int y = screenHeight - 62;
-        guiGraphics.fill(x, y, x + width, y + height, 0x9A0D1016);
-        guiGraphics.fill(x, y, x + width, y + 2, 0xFFB78A3D);
-        guiGraphics.drawString(minecraft.font, title, x + 9, y + 6, 0xFFF6E7C6, false);
-        guiGraphics.drawString(minecraft.font, phase, x + 9, y + 16, 0xFF82C7FF, false);
-        guiGraphics.drawString(minecraft.font, subtitle, x + width - subWidth - 9, y + 16, 0xFFD7D7D7, false);
     }
 
     private record ActiveFocus(BlockPos origin, TableEffectEvents.TableAnchor anchor, long startTimeMs, long durationMs,

@@ -45,6 +45,7 @@ public enum BasicCard implements Card {
     SKIP("skip") {
         @Override
         public boolean play(FourthRoomGameManager manager, UUID playerId, @Nullable UUID targetId, CardInstance instance) {
+            // 跳过卡牌立即跳过当前玩家的回合，不摸牌
             return manager.skipCurrentTurn(playerId);
         }
     },
@@ -84,8 +85,14 @@ public enum BasicCard implements Card {
     LIFE("life") {
         @Override
         public boolean play(FourthRoomGameManager manager, UUID playerId, @Nullable UUID targetId, CardInstance instance) {
-            manager.addLifeShield(playerId, 1);
-            return true;
+            // 命格卡不能主动打出，只能在死亡牌触发时被动使用
+            return false;
+        }
+    },
+    COPY("copy") {
+        @Override
+        public boolean play(FourthRoomGameManager manager, UUID playerId, @Nullable UUID targetId, CardInstance instance) {
+            return manager.copyRandomCard(playerId, targetId);
         }
     };
 

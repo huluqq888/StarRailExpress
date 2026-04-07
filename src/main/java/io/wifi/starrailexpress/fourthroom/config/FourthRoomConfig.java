@@ -34,6 +34,7 @@ public final class FourthRoomConfig {
     public String blueTeamBlock = "minecraft:diamond_block";
     public String redTeamBlock = "minecraft:gold_block";
     public String duelMapName = "default";
+    public String deckPreset = "standard";
     public RelativePos lobbyOffset = new RelativePos(0, 1, 0);
     public RelativePos duelOffset = new RelativePos(0, 0, 64);
     public Map<String, Integer> itemPrices = createDefaultPrices();
@@ -115,6 +116,9 @@ public final class FourthRoomConfig {
         }
         if (duelMapName == null || duelMapName.isBlank()) {
             duelMapName = "default";
+        }
+        if (deckPreset == null || deckPreset.isBlank()) {
+            deckPreset = "standard";
         }
         if (lobbyOffset == null) {
             lobbyOffset = new RelativePos(0, 1, 0);

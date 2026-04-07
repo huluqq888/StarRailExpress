@@ -23,6 +23,7 @@ import io.wifi.starrailexpress.client.gui.screen.SkinManagementScreen;
 import io.wifi.starrailexpress.client.gui.screen.WaypointHUD;
 import io.wifi.starrailexpress.client.fourthroom.FourthRoomCameraDirector;
 import io.wifi.starrailexpress.client.fourthroom.FourthRoomClientState;
+import io.wifi.starrailexpress.client.fourthroom.FourthRoomTableHud;
 import io.wifi.starrailexpress.client.render.block_entity.FourthRoomTableBlockEntityRenderer;
 import io.wifi.starrailexpress.fourthroom.network.FourthRoomTableEffectsPayload;
 import io.wifi.starrailexpress.fourthroom.network.FourthRoomStatePayload;
@@ -648,6 +649,7 @@ public class SREClient implements ClientModInitializer {
             WaypointHUD.renderHUD(guiGraphics, deltaTick.getRealtimeDeltaTicks());
             AFKRenderer.renderAFKEffects(guiGraphics, deltaTick.getRealtimeDeltaTicks());
             FourthRoomCameraDirector.renderOverlay(guiGraphics);
+            FourthRoomTableHud.render(guiGraphics);
             // RoleUnlockHudRenderer.render(guiGraphics);
 
             // // 添加地图详情渲染

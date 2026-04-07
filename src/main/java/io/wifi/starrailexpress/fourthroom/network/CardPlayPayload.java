@@ -11,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public record CardPlayPayload(String cardId, String targetId) implements CustomPacketPayload {
+public record CardPlayPayload(int handIndex, String targetId) implements CustomPacketPayload {
     public static final Type<CardPlayPayload> ID = new Type<>(SRE.id("fourth_room_card_play"));
     public static final StreamCodec<FriendlyByteBuf, CardPlayPayload> CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8,
-            CardPlayPayload::cardId,
+            ByteBufCodecs.VAR_INT,
+            CardPlayPayload::handIndex,
             ByteBufCodecs.STRING_UTF8,
             CardPlayPayload::targetId,
             CardPlayPayload::new);
@@ -29,7 +29,8 @@ public record CardPlayPayload(String cardId, String targetId) implements CustomP
         @Override
         public void receive(@NotNull CardPlayPayload payload, ServerPlayNetworking.@NotNull Context context) {
             UUID target = payload.targetId().isBlank() ? null : UUID.fromString(payload.targetId());
-            FourthRoomGameManager.of(context.player().serverLevel()).playCard(context.player().getUUID(), payload.cardId(), target);
+            FourthRoomGameManager.of(context.player().serverLevel())
+                    .playCardByHandIndex(context.player().getUUID(), payload.handIndex(), target);
         }
     }
 }

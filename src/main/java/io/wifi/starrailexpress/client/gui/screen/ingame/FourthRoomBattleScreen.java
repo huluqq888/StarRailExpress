@@ -764,6 +764,10 @@ public final class FourthRoomBattleScreen extends Screen {
     }
 
     private boolean canUseCard(FourthRoomClientSnapshot snapshot, FourthRoomClientSnapshot.CardView card) {
+        // 命格卡不能主动打出
+        if (card.id().equals("life")) {
+            return false;
+        }
         if (card.id().equals("veto")) {
             return snapshot.viewer().alive();
         }
@@ -775,13 +779,14 @@ public final class FourthRoomBattleScreen extends Screen {
     private boolean playSelectedCard() {
         FourthRoomClientSnapshot snapshot = FourthRoomClientState.snapshot();
         FourthRoomClientSnapshot.CardView selected = selectedCard(snapshot);
+        int selectedIndex = selectedCardIndex(snapshot);
         if (selected == null || !canUseCard(snapshot, selected)) {
             return false;
         }
         if (selected.requiresTarget()) {
             List<FourthRoomClientSnapshot.RoomPlayer> targets = validCardTargets(snapshot, selected);
             if (targets.size() == 1) {
-                ClientPlayNetworking.send(new CardPlayPayload(selected.id(), targets.getFirst().uuid()));
+                ClientPlayNetworking.send(new CardPlayPayload(selectedIndex, targets.getFirst().uuid()));
                 selectedCardKey = "";
                 return true;
             }
@@ -789,7 +794,7 @@ public final class FourthRoomBattleScreen extends Screen {
             showingTargetPicker = true;
             return true;
         }
-        ClientPlayNetworking.send(new CardPlayPayload(selected.id(), ""));
+        ClientPlayNetworking.send(new CardPlayPayload(selectedIndex, ""));
         selectedCardKey = "";
         return true;
     }
@@ -797,8 +802,9 @@ public final class FourthRoomBattleScreen extends Screen {
     private void confirmTargetAndPlay(String targetUuid) {
         FourthRoomClientSnapshot snapshot = FourthRoomClientState.snapshot();
         FourthRoomClientSnapshot.CardView card = findCardByKey(snapshot, pendingCardKey);
-        if (card != null && canUseCard(snapshot, card)) {
-            ClientPlayNetworking.send(new CardPlayPayload(card.id(), targetUuid));
+        int cardIndex = findCardIndexByKey(snapshot, pendingCardKey);
+        if (card != null && cardIndex >= 0 && canUseCard(snapshot, card)) {
+            ClientPlayNetworking.send(new CardPlayPayload(cardIndex, targetUuid));
         }
         showingTargetPicker = false;
         pendingCardKey = "";
@@ -921,17 +927,26 @@ public final class FourthRoomBattleScreen extends Screen {
         return findCardByKey(snapshot, selectedCardKey);
     }
 
+    private int selectedCardIndex(FourthRoomClientSnapshot snapshot) {
+        return findCardIndexByKey(snapshot, selectedCardKey);
+    }
+
     private FourthRoomClientSnapshot.CardView findCardByKey(FourthRoomClientSnapshot snapshot, String key) {
+        int index = findCardIndexByKey(snapshot, key);
+        return index >= 0 ? snapshot.viewer().hand().get(index) : null;
+    }
+
+    private int findCardIndexByKey(FourthRoomClientSnapshot snapshot, String key) {
         if (key == null || key.isBlank()) {
-            return null;
+            return -1;
         }
         for (int index = 0; index < snapshot.viewer().hand().size(); index++) {
             FourthRoomClientSnapshot.CardView card = snapshot.viewer().hand().get(index);
             if (cardKey(card, index).equals(key)) {
-                return card;
+                return index;
             }
         }
-        return null;
+        return -1;
     }
 
     private List<CardLayout> buildCardLayouts(FourthRoomClientSnapshot snapshot, int mouseX, int mouseY) {

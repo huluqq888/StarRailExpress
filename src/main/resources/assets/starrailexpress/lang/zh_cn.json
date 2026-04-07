@@ -1005,6 +1005,7 @@
   "task.fourth_room.photograph_block.description": "拍摄主持人选择的目标方块。",
   "message.fourth_room.bulletproof_vest": "你的防弹背心挡住了手枪射击。",
   "message.fourth_room.life_card_blocked": "一张生命卡挡住了传入伤害。",
+  "message.fourth_room.life_card_auto_used": "自动使用命格卡抵挡了死亡牌伤害。",
   "message.fourth_room.purchased": "购买了 %s",
   "message.fourth_room.gold_change": "+%s 金币 (%s)",
   "shop.fourth_room.scorpion": "蝎子",

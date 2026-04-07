@@ -6,7 +6,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -26,6 +28,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
@@ -96,21 +99,47 @@ public class FourthRoomTableBlock extends Block implements EntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
         BlockPos corePos = getCore(state, pos);
         BlockEntity be = level.getBlockEntity(corePos);
         if (be instanceof FourthRoomTableBlockEntity table) {
+            if (level.isClientSide) {
+                return InteractionResult.SUCCESS;
+            }
             if (table.linkedRoomId() >= 0 && FourthRoomGameManager.of((net.minecraft.server.level.ServerLevel) level).data().active) {
-                player.displayClientMessage(Component.literal("§e[第四房间] §f盯着牌桌按 H 可打开战术面板"), true);
+                if (player instanceof ServerPlayer serverPlayer) {
+                    table.handleBattleInteraction(serverPlayer, resolveInteractionZone(state, pos, hitResult));
+                }
                 return InteractionResult.CONSUME;
             }
             if (player instanceof ServerPlayer serverPlayer) {
                 table.onPlayerInteract(serverPlayer);
             }
+            return InteractionResult.CONSUME;
         }
-        return InteractionResult.CONSUME;
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
+                                              InteractionHand hand, BlockHitResult hit) {
+        BlockPos corePos = getCore(state, pos);
+        BlockEntity be = level.getBlockEntity(corePos);
+        if (!(be instanceof FourthRoomTableBlockEntity table)) {
+            return super.useItemOn(stack, state, level, pos, player, hand, hit);
+        }
+        if (level.isClientSide) {
+            return ItemInteractionResult.SUCCESS;
+        }
+        if (table.linkedRoomId() >= 0 && FourthRoomGameManager.of((net.minecraft.server.level.ServerLevel) level).data().active) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                table.handleBattleInteraction(serverPlayer, resolveInteractionZone(state, pos, hit));
+            }
+            return ItemInteractionResult.SUCCESS;
+        }
+        if (player instanceof ServerPlayer serverPlayer) {
+            table.onPlayerInteract(serverPlayer);
+        }
+        return ItemInteractionResult.SUCCESS;
     }
 
     @Override
@@ -163,6 +192,69 @@ public class FourthRoomTableBlock extends Block implements EntityBlock {
         for (TablePart part : TablePart.values()) {
             level.setBlock(corePos.offset(part.xOffset, 0, part.zOffset), Blocks.AIR.defaultBlockState(),
                     Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_CLIENTS | Block.UPDATE_NEIGHBORS);
+        }
+    }
+
+    public static InteractionZone resolveInteractionZone(BlockState state, BlockPos pos, BlockHitResult hitResult) {
+        if (!(state.getBlock() instanceof FourthRoomTableBlock)) {
+            return InteractionZone.NONE;
+        }
+        BlockPos corePos = getCore(state, pos);
+        Direction facing = state.getValue(FACING);
+        Vec3 hitPos = hitResult.getLocation();
+        InteractionZone zone = nearestZone(hitPos, corePos, facing);
+        if (zone != InteractionZone.NONE) {
+            return zone;
+        }
+        double x = hitPos.x - (corePos.getX() + 0.5D);
+        double z = hitPos.z - (corePos.getZ() + 0.5D);
+        if (Math.abs(x) <= 1.45D && Math.abs(z) <= 1.45D) {
+            return InteractionZone.CENTER;
+        }
+        return InteractionZone.NONE;
+    }
+
+    private static InteractionZone nearestZone(Vec3 hitPos, BlockPos corePos, Direction facing) {
+        InteractionZone closest = InteractionZone.NONE;
+        double bestDistance = Double.MAX_VALUE;
+        for (InteractionZone zone : InteractionZone.values()) {
+            if (zone.anchor == null) {
+                continue;
+            }
+            Vec3 anchorPos = zone.anchor.worldPos(corePos, facing);
+            double distance = horizontalDistanceSquared(hitPos, anchorPos);
+            if (distance <= zone.radius * zone.radius && distance < bestDistance) {
+                closest = zone;
+                bestDistance = distance;
+            }
+        }
+        return closest;
+    }
+
+    private static double horizontalDistanceSquared(Vec3 first, Vec3 second) {
+        double dx = first.x - second.x;
+        double dz = first.z - second.z;
+        return dx * dx + dz * dz;
+    }
+
+    public enum InteractionZone {
+        DRAW_PILE(io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor.DRAW_PILE, 0.42D),
+        DISCARD_PILE(io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor.DISCARD_PILE, 0.42D),
+        CENTER(io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor.CENTER, 0.86D),
+        SEAT_A(io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor.SLOT_A, 0.48D),
+        SEAT_B(io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor.SLOT_B, 0.48D),
+        NONE(null, 0.0D);
+
+        private final io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor anchor;
+        private final double radius;
+
+        InteractionZone(io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents.TableAnchor anchor, double radius) {
+            this.anchor = anchor;
+            this.radius = radius;
+        }
+
+        public boolean isSeat() {
+            return this == SEAT_A || this == SEAT_B;
         }
     }
 

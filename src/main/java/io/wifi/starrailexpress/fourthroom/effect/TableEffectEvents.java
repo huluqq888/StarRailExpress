@@ -98,6 +98,14 @@ public final class TableEffectEvents {
             return seatIndex <= 0 ? SLOT_A : SLOT_B;
         }
 
+        public double localX() {
+            return localX;
+        }
+
+        public double localZ() {
+            return localZ;
+        }
+
         public Vec3 localOffset(Direction facing) {
             Direction resolvedFacing = facing == null ? Direction.NORTH : facing;
             double worldX;

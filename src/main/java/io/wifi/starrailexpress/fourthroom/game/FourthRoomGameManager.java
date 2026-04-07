@@ -135,13 +135,20 @@ public final class FourthRoomGameManager {
         if (playerState == null || !playerState.alive) {
             return false;
         }
-        CardInstance instance = playerState.hand.stream()
-                .filter(card -> card.cardId().equals(cardId))
-                .findFirst()
-                .orElse(null);
-        if (instance == null) {
+        for (int handIndex = 0; handIndex < playerState.hand.size(); handIndex++) {
+            if (playerState.hand.get(handIndex).cardId().equals(cardId)) {
+                return playCardByHandIndex(playerId, handIndex, targetId);
+            }
+        }
+        return false;
+    }
+
+    public boolean playCardByHandIndex(UUID playerId, int handIndex, @Nullable UUID targetId) {
+        FourthRoomPlayerState playerState = data.players.get(playerId);
+        if (playerState == null || !playerState.alive || handIndex < 0 || handIndex >= playerState.hand.size()) {
             return false;
         }
+        CardInstance instance = playerState.hand.get(handIndex);
         Card card = CardRegistry.byId(instance.cardId());
         if (card == null) {
             return false;
@@ -149,14 +156,32 @@ public final class FourthRoomGameManager {
         if (!card.isSkill() && !isPlayersTurn(playerId)) {
             return false;
         }
-        UUID resolvedTarget = targetId != null ? targetId : roomManager.getOpponent(playerId);
-        if (cardId.equals("point_kill") && !instance.gold()) {
+        boolean requiresTarget = cardRequiresTarget(card, instance.gold());
+        List<UUID> validTargets = validCardTargets(playerId, instance);
+        UUID resolvedTarget = targetId;
+        if (requiresTarget) {
+            if (resolvedTarget == null) {
+                if (validTargets.size() == 1) {
+                    resolvedTarget = validTargets.getFirst();
+                } else {
+                    return false;
+                }
+            }
+            if (!validTargets.contains(resolvedTarget)) {
+                return false;
+            }
+        } else {
+            if (resolvedTarget == null || !validTargets.contains(resolvedTarget)) {
+                resolvedTarget = roomManager.getOpponent(playerId);
+            }
+        }
+        if (card.id().equals("point_kill") && !instance.gold()) {
             resolvedTarget = playerId;
         }
-        playerState.hand.remove(instance);
+        playerState.hand.remove(handIndex);
         boolean success = card.play(this, playerId, resolvedTarget, instance);
         if (!success) {
-            playerState.hand.add(instance);
+            playerState.hand.add(handIndex, instance);
             return false;
         }
         playerState.discardPile.add(instance);
@@ -170,6 +195,45 @@ public final class FourthRoomGameManager {
         data.setDirty(true);
         syncMatchState();
         return true;
+    }
+
+    public boolean cardRequiresTarget(CardInstance instance) {
+        Card card = CardRegistry.byId(instance.cardId());
+        return card != null && cardRequiresTarget(card, instance.gold());
+    }
+
+    public List<UUID> validCardTargets(UUID playerId, CardInstance instance) {
+        FourthRoomPlayerState playerState = data.players.get(playerId);
+        if (playerState == null) {
+            return List.of();
+        }
+        FourthRoomRoomState roomState = data.rooms.get(playerState.roomId);
+        Card card = CardRegistry.byId(instance.cardId());
+        if (roomState == null || card == null) {
+            return List.of();
+        }
+        boolean allowSelf = "veto".equals(card.id());
+        List<UUID> targets = new ArrayList<>();
+        for (UUID occupantId : roomState.occupants) {
+            FourthRoomPlayerState occupant = data.players.get(occupantId);
+            if (occupant == null || !occupant.alive) {
+                continue;
+            }
+            if (!allowSelf && occupantId.equals(playerId)) {
+                continue;
+            }
+            targets.add(occupantId);
+        }
+        return targets;
+    }
+
+    public boolean canEndTurn(UUID playerId) {
+        return isPlayersTurn(playerId);
+    }
+
+    public boolean canRevealOwnIdentity(UUID playerId) {
+        FourthRoomPlayerState state = data.players.get(playerId);
+        return state != null && state.alive && state.firstHiddenIdentityIndex() >= 0;
     }
 
     public boolean endTurn(UUID playerId) {
@@ -324,6 +388,29 @@ public final class FourthRoomGameManager {
         return true;
     }
 
+    public boolean copyRandomCard(UUID playerId, UUID targetId) {
+        UUID resolvedTarget = targetId != null ? targetId : roomManager.getOpponent(playerId);
+        FourthRoomPlayerState targetState = data.players.get(resolvedTarget);
+        FourthRoomPlayerState actorState = data.players.get(playerId);
+        if (actorState == null || targetState == null) {
+            return false;
+        }
+        // 只复制非技能牌（可以被偷取或拆解的牌）
+        List<CardInstance> eligible = targetState.hand.stream().filter(card -> {
+            Card definition = CardRegistry.byId(card.cardId());
+            return definition != null && definition.canBeStolenOrDismantled();
+        }).toList();
+        if (eligible.isEmpty()) {
+            return false;
+        }
+        CardInstance copied = eligible.get(ThreadLocalRandom.current().nextInt(eligible.size()));
+        // 创建一个新的卡牌实例（复制），保留金卡属性
+        CardInstance newCopy = new CardInstance(copied.cardId(), copied.gold());
+        actorState.hand.add(newCopy);
+        data.setDirty(true);
+        return true;
+    }
+
     public void armDecoy(UUID playerId) {
         FourthRoomPlayerState state = data.players.get(playerId);
         if (state != null) {
@@ -408,6 +495,26 @@ public final class FourthRoomGameManager {
         if (targetState == null || !targetState.alive) {
             return;
         }
+        
+        // 检查是否是死亡牌触发的伤害，如果是，检查玩家是否有命格卡
+        if ("death_card".equals(reason)) {
+            CardInstance lifeCard = targetState.hand.stream()
+                    .filter(card -> "life".equals(card.cardId()))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (lifeCard != null) {
+                // 自动使用命格卡抵挡伤害
+                targetState.hand.remove(lifeCard);
+                targetState.discardPile.add(lifeCard);
+                sendPrivate(targetId, Component.translatable("message.fourth_room.life_card_auto_used"));
+                logRoomAction(targetState.roomId, "defense", playerName(targetId), "自动使用了", "命格", "", "抵挡了死亡牌伤害");
+                data.setDirty(true);
+                syncMatchState();
+                return;
+            }
+        }
+        
         if (targetState.lifeShield > 0) {
             targetState.lifeShield--;
             sendPrivate(targetId, Component.translatable("message.fourth_room.life_card_blocked"));
@@ -705,7 +812,7 @@ public final class FourthRoomGameManager {
                     latestDiscardLabel(roomState),
                     roomState.activePlayerId == null ? "" : roomState.activePlayerId.toString(),
                     phaseDisplayName(data.phase),
-                    roomState.publicActions.isEmpty() ? "" : formatActionSummary(roomState.publicActions.getLast()),
+                    "",
                     buildRecentTableCards(roomState));
         }
     }
@@ -745,22 +852,41 @@ public final class FourthRoomGameManager {
                 occupantId.toString(),
                 playerName(occupantId),
                 occupant.alive,
-                occupant.hiddenIdentityCount());
+                occupant.hiddenIdentityCount(),
+                buildPublicIdentitySlots(occupant));
     }
 
     private List<FourthRoomTableBlockEntity.TableCardDisplay> buildRecentTableCards(FourthRoomRoomState roomState) {
         List<FourthRoomTableBlockEntity.TableCardDisplay> displays = new ArrayList<>();
-        int start = Math.max(0, roomState.publicActions.size() - 5);
+        int start = Math.max(0, roomState.publicActions.size() - 8);
         for (int index = start; index < roomState.publicActions.size(); index++) {
             FourthRoomPublicAction action = roomState.publicActions.get(index);
+            if (!"card".equals(action.category) && !"skill".equals(action.category)) {
+                continue;
+            }
+            if (action.subject == null || action.subject.isBlank()) {
+                continue;
+            }
             displays.add(new FourthRoomTableBlockEntity.TableCardDisplay(
                     actionTitle(action),
-                    formatActionSummary(action),
+                    "",
                     categoryColor(action.category),
                     isHighlightCategory(action.category),
-                    action.tick));
+                    action.tick + action.sequence));
+        }
+        while (displays.size() > 6) {
+            displays.removeFirst();
         }
         return displays;
+    }
+
+    private List<String> buildPublicIdentitySlots(FourthRoomPlayerState occupant) {
+        List<String> identities = new ArrayList<>();
+        for (int index = 0; index < occupant.identityBlocks.size(); index++) {
+            boolean revealed = index < occupant.revealed.size() && occupant.revealed.get(index);
+            identities.add(revealed ? occupant.identityBlocks.get(index) : "");
+        }
+        return identities;
     }
 
     private int roomDrawPileSize(FourthRoomRoomState roomState) {
@@ -856,7 +982,6 @@ public final class FourthRoomGameManager {
         TableEffectEvents.TableAnchor actorAnchor = anchorForPlayerName(roomId, action.actorName);
         TableEffectEvents.TableAnchor targetAnchor = anchorForPlayerName(roomId, action.targetName);
         List<EffectEvent> effects = new ArrayList<>();
-        effects.add(new TableEffectEvents.Banner(40L, formatActionBanner(action), color, 920L));
         if (actorAnchor != null && !action.actorName.isBlank() && !"系统".equals(action.actorName)) {
             effects.add(new TableEffectEvents.CameraFocus(0L, actorAnchor, 300L, 0.40F, false, 0));
         }
@@ -1016,23 +1141,16 @@ public final class FourthRoomGameManager {
         state.extraTurns = 0;
         state.markedForKill = 0;
         state.decoyArmed = false;
-        List<CardInstance> deck = new ArrayList<>();
-        deck.add(new CardInstance(BasicCard.DEATH.id(), false));
-        deck.add(new CardInstance(BasicCard.DEATH.id(), false));
-        deck.add(new CardInstance(BasicCard.DEATH.id(), false));
-        deck.add(new CardInstance(BasicCard.CLEANSE.id(), false));
-        deck.add(new CardInstance(BasicCard.BOTTOM_DRAW.id(), true));
-        deck.add(new CardInstance(BasicCard.SEIZE.id(), false));
-        deck.add(new CardInstance(BasicCard.SEIZE.id(), false));
-        deck.add(new CardInstance(BasicCard.SKIP.id(), false));
-        deck.add(new CardInstance(BasicCard.VETO.id(), false));
-        deck.add(new CardInstance(BasicCard.POINT_KILL.id(), false));
-        deck.add(new CardInstance(BasicCard.POINT_KILL.id(), true));
-        deck.add(new CardInstance(BasicCard.DISMANTLE.id(), false));
-        deck.add(new CardInstance(BasicCard.PEEK.id(), false));
-        deck.add(new CardInstance(BasicCard.LIFE.id(), false));
-        deck.add(new CardInstance(BasicCard.LIFE.id(), false));
-        Collections.shuffle(deck);
+        
+        // 使用牌组预设创建固定牌组
+        DeckPreset preset = DeckPreset.byId(config.deckPreset);
+        List<CardInstance> deck = preset.createDeck();
+        
+        // 如果是混乱模式，额外打乱
+        if (preset == DeckPreset.CHAOS) {
+            Collections.shuffle(deck);
+        }
+        
         state.drawPile.addAll(deck);
         drawCards(state.playerId, 3, false);
         state.hand.add(new CardInstance(state.skillCardId, false));
@@ -1067,9 +1185,17 @@ public final class FourthRoomGameManager {
         if (!isPlayersTurn(resolvedTarget)) {
             return false;
         }
-        endTurn(resolvedTarget);
+        
+        // 立即跳过当前回合，不摸牌
+        targetState.peekCache.clear();
         logPlayerRoomAction(playerId, "card", "施放了", cardDisplayName(BasicCard.SKIP), playerName(resolvedTarget),
-                "立即跳过当前玩家回合");
+                "立即跳过回合（不摸牌）");
+        roomManager.advanceTurn(targetState.roomId);
+        resolveTurnEntry(targetState.roomId);
+        FourthRoomRoomState newRoomState = data.rooms.get(targetState.roomId);
+        emitActiveTurnFocus(targetState.roomId, newRoomState != null ? newRoomState.activePlayerId : null, 140L);
+        data.setDirty(true);
+        syncMatchState();
         return true;
     }
 
@@ -1131,6 +1257,7 @@ public final class FourthRoomGameManager {
             case "dismantle" -> "拆解";
             case "peek" -> "窥视";
             case "life" -> "命格";
+            case "copy" -> "复制";
             case "rebuild" -> "重构";
             case "interrogate" -> "审讯";
             case "decoy" -> "诱饵";
@@ -1146,12 +1273,13 @@ public final class FourthRoomGameManager {
             case "cleanse" -> "将弃牌堆洗回牌库。";
             case "bottom_draw" -> "从牌库底部摸一张牌。";
             case "seize" -> "随机夺取目标一张可夺取卡牌。";
-            case "skip" -> "立即跳过当前玩家的回合。";
+            case "skip" -> "立即跳过当前玩家的回合，不摸牌。";
             case "veto" -> "任何时候可以打出，强制目标摸一张牌。可以对自己使用，也可以被否决抵消。";
             case "point_kill" -> "给目标额外一个回合。";
             case "dismantle" -> "随机将目标一张卡塞回其牌库。";
             case "peek" -> "查看自己牌库顶的三张牌。";
-            case "life" -> "获得一层伤害护盾。";
+            case "life" -> "被动卡牌：抽到死亡牌时自动使用并抵挡伤害，无法主动打出。";
+            case "copy" -> "复制对手手牌中1张非技能牌，加入自己手牌。";
             case "rebuild" -> "洗回弃牌堆并再摸两张牌。";
             case "interrogate" -> "强制目标展示并埋回一张可夺取牌。";
             case "decoy" -> "下次受到伤害时转嫁给同房对手。";
@@ -1164,7 +1292,7 @@ public final class FourthRoomGameManager {
     private boolean cardRequiresTarget(Card card, boolean gold) {
         return switch (card.id()) {
             case "point_kill" -> gold;
-            case "seize", "veto", "dismantle", "interrogate" -> true;
+            case "seize", "veto", "dismantle", "interrogate", "copy" -> true;
             case "skip" -> false;
             default -> false;
         };

@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.client.render.block_entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import io.wifi.starrailexpress.client.fourthroom.FourthRoomClientState;
 import io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlock;
 import io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlockEntity;
 import io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents;
@@ -15,17 +16,24 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<FourthRoomTableBlockEntity> {
 
@@ -44,13 +52,13 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
         renderPile(entity, poseStack, bufferSource, packedOverlay, facing, TableEffectEvents.TableAnchor.DRAW_PILE,
                 Math.max(1, (int) Math.ceil(entity.drawPileSize() / 4.0D)), "牌库 x" + entity.drawPileSize(), false);
         renderPile(entity, poseStack, bufferSource, packedOverlay, facing, TableEffectEvents.TableAnchor.DISCARD_PILE,
-                Math.max(1, Math.min(6, entity.discardPileSize())), entity.topDiscardCardId().isBlank()
-                        ? "弃牌堆 x" + entity.discardPileSize()
-                        : entity.topDiscardCardId() + " x" + entity.discardPileSize(), true);
+                Math.max(1, Math.min(6, entity.discardPileSize())), "弃牌堆 x" + entity.discardPileSize(), true);
         renderSeatStatus(entity, poseStack, bufferSource, facing, TableEffectEvents.TableAnchor.SLOT_A,
-                entity.seatAPlayerName(), entity.seatAPlayerUuid(), entity.seatAAlive(), entity.seatAHiddenIdentityCount());
+                entity.seatAPlayerName(), entity.seatAPlayerUuid(), entity.seatAAlive(), entity.seatAHiddenIdentityCount(),
+                entity.seatAIdentitySlots());
         renderSeatStatus(entity, poseStack, bufferSource, facing, TableEffectEvents.TableAnchor.SLOT_B,
-                entity.seatBPlayerName(), entity.seatBPlayerUuid(), entity.seatBAlive(), entity.seatBHiddenIdentityCount());
+                entity.seatBPlayerName(), entity.seatBPlayerUuid(), entity.seatBAlive(), entity.seatBHiddenIdentityCount(),
+                entity.seatBIdentitySlots());
         renderRecentCards(entity, poseStack, bufferSource, facing);
         renderAnimatedCards(entity, poseStack, bufferSource, facing, packedOverlay);
         renderPulses(entity, poseStack, bufferSource, facing);
@@ -72,10 +80,11 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
 
     private void renderSeatStatus(FourthRoomTableBlockEntity entity, PoseStack poseStack, MultiBufferSource bufferSource,
                                   Direction facing, TableEffectEvents.TableAnchor anchor, String playerName,
-                                  String playerUuid, boolean alive, int hiddenIdentities) {
+                                  String playerUuid, boolean alive, int hiddenIdentities, List<String> identitySlots) {
         if (playerName.isBlank()) {
             return;
         }
+        renderIdentityCards(entity, poseStack, bufferSource, facing, anchor, playerUuid, identitySlots, alive);
         Vec3 offset = anchor.localOffset(facing);
         int color = alive ? 0xFFF5ECD4 : 0xFF7F7F7F;
         if (!entity.activePlayerUuid().isBlank() && entity.activePlayerUuid().equals(playerUuid)) {
@@ -83,8 +92,8 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
         }
         renderBillboardText(poseStack, bufferSource, Component.literal(playerName), offset.x, 1.05D, offset.z, color,
                 0.019F);
-        renderBillboardText(poseStack, bufferSource,
-                Component.literal("身份 x" + hiddenIdentities + (alive ? "" : " · 出局")), offset.x, 0.96D, offset.z,
+        String status = !alive ? "已出局" : hiddenIdentities > 0 ? ("暗置身份 x" + hiddenIdentities) : "身份已翻开";
+        renderBillboardText(poseStack, bufferSource, Component.literal(status), offset.x, 0.96D, offset.z,
                 alive ? 0xFFB6D4FF : 0xFF969696, 0.016F);
     }
 
@@ -93,14 +102,15 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
         int count = entity.tableCards().size();
         for (int index = 0; index < count; index++) {
             FourthRoomTableBlockEntity.TableCardDisplay card = entity.tableCards().get(index);
-            float spread = count <= 1 ? 0.0F : (index - (count - 1) / 2.0F) * 0.38F;
-            float zRot = spread * -12.0F;
-            renderCard(entity, poseStack, bufferSource, 0.5D + spread, 0.94D + Math.abs(spread) * 0.01D, 0.5D,
-                    0.22F, card.highlight(), zRot, OverlayTexture.NO_OVERLAY);
-            renderBillboardText(poseStack, bufferSource, Component.literal(card.titleText()), spread, 1.19D,
-                    0.10D - Math.abs(spread) * 0.03D, card.accentColor(), 0.016F);
-            renderBillboardText(poseStack, bufferSource, Component.literal(card.summaryText()), spread, 1.10D,
-                    0.10D - Math.abs(spread) * 0.03D, 0xFFE9E9E9, 0.013F);
+            RandomSource random = RandomSource.create(card.timestamp());
+            double localX = Mth.clamp((random.nextDouble() - 0.5D) * 1.10D + (index - (count - 1) / 2.0D) * 0.05D,
+                    -0.68D, 0.68D);
+            double localZ = Mth.clamp((random.nextDouble() - 0.5D) * 0.64D + 0.10D, -0.18D, 0.46D);
+            Vec3 offset = tableOffset(facing, localX, localZ);
+            float zRot = (random.nextFloat() - 0.5F) * 54.0F;
+            renderCard(entity, poseStack, bufferSource, 0.5D + offset.x, 0.94D + index * 0.004D,
+                    0.5D + offset.z, card.highlight() ? 0.24F : 0.22F, card.highlight(), zRot,
+                    OverlayTexture.NO_OVERLAY);
         }
     }
 
@@ -144,13 +154,6 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
 
     private void renderTableLabels(FourthRoomTableBlockEntity entity, PoseStack poseStack,
                                    MultiBufferSource bufferSource) {
-        renderBillboardText(poseStack, bufferSource,
-                Component.literal(entity.phase().isBlank() ? "卡牌对战" : entity.phase()), 0.0D, 1.42D, -0.05D,
-                0xFF88D6FF, 0.020F);
-        if (!entity.lastActionText().isBlank()) {
-            renderBillboardText(poseStack, bufferSource, Component.literal(entity.lastActionText()), 0.0D, 1.31D,
-                    -0.05D, 0xFFF4E8CC, 0.016F);
-        }
         FourthRoomTableBlockEntity.BannerState banner = entity.activeBanner();
         if (banner != null) {
             long now = System.currentTimeMillis();
@@ -165,10 +168,72 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
     private void renderCard(FourthRoomTableBlockEntity entity, PoseStack poseStack, MultiBufferSource bufferSource,
                             double x, double y, double z, float scale, boolean highlighted, float zRotation,
                             int packedOverlay) {
-        ItemStack stack = new ItemStack(Items.PAPER);
+                renderItemStack(entity, poseStack, bufferSource, createCardStack(highlighted), x, y, z, scale, zRotation,
+                                packedOverlay);
+        }
+
+        private void renderIdentityCards(FourthRoomTableBlockEntity entity, PoseStack poseStack,
+                                                                         MultiBufferSource bufferSource, Direction facing,
+                                                                         TableEffectEvents.TableAnchor anchor, String playerUuid,
+                                                                         List<String> publicIdentitySlots, boolean alive) {
+                List<String> visibleIdentities = resolveIdentitySlots(entity, playerUuid, publicIdentitySlots);
+                if (visibleIdentities.isEmpty()) {
+                        return;
+                }
+                double mid = (visibleIdentities.size() - 1) / 2.0D;
+                for (int index = 0; index < visibleIdentities.size(); index++) {
+                        String blockId = visibleIdentities.get(index);
+                        Vec3 offset = tableOffset(facing,
+                                        anchor.localX() + (index - mid) * 0.28D,
+                                        anchor.localZ() + 0.28D);
+                        float rotation = (float) ((index - mid) * 7.0D + (alive ? 0.0D : -4.0D));
+                        ItemStack stack = identityStack(blockId);
+                        float scale = blockId.isBlank() ? 0.18F : 0.20F;
+                        renderItemStack(entity, poseStack, bufferSource, stack, 0.5D + offset.x, 0.945D + index * 0.004D,
+                                        0.5D + offset.z, scale, rotation, OverlayTexture.NO_OVERLAY);
+                }
+        }
+
+        private List<String> resolveIdentitySlots(FourthRoomTableBlockEntity entity, String playerUuid,
+                                                                                          List<String> publicIdentitySlots) {
+                var snapshot = FourthRoomClientState.snapshot();
+                if (snapshot.active()
+                                && snapshot.viewer().roomId() == entity.linkedRoomId()
+                                && snapshot.viewer().uuid().equals(playerUuid)
+                                && !snapshot.viewer().identities().isEmpty()) {
+                        List<String> localSlots = new ArrayList<>();
+                        snapshot.viewer().identities().forEach(identity -> localSlots.add(identity.blockId()));
+                        return localSlots;
+                }
+                return publicIdentitySlots;
+        }
+
+        private ItemStack identityStack(String blockId) {
+                if (blockId == null || blockId.isBlank()) {
+                        return createCardStack(false);
+                }
+                ResourceLocation id = ResourceLocation.tryParse(blockId);
+                if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
+                        return createCardStack(true);
+                }
+                Item item = BuiltInRegistries.ITEM.get(id);
+                if (item == Items.AIR) {
+                        return createCardStack(true);
+                }
+                return new ItemStack(item);
+        }
+
+        private ItemStack createCardStack(boolean highlighted) {
+                ItemStack stack = new ItemStack(Items.PAPER);
         if (highlighted) {
             stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         }
+                return stack;
+        }
+
+        private void renderItemStack(FourthRoomTableBlockEntity entity, PoseStack poseStack, MultiBufferSource bufferSource,
+                                                                 ItemStack stack, double x, double y, double z, float scale, float zRotation,
+                                                                 int packedOverlay) {
         poseStack.pushPose();
         poseStack.translate(x, y, z);
         poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
@@ -196,6 +261,16 @@ public class FourthRoomTableBlockEntityRenderer implements BlockEntityRenderer<F
                 LightTexture.FULL_BRIGHT);
         poseStack.popPose();
     }
+
+        private Vec3 tableOffset(Direction facing, double localX, double localZ) {
+                return switch (facing) {
+                        case SOUTH -> new Vec3(-localX, 0.0D, localZ);
+                        case EAST -> new Vec3(localZ, 0.0D, localX);
+                        case WEST -> new Vec3(-localZ, 0.0D, -localX);
+                        case NORTH -> new Vec3(localX, 0.0D, -localZ);
+                        default -> new Vec3(localX, 0.0D, localZ);
+                };
+        }
 
     @Override
     public boolean shouldRenderOffScreen(@NotNull FourthRoomTableBlockEntity blockEntity) {

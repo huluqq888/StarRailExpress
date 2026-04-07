@@ -2,10 +2,14 @@ package io.wifi.starrailexpress.fourthroom.block;
 
 import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.fourthroom.card.Card;
+import io.wifi.starrailexpress.fourthroom.card.CardInstance;
+import io.wifi.starrailexpress.fourthroom.card.CardRegistry;
 import io.wifi.starrailexpress.fourthroom.effect.EffectEvent;
 import io.wifi.starrailexpress.fourthroom.effect.EffectQueue;
 import io.wifi.starrailexpress.fourthroom.effect.TableEffectEvents;
 import io.wifi.starrailexpress.fourthroom.game.FourthRoomGameManager;
+import io.wifi.starrailexpress.fourthroom.game.FourthRoomPlayerState;
 import io.wifi.starrailexpress.fourthroom.game.FourthRoomSavedData;
 import io.wifi.starrailexpress.fourthroom.network.FourthRoomTableEffectsPayload;
 import io.wifi.starrailexpress.game.GameConstants;
@@ -58,12 +62,14 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
     private String seatAPlayerName = "";
     private boolean seatAAlive;
     private int seatAHiddenIdentityCount;
+    private final List<String> seatAIdentitySlots = new ArrayList<>();
 
     /** Seat B player uuid/name snapshot. */
     private String seatBPlayerUuid = "";
     private String seatBPlayerName = "";
     private boolean seatBAlive;
     private int seatBHiddenIdentityCount;
+    private final List<String> seatBIdentitySlots = new ArrayList<>();
 
     /** Number of cards in draw pile (for visual stack height). */
     private int drawPileSize;
@@ -121,6 +127,98 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
             tryStartTableMatch();
         }
         sync();
+    }
+
+    public boolean handleBattleInteraction(ServerPlayer player, FourthRoomTableBlock.InteractionZone zone) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return false;
+        }
+        FourthRoomGameManager manager = FourthRoomGameManager.of(serverLevel);
+        FourthRoomPlayerState playerState = manager.data().players.get(player.getUUID());
+        if (linkedRoomId < 0 || !manager.data().active || playerState == null || playerState.roomId != linkedRoomId) {
+            player.displayClientMessage(Component.literal("§e[第四房间] §c请操作自己房间内的牌桌"), true);
+            return false;
+        }
+        if (!playerState.alive) {
+            player.displayClientMessage(Component.literal("§e[第四房间] §c你已经出局，无法继续操作牌桌"), true);
+            return false;
+        }
+
+        UUID playerId = player.getUUID();
+        if (player.isShiftKeyDown() && zone.isSeat()) {
+            UUID seatPlayerId = playerUuidForZone(zone);
+            if (!playerId.equals(seatPlayerId)) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §c只能潜行翻开自己的身份牌"), true);
+                return false;
+            }
+            if (!manager.canRevealOwnIdentity(playerId) || !manager.revealOwnIdentity(playerId)) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §c当前没有可翻开的身份牌"), true);
+                return false;
+            }
+            return true;
+        }
+
+        if (zone == FourthRoomTableBlock.InteractionZone.DRAW_PILE) {
+            if (!manager.canEndTurn(playerId)) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §c只能在自己的回合右键牌库结束回合"), true);
+                return false;
+            }
+            if (!manager.endTurn(playerId)) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §c当前无法结束回合"), true);
+                return false;
+            }
+            return true;
+        }
+
+        if (playerState.hand.isEmpty()) {
+            player.displayClientMessage(Component.literal("§e[第四房间] §c你现在没有可打出的手牌"), true);
+            return false;
+        }
+
+        int handIndex = player.getInventory().selected;
+        if (handIndex < 0 || handIndex >= playerState.hand.size()) {
+            player.displayClientMessage(Component.literal("§e[第四房间] §c当前物品栏槽位没有对应手牌，滚轮切到有牌的位置"), true);
+            return false;
+        }
+
+        CardInstance instance = playerState.hand.get(handIndex);
+        Card card = CardRegistry.byId(instance.cardId());
+        if (card == null) {
+            player.displayClientMessage(Component.literal("§e[第四房间] §c这张牌当前无法解析"), true);
+            return false;
+        }
+
+        if (manager.cardRequiresTarget(instance)) {
+            if (!zone.isSeat()) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §f这张牌需要右键目标身份牌来使用"), true);
+                return false;
+            }
+            UUID targetId = playerUuidForZone(zone);
+            List<UUID> validTargets = manager.validCardTargets(playerId, instance);
+            if (targetId == null) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §c该位置当前没有可指定的目标"), true);
+                return false;
+            }
+            if (!validTargets.contains(targetId)) {
+                player.displayClientMessage(Component.literal(playerId.equals(targetId)
+                        ? "§e[第四房间] §c这张牌不能对自己使用"
+                        : "§e[第四房间] §c目标当前不可被这张牌指定"), true);
+                return false;
+            }
+            if (!manager.playCardByHandIndex(playerId, handIndex, targetId)) {
+                player.displayClientMessage(Component.literal("§e[第四房间] §c当前无法打出这张牌"), true);
+                return false;
+            }
+            return true;
+        }
+
+        if (!manager.playCardByHandIndex(playerId, handIndex, null)) {
+            player.displayClientMessage(Component.literal(card.isSkill()
+                    ? "§e[第四房间] §c当前无法施放这张技能牌"
+                    : "§e[第四房间] §c还没轮到你出牌"), true);
+            return false;
+        }
+        return true;
     }
 
     private void tryStartTableMatch() {
@@ -209,10 +307,12 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
         seatAPlayerName = "";
         seatAAlive = false;
         seatAHiddenIdentityCount = 0;
+        seatAIdentitySlots.clear();
         seatBPlayerUuid = "";
         seatBPlayerName = "";
         seatBAlive = false;
         seatBHiddenIdentityCount = 0;
+        seatBIdentitySlots.clear();
         tableCards.clear();
         if (clientEffectQueue != null) {
             clientEffectQueue.clear();
@@ -314,10 +414,12 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
     public String seatAPlayerName() { return seatAPlayerName; }
     public boolean seatAAlive() { return seatAAlive; }
     public int seatAHiddenIdentityCount() { return seatAHiddenIdentityCount; }
+    public List<String> seatAIdentitySlots() { return seatAIdentitySlots; }
     public String seatBPlayerUuid() { return seatBPlayerUuid; }
     public String seatBPlayerName() { return seatBPlayerName; }
     public boolean seatBAlive() { return seatBAlive; }
     public int seatBHiddenIdentityCount() { return seatBHiddenIdentityCount; }
+    public List<String> seatBIdentitySlots() { return seatBIdentitySlots; }
     public List<TableCardDisplay> tableCards() { return tableCards; }
     public List<ActiveCardAnimation> activeCardAnimations() { return activeCardAnimations; }
     public List<AnchorPulseState> activePulses() { return activePulses; }
@@ -362,10 +464,12 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
         tag.putString("SeatAPlayerName", seatAPlayerName);
         tag.putBoolean("SeatAAlive", seatAAlive);
         tag.putInt("SeatAHiddenIdentityCount", seatAHiddenIdentityCount);
+        tag.put("SeatAIdentitySlots", saveStringList(seatAIdentitySlots));
         tag.putString("SeatBPlayerUuid", seatBPlayerUuid);
         tag.putString("SeatBPlayerName", seatBPlayerName);
         tag.putBoolean("SeatBAlive", seatBAlive);
         tag.putInt("SeatBHiddenIdentityCount", seatBHiddenIdentityCount);
+        tag.put("SeatBIdentitySlots", saveStringList(seatBIdentitySlots));
 
         ListTag seated = new ListTag();
         for (UUID uuid : seatedPlayers) {
@@ -396,10 +500,12 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
         seatAPlayerName = tag.getString("SeatAPlayerName");
         seatAAlive = tag.getBoolean("SeatAAlive");
         seatAHiddenIdentityCount = tag.getInt("SeatAHiddenIdentityCount");
+        loadStringList(tag.getList("SeatAIdentitySlots", Tag.TAG_STRING), seatAIdentitySlots);
         seatBPlayerUuid = tag.getString("SeatBPlayerUuid");
         seatBPlayerName = tag.getString("SeatBPlayerName");
         seatBAlive = tag.getBoolean("SeatBAlive");
         seatBHiddenIdentityCount = tag.getInt("SeatBHiddenIdentityCount");
+        loadStringList(tag.getList("SeatBIdentitySlots", Tag.TAG_STRING), seatBIdentitySlots);
 
         seatedPlayers.clear();
         for (Tag entry : tag.getList("SeatedPlayers", Tag.TAG_COMPOUND)) {
@@ -422,15 +528,47 @@ public class FourthRoomTableBlockEntity extends BlockEntity {
             seatAPlayerName = seat == null ? "" : seat.playerName();
             seatAAlive = seat != null && seat.alive();
             seatAHiddenIdentityCount = seat == null ? 0 : seat.hiddenIdentityCount();
+            seatAIdentitySlots.clear();
+            if (seat != null) {
+                seatAIdentitySlots.addAll(seat.identitySlots());
+            }
             return;
         }
         seatBPlayerUuid = seat == null ? "" : seat.playerUuid();
         seatBPlayerName = seat == null ? "" : seat.playerName();
         seatBAlive = seat != null && seat.alive();
         seatBHiddenIdentityCount = seat == null ? 0 : seat.hiddenIdentityCount();
+        seatBIdentitySlots.clear();
+        if (seat != null) {
+            seatBIdentitySlots.addAll(seat.identitySlots());
+        }
     }
 
-    public record SeatView(String playerUuid, String playerName, boolean alive, int hiddenIdentityCount) {
+    private UUID playerUuidForZone(FourthRoomTableBlock.InteractionZone zone) {
+        return switch (zone) {
+            case SEAT_A -> seatAPlayerUuid.isBlank() ? null : UUID.fromString(seatAPlayerUuid);
+            case SEAT_B -> seatBPlayerUuid.isBlank() ? null : UUID.fromString(seatBPlayerUuid);
+            default -> null;
+        };
+    }
+
+    private static ListTag saveStringList(List<String> values) {
+        ListTag list = new ListTag();
+        for (String value : values) {
+            list.add(net.minecraft.nbt.StringTag.valueOf(value));
+        }
+        return list;
+    }
+
+    private static void loadStringList(ListTag list, List<String> out) {
+        out.clear();
+        for (Tag entry : list) {
+            out.add(entry.getAsString());
+        }
+    }
+
+    public record SeatView(String playerUuid, String playerName, boolean alive, int hiddenIdentityCount,
+                           List<String> identitySlots) {
     }
 
     // ── Inner: Table Card Display Data ──────────────────────────

@@ -921,5 +921,6 @@
   "gui.sre.mailbox.attachments": "Attachments:",
   "gui.sre.mailbox.status_claimed": "Claimed",
   "gui.sre.mailbox.status_expired": "Expired",
+  "message.fourth_room.life_card_auto_used": "Automatically used Life card to block Death card damage.",
   "=== END ===": ""
 }
