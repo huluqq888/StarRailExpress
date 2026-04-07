@@ -18,6 +18,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.commands.BroadcastCommand;
+import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -198,6 +199,10 @@ public class GhostPlayerComponent implements RoleComponent, ServerTickingCompone
             return;
         if (player.isCreative())
             return;
+        if (player.hasEffect(ModEffects.NO_COLLIDE))
+            return;
+        if (player.hasEffect(ModEffects.SKILL_BANED))
+            return;
         if (lastStandNotified) {
             return; // 已经通知过了，不再重复
         }
@@ -257,6 +262,11 @@ public class GhostPlayerComponent implements RoleComponent, ServerTickingCompone
         if (player.isSpectator())
             return;
         if (player.isCreative())
+            return;
+
+        if (player.hasEffect(ModEffects.NO_COLLIDE))
+            return;
+        if (player.hasEffect(ModEffects.SKILL_BANED))
             return;
         if (lastStandNotified) {
             return; // 已经通知过了，不再重复

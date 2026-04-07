@@ -324,6 +324,7 @@ public class SREMurderGameMode extends GameMode {
         List<SRERole> assignedKillers = killerPool.selectRoles(killerCount);
 
         // 警卫池 - 使用无限重复模式，因为警卫职业数量有限
+        Harpymodloader.setRoleMaximum(TMMRoles.VIGILANTE.getIdentifier(), 100);
         RoleAssignmentPool vigilantePool = RoleAssignmentPool.create("Vigilante", SRERole::isVigilanteTeam);
         List<SRERole> assignedVigilantes = vigilantePool.selectRoles(vigilanteCount);
 
