@@ -11,6 +11,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import org.agmas.noellesroles.commands.GameUtilsCommand;
 
+import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.command.MapVoteCommand;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +51,8 @@ public class GameManagementScreen extends Screen {
         /** 小节标题（黄色粗体，使用翻译键） */
         public static Entry label(String key) {
             return new Entry(EntryType.LABEL,
-                    Component.translatable(key).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD),
+                    Component.translatable(key).withStyle(ChatFormatting.YELLOW,
+                            ChatFormatting.BOLD),
                     null, 0xFFCCAA22);
         }
 
@@ -136,22 +140,25 @@ public class GameManagementScreen extends Screen {
         // ── 分类：游戏流程 ──────────────────────────────────────────
         Category game = new Category("screen.game_manage.category.game", 0xFF5577CC);
 
-        game.section("screen.game_manage.section.start", 0xFF5577CC)
-                .add(Entry.button("screen.game_manage.btn.start_murder", "tmm:start sre:murder",
-                        0xFF44BB66))
-                .add(Entry.button("screen.game_manage.btn.start_wheel", "tmm:start noellesroles:chair_wheel_race",
-                        0xFFCC2233))
-                .add(Entry.button("screen.game_manage.btn.start_loose_ends", "tmm:start wathe:loose_ends", 0xFFCCAA22));
-
-        var section = game.section("screen.game_manage.section.win", 0xFF7755BB);
-        for (var status : GameUtilsCommand.WinStatusSuggestions.allWinStatus) {
-            var statusName = status.toString().toLowerCase();
-            section.add(Entry.button(
-                    Component.translatable("announcement.star.win." + statusName)
-                            .append(Component.literal(" " + statusName).withStyle(ChatFormatting.GRAY)),
-                    "tmm:game win " + statusName,
-                    new java.awt.Color(random.nextInt(0, 256), random.nextInt(0, 256), random.nextInt(0, 256))
-                            .getRGB()));
+        {
+            var section = game.section("screen.game_manage.section.start", 0xFF5577CC);
+            for (var gameMode : SREGameModes.GAME_MODES.keySet()) {
+                section.add(Entry.button(MapVoteCommand.getLocalizedGameModeName(gameMode.getPath()),
+                        "tmm:start " + gameMode.toString(),
+                        0xFF440000 | random.nextInt(0, 128) | random.nextInt(0, 128) << 8));
+            }
+        }
+        {
+            var section = game.section("screen.game_manage.section.win", 0xFF7755BB);
+            for (var status : GameUtilsCommand.WinStatusSuggestions.allWinStatus) {
+                var statusName = status.toString().toLowerCase();
+                section.add(Entry.button(
+                        Component.translatable("announcement.star.win." + statusName)
+                                .append(Component.literal(" " + statusName).withStyle(ChatFormatting.GRAY)),
+                        "tmm:game win " + statusName,
+                        new java.awt.Color(random.nextInt(0, 256), random.nextInt(0, 256), random.nextInt(0, 256))
+                                .getRGB()));
+            }
         }
 
         game.section("screen.game_manage.section.stop", 0xFF7755BB)
@@ -220,9 +227,9 @@ public class GameManagementScreen extends Screen {
 
         maps.section("screen.game_manage.section.reset_map", 0xFF6644AA)
                 .add(Entry.button("screen.game_manage.btn.simple_reset_map",
-                        "tmm:game reset asyn simple", 0xFF6644AA))
+                        "tmm:game reset blocks simple", 0xFF6644AA))
                 .add(Entry.button("screen.game_manage.btn.full_reset_map",
-                        "tmm:game reset asyn copy", 0xFF5566BB));
+                        "tmm:game reset blocks copy", 0xFF5566BB));
         maps.section("screen.game_manage.section.map_scanner", 0xFFAA4422)
                 .add(Entry.button("screen.game_manage.section.scan_reset",
                         "tmm:game scan reset_points", 0xFF6644AA))
@@ -242,11 +249,9 @@ public class GameManagementScreen extends Screen {
                 .add(Entry.button("screen.game_manage.btn.list_rooms",
                         "room", 0xFF556677))
                 .add(Entry.button("screen.game_manage.btn.show_game_time",
-                        "tmm:game gametime", 0xFF556677))
+                        "tmm:game time", 0xFF556677))
                 .add(Entry.button("screen.game_manage.btn.list_tasks",
-                        "tmm:game tasks list", 0xFF526677))
-                .add(Entry.button("screen.game_manage.btn.list_roles",
-                        "listRoles", 0xFF667788));
+                        "tmm:game tasks list", 0xFF526677));
 
         misc.section("screen.game_manage.section.misc", 0xFF5577BB)
                 .add(Entry.button("screen.game_manage.btn.reload_config",
@@ -662,7 +667,8 @@ public class GameManagementScreen extends Screen {
                         scrollOffset = 0;
                         refreshEntries();
                         this.minecraft.getSoundManager()
-                                .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
+                                .play(SimpleSoundInstance.forUI(
+                                        SoundEvents.UI_BUTTON_CLICK, 1f));
                     }
                     return true;
                 }
@@ -688,7 +694,8 @@ public class GameManagementScreen extends Screen {
                             && isInRect((int) mx, (int) my, contentX, curY, contentW, eh)) {
                         executeCommand(entry.command);
                         this.minecraft.getSoundManager()
-                                .play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
+                                .play(SimpleSoundInstance.forUI(
+                                        SoundEvents.UI_BUTTON_CLICK, 1f));
                         return true;
                     }
                     curY += eh + ENTRY_SPACING;
@@ -766,9 +773,12 @@ public class GameManagementScreen extends Screen {
                         Component.literal("/" + command).withStyle(ChatFormatting.WHITE))
                 .withStyle(ChatFormatting.GREEN)
                 .withStyle(
-                        style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + command))
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                        Component.translatable("tip.game_manage.click_to_suggest"))));
+                        style -> style.withClickEvent(new ClickEvent(
+                                ClickEvent.Action.SUGGEST_COMMAND, "/" + command))
+                                .withHoverEvent(new HoverEvent(
+                                        HoverEvent.Action.SHOW_TEXT,
+                                        Component.translatable(
+                                                "tip.game_manage.click_to_suggest"))));
         if (minecraft.player != null) {
             minecraft.player
                     .displayClientMessage(text, false);

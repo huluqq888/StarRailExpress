@@ -33,23 +33,23 @@ public class CustomPendingHud {
                     // neutral_for_killer
                     // vigilante
                     int roleType = CustomRoleGameModeTeamsPlayerComponent.KEY.get(client.player).getTeam();
-                    Component teamName = Component.translatable("Unknown");
+                    Component teamName = Component.translatable("Unknown").withStyle(ChatFormatting.GRAY);
                     if (roleType == 1) {
-                        teamName = Component.translatable("display.type.role.innocent");
+                        teamName = Component.translatable("display.type.role.innocent").withStyle(ChatFormatting.GREEN);
                     } else if (roleType == 2) {
-                        teamName = Component.translatable("display.type.role.neutral");
+                        teamName = Component.translatable("display.type.role.neutral").withStyle(ChatFormatting.YELLOW);
                     } else if (roleType == 3) {
-                        teamName = Component.translatable("display.type.role.neutral_for_killer");
+                        teamName = Component.translatable("display.type.role.neutral_for_killer").withStyle(ChatFormatting.LIGHT_PURPLE);
                     } else if (roleType == 4) {
-                        teamName = Component.translatable("display.type.role.killer");
+                        teamName = Component.translatable("display.type.role.killer").withStyle(ChatFormatting.RED);
                     } else if (roleType == 5) {
-                        teamName = Component.translatable("display.type.role.vigilante");
+                        teamName = Component.translatable("display.type.role.vigilante").withStyle(ChatFormatting.AQUA);
                     }
                     // 渲染位置 - 右下角
                     int screenWidth = client.getWindow().getGuiScaledWidth();
                     int screenHeight = client.getWindow().getGuiScaledHeight();
                     int x = screenWidth - 10; // 距离右边缘
-                    int y = screenHeight - 10 - 15 * 3; // 距离底部4行
+                    int y = screenHeight - 10 - 15 * 4; // 距离底部4行
 
                     Font font = client.font;
                     {
@@ -61,31 +61,23 @@ public class CustomPendingHud {
                     }
 
                     {
-                        Component tip = Component
-                                .translatable("hud.custom_pending.keybind",
-                                        NoellesrolesClient.abilityBind.getTranslatedKeyMessage())
+                        Component tip = Component.translatable("hud.custom_pending.myteam", teamName)
                                 .withStyle(ChatFormatting.GREEN);
                         context.drawString(font, tip, x - font.width(tip), y + 15, 0xFFFFFFFF);
                     }
-
-                    {
-                        Component tip = Component.translatable("hud.custom_pending.myteam", teamName)
-                                .withStyle(ChatFormatting.GREEN);
-                        context.drawString(font, tip, x - font.width(tip), y + 15 * 2, 0xFFFFFFFF);
-                    }
                     if (client.player.hasEffect(ModEffects.NO_COLLIDE)) {
-                        int roleDrawLeft = 0;
+                        int roleDrawLeft = client.player.getEffect(ModEffects.NO_COLLIDE).getDuration();
                         // 显示技能冷却
                         int cdSeconds = roleDrawLeft / 20;
                         Component cdText = Component.translatable("hud.custom_pending.tip",
                                 String.format("%d", cdSeconds));
 
                         // 红色文字表示抽取间隔
-                        context.drawString(font, cdText, x - font.width(cdText), y + 15 * 3, CommonColors.RED);
+                        context.drawString(font, cdText, x - font.width(cdText), y + 15 * 2, CommonColors.RED);
 
                         Component tip = Component.translatable("hud.custom_pending.tip_2")
                                 .withStyle(ChatFormatting.YELLOW);
-                        context.drawString(font, tip, x - font.width(tip), y, 0xFFFFFFFF);
+                        context.drawString(font, tip, x - font.width(tip), y + 15 * 3, 0xFFFFFFFF);
                     }
 
                 });
