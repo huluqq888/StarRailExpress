@@ -61,6 +61,15 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
                     false, // showParticles - 不显示粒子
                     false // showIcon - 不显示图标
             ));
+            
+            player.addEffect(new MobEffectInstance(
+                    ModEffects.SKILL_BANED,
+                    20,
+                    10,
+                    true, // ambient - 环境效果（粒子更少更透明）
+                    false, // showParticles - 不显示粒子
+                    false // showIcon - 不显示图标
+            ));
             RoleUtils.sendWelcomeAnnouncement(player);
         }
         getRolesAndAssignTeams(serverWorld, gameWorldComponent, unassignedPlayers);
@@ -168,6 +177,7 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
 
         while (unassignedPlayers.size() > 0 && roleSelector.size() > 0) {
             int selectedRoleType = roleSelector.getFirst();
+            roleSelector.removeFirst();
             Player selectedPlayer = super.pickPlayerWithProgressBias(serverWorld, unassignedPlayers, selectedRoleType);
             if (selectedPlayer != null) {
                 unassignedPlayers.remove(selectedPlayer);

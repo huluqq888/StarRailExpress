@@ -49,7 +49,7 @@ public class CustomPendingHud {
                     int screenWidth = client.getWindow().getGuiScaledWidth();
                     int screenHeight = client.getWindow().getGuiScaledHeight();
                     int x = screenWidth - 10; // 距离右边缘
-                    int y = screenHeight - 10 - 15 * 3; // 距离底部4行
+                    int y = screenHeight - 10 - 15 * 4; // 距离底部4行
 
                     Font font = client.font;
                     {
@@ -61,31 +61,23 @@ public class CustomPendingHud {
                     }
 
                     {
-                        Component tip = Component
-                                .translatable("hud.custom_pending.keybind",
-                                        NoellesrolesClient.abilityBind.getTranslatedKeyMessage())
+                        Component tip = Component.translatable("hud.custom_pending.myteam", teamName)
                                 .withStyle(ChatFormatting.GREEN);
                         context.drawString(font, tip, x - font.width(tip), y + 15, 0xFFFFFFFF);
                     }
-
-                    {
-                        Component tip = Component.translatable("hud.custom_pending.myteam", teamName)
-                                .withStyle(ChatFormatting.GREEN);
-                        context.drawString(font, tip, x - font.width(tip), y + 15 * 2, 0xFFFFFFFF);
-                    }
                     if (client.player.hasEffect(ModEffects.NO_COLLIDE)) {
-                        int roleDrawLeft = 0;
+                        int roleDrawLeft = client.player.getEffect(ModEffects.NO_COLLIDE).getDuration();
                         // 显示技能冷却
                         int cdSeconds = roleDrawLeft / 20;
                         Component cdText = Component.translatable("hud.custom_pending.tip",
                                 String.format("%d", cdSeconds));
 
                         // 红色文字表示抽取间隔
-                        context.drawString(font, cdText, x - font.width(cdText), y + 15 * 3, CommonColors.RED);
+                        context.drawString(font, cdText, x - font.width(cdText), y + 15 * 2, CommonColors.RED);
 
                         Component tip = Component.translatable("hud.custom_pending.tip_2")
                                 .withStyle(ChatFormatting.YELLOW);
-                        context.drawString(font, tip, x - font.width(tip), y, 0xFFFFFFFF);
+                        context.drawString(font, tip, x - font.width(tip), y + 15 * 3, 0xFFFFFFFF);
                     }
 
                 });

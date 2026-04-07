@@ -35,7 +35,6 @@ public class OnceRevolverItem extends SkinableItem {
 
     public InteractionResultHolder<ItemStack> use(@NotNull Level world, @NotNull Player user, InteractionHand hand) {
         ItemStack stack = user.getItemInHand(hand);
-        stack.hurtAndBreak(1, user, EquipmentSlot.MAINHAND);
         SREGameWorldComponent gameComponent;
         SRERole role;
         if (world.isClientSide) {
@@ -45,6 +44,7 @@ public class OnceRevolverItem extends SkinableItem {
                 if (role != null && !role.onUseGun(user)) {
                     return InteractionResultHolder.fail(stack);
                 }
+                stack.hurtAndBreak(1, user, EquipmentSlot.MAINHAND);
             }
 
             HitResult collision = getGunTarget(user);
@@ -66,6 +66,8 @@ public class OnceRevolverItem extends SkinableItem {
             if (role != null && !role.onUseGun(user)) {
                 return InteractionResultHolder.fail(stack);
             }
+            stack.hurtAndBreak(1, user, EquipmentSlot.MAINHAND);
+
             user.getCooldowns().addCooldown(ModItems.ONCE_REVOLVER, SREConfig.instance().revolverCooldown * 20);
         }
         return InteractionResultHolder.consume(stack);
