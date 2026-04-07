@@ -6,7 +6,7 @@ import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.event.OnPlayerDeath;
-import io.wifi.starrailexpress.game.WTLooseEndsGameMode;
+import io.wifi.starrailexpress.game.modes.WTLooseEndsGameMode;
 import io.wifi.starrailexpress.network.RemoveStatusBarPayload;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;

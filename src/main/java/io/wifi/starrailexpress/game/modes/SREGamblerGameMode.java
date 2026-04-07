@@ -1,4 +1,4 @@
-package io.wifi.starrailexpress.game;
+package io.wifi.starrailexpress.game.modes;
 
 import io.wifi.starrailexpress.api.GameMode;
 import io.wifi.starrailexpress.api.SRERole;
@@ -6,6 +6,9 @@ import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.*;
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent.FactionCardType;
 import io.wifi.starrailexpress.event.AllowGameEnd;
+import io.wifi.starrailexpress.game.GameConstants;
+import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.game.utils.RoleInstant;
 import io.wifi.starrailexpress.network.original.AnnounceWelcomePayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.impl.util.log.Log;
@@ -36,8 +39,8 @@ import org.agmas.noellesroles.commands.BroadcastCommand;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class StarRailMurderGameMode extends GameMode {
-    public StarRailMurderGameMode(ResourceLocation identifier) {
+public class SREGamblerGameMode extends GameMode {
+    public SREGamblerGameMode(ResourceLocation identifier) {
         super(identifier, 10, 6);
     }
 
@@ -522,10 +525,6 @@ public class StarRailMurderGameMode extends GameMode {
             int selectedRoleType) {
         // 目前采用forceTeam逻辑所以无需判断
         return PlayerRoleAssigner.pickByInverseWeight(unassignedPlayers, selectedRoleType);
-    }
-
-    public record RoleInstant(UUID uuid, SRERole role) {
-
     }
 
     @Override

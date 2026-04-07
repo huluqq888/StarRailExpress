@@ -1,8 +1,7 @@
 package org.agmas.harpymodloader.modded_murder;
 
 import io.wifi.starrailexpress.api.SRERole;
-import io.wifi.starrailexpress.game.StarRailMurderGameMode;
-import io.wifi.starrailexpress.game.StarRailMurderGameMode.RoleInstant;
+import io.wifi.starrailexpress.game.utils.RoleInstant;
 import net.minecraft.world.entity.player.Player;
 import org.agmas.harpymodloader.Harpymodloader;
 
@@ -89,10 +88,10 @@ public class RoleAssignmentManager {
      * @param roles 原始角色列表
      * @return 展开后的角色列表（包含所有关联角色，允许重复）
      */
-    public static List<StarRailMurderGameMode.RoleInstant> expandWithCompanionRoles(
-            List<StarRailMurderGameMode.RoleInstant> roles) {
-        List<StarRailMurderGameMode.RoleInstant> oldRoles = new ArrayList<>(roles);
-        List<StarRailMurderGameMode.RoleInstant> expandedRoles = new ArrayList<>(roles);
+    public static List<RoleInstant> expandWithCompanionRoles(
+            List<RoleInstant> roles) {
+        List<RoleInstant> oldRoles = new ArrayList<>(roles);
+        List<RoleInstant> expandedRoles = new ArrayList<>(roles);
         List<SRERole> companionRoles = new ArrayList<>();
         List<SRERole> companedRoles = new ArrayList<>();
 
@@ -118,7 +117,7 @@ public class RoleAssignmentManager {
         }
 
         expandedRoles.addAll(
-                companionRoles.stream().map(r -> new StarRailMurderGameMode.RoleInstant(UUID.randomUUID(), r))
+                companionRoles.stream().map(r -> new RoleInstant(UUID.randomUUID(), r))
                         .toList());
         return expandedRoles;
     }
