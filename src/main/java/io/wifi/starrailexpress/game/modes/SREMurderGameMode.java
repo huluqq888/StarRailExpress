@@ -72,7 +72,6 @@ public class SREMurderGameMode extends GameMode {
         // if (!Harpymodloader.isMojangVerify) {
         // return;
         // }
-        GameInitializeEvent.EVENT.invoker().initializeGame(serverWorld, gameWorldComponent, players);
 
         Harpymodloader.refreshRoles();
 
