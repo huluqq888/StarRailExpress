@@ -1,6 +1,8 @@
 package io.wifi.starrailexpress.client.gui.screen.gamemode.custom_role;
 
 import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.api.TMMRoles;
+import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -18,17 +20,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
-import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.client.widget.SelectedRoleIntroTextWidget;
+import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.packet.GamblerSelectRoleC2SPacket;
-import org.agmas.noellesroles.roles.gambler.GamblerPlayerComponent;
 import org.agmas.noellesroles.utils.RoleUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomRoleSelectScreen extends Screen {
-    private final GamblerPlayerComponent component;
+    private final CustomRoleGameModeTeamsPlayerComponent component;
     private final List<SRERole> availableRoles = new ArrayList<>();
     private SRERole selectedRole;
     private int CARDS_PER_ROW = 5;
@@ -68,25 +69,16 @@ public class CustomRoleSelectScreen extends Screen {
     }
 
     public CustomRoleSelectScreen(Player player) {
-        super(Component.translatable("gui.noellesroles.gambler.title"));
-        this.component = GamblerPlayerComponent.KEY.get(player);
+        super(Component.translatable("gui.noellesroles.gambler.title").withStyle(ChatFormatting.GOLD,
+                ChatFormatting.BOLD));
+        this.component = CustomRoleGameModeTeamsPlayerComponent.KEY.get(player);
 
         // 加载可用角色
-        for (ResourceLocation roleId : component.availableRoles) {
-            for (SRERole role : Noellesroles.getAllRoles()) {
-                if (role.identifier().equals(roleId)) {
-                    availableRoles.add(role);
-                    break;
-                }
-            }
-        }
-
-        if (component.selectedRole != null) {
-            for (SRERole role : availableRoles) {
-                if (role.identifier().equals(component.selectedRole)) {
-                    selectedRole = role;
-                    break;
-                }
+        for (ResourceLocation roleId : component.getAvailableRoles()) {
+            SRERole role = TMMRoles.ROLES.get(roleId);
+            if (role != null) {
+                availableRoles.add(role);
+                break;
             }
         }
     }
@@ -315,34 +307,6 @@ public class CustomRoleSelectScreen extends Screen {
             widget.setWidth(Math.max(200, widgetWidth));
             widget.setX(width / 2 - widget.getWidth() / 2);
             widget.setY(height - font.lineHeight - marginBottomY - widget.getHeight() - 10);
-            // List<FormattedCharSequence> wrappedDescription = font.split(roleDescription,
-            // 280); // 使用适当的宽度
-
-            // // 计算文本占用的垂直空间
-            // int textHeight = 10; // selectedText 的高度
-            // textHeight += wrappedDescription.size() * 10 + 2; // 每行描述 + 间隔
-
-            // // 计算合适的 Y 坐标，确保不超出屏幕
-            // int margin = 30; // 底部边距
-            // int infoY = Math.max(height - margin - textHeight - 20, 100); // 最低在 y=100
-            // 以上显示
-
-            // // 计算合适的 X 和宽度，确保不超出屏幕
-            // int infoWidth = Math.min(300, width - 2 * margin); // 最大宽度不超过屏幕减去边距
-            // int infoX = (width - infoWidth) / 2; // 居中显示
-
-            // int infoHeight = textHeight + 20; // 加上边框和间距
-
-            // // 绘制选中角色文本
-            // // guiGraphics.drawCenteredString(font, selectedText, width / 2, infoY,
-            // 0x00FF00);
-
-            // // 显示已选择角色的描述（如果空间足够）
-            // for (int i = 0; i < wrappedDescription.size(); i++) {
-            // FormattedCharSequence line = wrappedDescription.get(i);
-            // guiGraphics.drawCenteredString(font, line, width / 2, infoY + 12 + i * 10,
-            // 0xAAAAAA);
-            // }
         }
         return widget;
     }
@@ -361,7 +325,19 @@ public class CustomRoleSelectScreen extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         // 绘制标题
-        guiGraphics.drawCenteredString(font, this.title, width / 2, 30, 0xFFFFFF);
+        guiGraphics.drawCenteredString(font, this.title, width / 2, 30, 0xFFFFFFFF);
+        if (this.minecraft.player.hasEffect(ModEffects.NO_COLLIDE)) {
+            guiGraphics.drawCenteredString(font,
+                    Component
+                            .translatable("gui.sre.gamemode.subtitle",
+                                    this.minecraft.player.getEffect(ModEffects.NO_COLLIDE).getDuration() / 20)
+                            .withStyle(ChatFormatting.WHITE),
+                    width / 2, 45,
+                    0xFFFFFFFF);
+        } else {
+            onClose();
+            return;
+        }
 
         // 绘制页码信息
         if (totalPages > 0) {
@@ -669,5 +645,17 @@ public class CustomRoleSelectScreen extends Screen {
         if (newIndex >= 0 && newIndex < roleCardWidgets.size()) {
             selectedRole = roleCardWidgets.get(newIndex).role;
         }
+    }
+
+    public void updateRoleSelection() {
+        // 加载可用角色
+        for (ResourceLocation roleId : component.getAvailableRoles()) {
+            SRERole role = TMMRoles.ROLES.get(roleId);
+            if (role != null) {
+                availableRoles.add(role);
+                break;
+            }
+        }
+        refreshRoleSelection();
     }
 }

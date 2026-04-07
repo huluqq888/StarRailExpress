@@ -70,7 +70,7 @@ public class SREGamblerGameMode extends SREMurderGameMode {
             player.addEffect(new MobEffectInstance(
                     ModEffects.NO_COLLIDE,
                     safeTick,
-                    1,
+                    10, //10级别确保不会被替换
                     true, // ambient - 环境效果（粒子更少更透明）
                     false, // showParticles - 不显示粒子
                     false // showIcon - 不显示图标

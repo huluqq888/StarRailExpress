@@ -2,29 +2,37 @@ package io.wifi.starrailexpress.game.modes.funny;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import org.agmas.harpymodloader.events.ModdedRoleAssigned;
-import org.agmas.harpymodloader.events.ResetPlayerEvent;
-import org.agmas.noellesroles.Noellesroles;
+import java.util.UUID;
+import org.agmas.harpymodloader.Harpymodloader;
+import org.agmas.harpymodloader.commands.SetRoleCountCommand;
+import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
+import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.init.ModEffects;
-import org.agmas.noellesroles.init.ModItems;
-import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.utils.MCItemsUtils;
-
 import io.wifi.starrailexpress.SREConfig;
-import io.wifi.starrailexpress.api.TMMRoles;
+import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.api.SpecialGameModeRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
+import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent.FactionCardType;
+import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
+import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeWorldComponent;
 import io.wifi.starrailexpress.event.AllowGameEnd;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
+import io.wifi.starrailexpress.game.utils.RoleInstance;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Player;
 
 public class SRECustomRoleGameMode extends SREMurderGameMode {
     public SRECustomRoleGameMode(ResourceLocation identifier) {
-        super(identifier);
+        super(identifier, 10, 6);
     }
 
     long roleSelectTimeout = -1;
@@ -34,49 +42,129 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
             List<ServerPlayer> players) {
         int safeTick = SREConfig.instance().customRoleModeForceSelectTime * 20;
         roleSelectTimeout = serverWorld.getGameTime() + safeTick;
-        int gamblerCount = Math.clamp(
-                Math.round((float) players.size() * SREConfig.instance().gamblerModeGamblerPercent), 0, players.size());
-        List<ServerPlayer> unassignedPlayers = new ArrayList<>(players);
-
-        Collections.shuffle(unassignedPlayers);
-
-        List<ServerPlayer> gamblerPlayers = new ArrayList<>(unassignedPlayers.subList(0, gamblerCount));
-        List<ServerPlayer> normalRolePlayers = new ArrayList<>();
-        if (gamblerCount < unassignedPlayers.size()) {
-            normalRolePlayers.addAll(unassignedPlayers.subList(gamblerCount, unassignedPlayers.size()));
-        }
-
+        ArrayList<ServerPlayer> unassignedPlayers = new ArrayList<>(players);
         for (ServerPlayer player : unassignedPlayers) {
-            ResetPlayerEvent.EVENT.invoker().resetPlayer(player);
-        }
-
-        int killerCount = normalRolePlayers.size() / 2;
-        Collections.shuffle(normalRolePlayers);
-        for (var player : normalRolePlayers) {
-            if (killerCount > 0) {
-                killerCount--;
-                gameWorldComponent.addRole(player, TMMRoles.KILLER, false);
-                ModdedRoleAssigned.EVENT.invoker().assignModdedRole(player, TMMRoles.KILLER);
-            } else {
-                gameWorldComponent.addRole(player, TMMRoles.VIGILANTE, false);
-                ModdedRoleAssigned.EVENT.invoker().assignModdedRole(player, TMMRoles.VIGILANTE);
-            }
-        }
-
-        for (ServerPlayer player : gamblerPlayers) {
-            gameWorldComponent.addRole(player, ModRoles.GAMBLER, false);
-            ModdedRoleAssigned.EVENT.invoker().assignModdedRole(player, ModRoles.GAMBLER);
-            MCItemsUtils.insertStackInFreeSlot(player, ModItems.ONCE_REVOLVER.getDefaultInstance());
+            gameWorldComponent.addRole(player, SpecialGameModeRoles.CUSTOM_PENDING, false);
+            CustomRoleGameModeTeamsPlayerComponent.KEY.get(player).setTeam(0);
             player.addEffect(new MobEffectInstance(
                     ModEffects.NO_COLLIDE,
                     safeTick,
-                    1,
+                    10,
                     true, // ambient - 环境效果（粒子更少更透明）
                     false, // showParticles - 不显示粒子
                     false // showIcon - 不显示图标
             ));
         }
+        getRolesAndAssignTeams(serverWorld, gameWorldComponent, unassignedPlayers);
         gameWorldComponent.syncRoles();
+    }
+
+    public void getRolesAndAssignTeams(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
+            ArrayList<ServerPlayer> players) {
+        ArrayList<ServerPlayer> unassignedPlayers = new ArrayList<>(players);
+        // 第一步：处理强制分配的角色
+
+        int killerCount = SetRoleCountCommand.getKillerCount(players.size());
+        int vigilanteCount = SetRoleCountCommand.getVigilanteCount(players.size());
+        int neutralsCount = SetRoleCountCommand.getNatureCount(players.size());
+
+        // 确保数量不为负数
+        killerCount = Math.max(0, killerCount);
+        vigilanteCount = Math.max(0, vigilanteCount);
+        neutralsCount = Math.max(0, neutralsCount);
+
+        List<RoleInstance> expandedRoles = super.getAllRoles(killerCount, vigilanteCount, neutralsCount, players.size(),
+                0);
+        HashMap<Integer, Integer> roleTypesCount = new HashMap<>();
+
+        var crgmwc = CustomRoleGameModeWorldComponent.KEY.get(serverWorld);
+        crgmwc.getRoles().clear();
+        crgmwc.addAllRoles(expandedRoles);
+        for (var roleInstance : expandedRoles) {
+            SRERole role = roleInstance.role();
+            if (role != null) {
+                int roleType = PlayerRoleWeightManager.getRoleType(role);
+                int nc = roleTypesCount.getOrDefault(roleType, 0);
+                roleTypesCount.put(roleType, nc + 1);
+            }
+        }
+
+        // 保底
+        for (var p : players) {
+            if (PlayerRoleWeightManager.ForcePlayerTeam.containsKey(p.getUUID()))
+                continue;
+            var manager = PlayerRoleWeightManager.playerWeights.get(p.getUUID());
+            if (manager != null) {
+                if (manager.getStreakCount() >= serverWorld.random.nextInt(4, 7)) {
+                    int highestWeightType = PlayerRoleWeightManager.getHighestScoredType(p.getUUID());
+                    if (highestWeightType == manager.getLastAssignedFactionGroup())
+                        continue;
+                    PlayerRoleWeightManager.forceTeam(p.getUUID(), highestWeightType);
+                }
+            }
+        }
+
+        {
+            {
+                // 分配forceTeam
+                for (var entry : PlayerRoleWeightManager.ForcePlayerTeam.entrySet()) {
+                    UUID playerUid = entry.getKey();
+                    var selectedPlayer = unassignedPlayers.stream().filter((p) -> p.getUUID().equals(playerUid))
+                            .findFirst().orElse(null);
+                    if (selectedPlayer == null)
+                        continue;
+                    int roleType = entry.getValue();
+                    Harpymodloader.LOGGER.debug(
+                            "Assign player [{}] to {}",
+                            playerUid,
+                            roleType);
+                    int nc = roleTypesCount.getOrDefault(roleType, 0);
+                    if (nc > 0) {
+                        roleTypesCount.put(roleType, nc - 1);
+                        CustomRoleGameModeTeamsPlayerComponent.KEY.get(selectedPlayer).setTeamAndSync(roleType);
+                        unassignedPlayers.remove(selectedPlayer);
+                    } else {
+                        PlayerRoleWeightManager.boostKillerSideAfterForceFailure(playerUid);
+                        Harpymodloader.LOGGER.warn(
+                                "Couldn't force player [{}]'s role to {} because there are no roles available for him.",
+                                playerUid,
+                                roleType);
+                        FactionCardType cardType = FactionCardType.fromInt(roleType);
+                        if (cardType != FactionCardType.NONE) {
+                            SREPlayerProgressionComponent.KEY.get(selectedPlayer).addFactionCard(cardType, 1);
+                            BroadcastCommand.BroadcastMessage(selectedPlayer,
+                                    Component.translatable("message.sre.pass.faction.assign_failed")
+                                            .withStyle(ChatFormatting.RED));
+                        }
+                    }
+
+                }
+            }
+        }
+
+        Collections.shuffle(unassignedPlayers);
+        ArrayList<Integer> roleSelector = new ArrayList<>();
+        for (var t : roleTypesCount.entrySet()) {
+            for (int i = 0; i < t.getValue(); i++) {
+                roleSelector.add(t.getKey());
+            }
+        }
+        Collections.shuffle(roleSelector);
+
+        while (unassignedPlayers.size() > 0 && roleSelector.size() > 0) {
+            int selectedRoleType = roleSelector.getFirst();
+            Player selectedPlayer = super.pickPlayerWithProgressBias(serverWorld, unassignedPlayers, selectedRoleType);
+            if (selectedPlayer != null) {
+                unassignedPlayers.remove(selectedPlayer);
+                CustomRoleGameModeTeamsPlayerComponent.KEY.get(selectedPlayer).setTeamAndSync(selectedRoleType);
+            }
+        }
+        for (var up : unassignedPlayers) {
+            // 职业不够分配平民
+            CustomRoleGameModeTeamsPlayerComponent.KEY.get(up).setTeamAndSync(1);
+        }
+
+        crgmwc.sync();
     }
 
     @Override
@@ -90,10 +178,11 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
         if (roleSelectTimeout != -1) {
             if (serverWorld.getGameTime() >= roleSelectTimeout) {
                 var gamblerPlayers = serverWorld.getPlayers((p) -> GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p)
-                        && gameWorldComponent.isRole(p, ModRoles.GAMBLER));
+                        && gameWorldComponent.isRole(p, SpecialGameModeRoles.CUSTOM_PENDING));
                 if (gamblerPlayers != null && !gamblerPlayers.isEmpty()) {
+                    var crgmwcca = CustomRoleGameModeWorldComponent.KEY.get(serverWorld);
                     for (var p : gamblerPlayers) {
-                        GameUtils.killPlayer(p, true, null, Noellesroles.id("gamble_self_kill"));
+                        crgmwcca.autoSelect(p);
                     }
                 }
                 roleSelectTimeout = -1;
@@ -108,7 +197,7 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
             boolean isLooseEndsMode, SREGameWorldComponent gameWorldComponent) {
         if (roleSelectTimeout != -1) {
             var gamblerPlayers = serverWorld.getPlayers((p) -> GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p)
-                    && gameWorldComponent.isRole(p, ModRoles.GAMBLER));
+                    && gameWorldComponent.isRole(p, SpecialGameModeRoles.CUSTOM_PENDING));
             if (!gamblerPlayers.isEmpty()) {
                 if (serverWorld.getGameTime() <= roleSelectTimeout) {
                     return GameUtils.WinStatus.NONE;

@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.cca;
 
-import io.wifi.starrailexpress.cca.gamemode.SRECustomRoleWorldComponent;
+import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
+import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeWorldComponent;
 import io.wifi.starrailexpress.mail.MailboxComponent;
 import net.exmo.sre.nametag.NameTagInventoryComponent;
 import net.minecraft.world.entity.player.Player;
@@ -18,7 +19,7 @@ public class SREComponents
     @Override
     public void registerWorldComponentFactories(@NotNull WorldComponentFactoryRegistry registry) {
         registry.register(SRETrainWorldComponent.KEY, SRETrainWorldComponent::new);
-        registry.register(SRECustomRoleWorldComponent.KEY, SRECustomRoleWorldComponent::new);
+        registry.register(CustomRoleGameModeWorldComponent.KEY, CustomRoleGameModeWorldComponent::new);
         registry.register(SREGameWorldComponent.KEY, SREGameWorldComponent::new);
         registry.register(SRERoleWorldComponent.KEY, SRERoleWorldComponent::new);
         registry.register(AreasWorldComponent.KEY, AreasWorldComponent::new);
@@ -64,6 +65,8 @@ public class SREComponents
                 .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(NameTagInventoryComponent::new);
         registry.beginRegistration(Player.class, MailboxComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(MailboxComponent::new);
+        registry.beginRegistration(Player.class, CustomRoleGameModeTeamsPlayerComponent.KEY)
+                .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(CustomRoleGameModeTeamsPlayerComponent::new);
     }
 
     @Override

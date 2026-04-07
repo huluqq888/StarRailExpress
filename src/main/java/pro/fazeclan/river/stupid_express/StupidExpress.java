@@ -3,6 +3,7 @@ package pro.fazeclan.river.stupid_express;
 import dev.doctor4t.ratatouille.util.registrar.SoundEventRegistrar;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.api.SpecialGameModeRoles;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.event.OnPlayerDeath;
@@ -60,6 +61,7 @@ public class StupidExpress implements ModInitializer {
                 || r.identifier().equals(ModRoles.BASEBALL_PLAYER_ID)
                 || r.identifier().equals(ModRoles.MAGICIAN_ID)
                 || r.identifier().equals(SERoles.INITIATE.identifier())
+                || r.identifier().equals(SpecialGameModeRoles.CUSTOM_PENDING.identifier())
                 || r.identifier().equals(ModRoles.JOJO_ID)
                 || r.identifier().equals(ModRoles.BEST_VIGILANTE_ID)
                 || r.identifier().equals(ModRoles.BASEBALL_PLAYER_ID)

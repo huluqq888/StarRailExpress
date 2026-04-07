@@ -4,6 +4,6 @@ import java.util.UUID;
 
 import io.wifi.starrailexpress.api.SRERole;
 
-public record RoleInstant(UUID uuid, SRERole role) {
+public record RoleInstance(UUID uuid, SRERole role) {
     
 }
