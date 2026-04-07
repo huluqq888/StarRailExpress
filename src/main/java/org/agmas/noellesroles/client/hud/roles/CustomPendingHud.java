@@ -33,17 +33,17 @@ public class CustomPendingHud {
                     // neutral_for_killer
                     // vigilante
                     int roleType = CustomRoleGameModeTeamsPlayerComponent.KEY.get(client.player).getTeam();
-                    Component teamName = Component.translatable("Unknown");
+                    Component teamName = Component.translatable("Unknown").withStyle(ChatFormatting.GRAY);
                     if (roleType == 1) {
-                        teamName = Component.translatable("display.type.role.innocent");
+                        teamName = Component.translatable("display.type.role.innocent").withStyle(ChatFormatting.GREEN);
                     } else if (roleType == 2) {
-                        teamName = Component.translatable("display.type.role.neutral");
+                        teamName = Component.translatable("display.type.role.neutral").withStyle(ChatFormatting.YELLOW);
                     } else if (roleType == 3) {
-                        teamName = Component.translatable("display.type.role.neutral_for_killer");
+                        teamName = Component.translatable("display.type.role.neutral_for_killer").withStyle(ChatFormatting.LIGHT_PURPLE);
                     } else if (roleType == 4) {
-                        teamName = Component.translatable("display.type.role.killer");
+                        teamName = Component.translatable("display.type.role.killer").withStyle(ChatFormatting.RED);
                     } else if (roleType == 5) {
-                        teamName = Component.translatable("display.type.role.vigilante");
+                        teamName = Component.translatable("display.type.role.vigilante").withStyle(ChatFormatting.AQUA);
                     }
                     // 渲染位置 - 右下角
                     int screenWidth = client.getWindow().getGuiScaledWidth();
