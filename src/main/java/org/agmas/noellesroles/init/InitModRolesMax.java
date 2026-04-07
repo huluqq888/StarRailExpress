@@ -4,6 +4,7 @@ import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.SREConfig.AutoPresetInfo;
 import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.api.SpecialGameModeRoles;
 import io.wifi.starrailexpress.api.TMMRoles;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.events.GameInitializeEvent;
@@ -84,6 +85,9 @@ public class InitModRolesMax {
 
         // 滑头鬼每局只能有 1 个
         Harpymodloader.setRoleMaximum(ModRoles.SLIPPERY_GHOST_ID, 1);
+        
+        // 不应该刷新
+        Harpymodloader.setRoleMaximum(SpecialGameModeRoles.CUSTOM_PENDING, 0);
 
         // 工程师每局只能有 1 个
         Harpymodloader.setRoleMaximum(ModRoles.ENGINEER_ID, 1);
@@ -91,6 +95,7 @@ public class InitModRolesMax {
         Harpymodloader.setRoleMaximum(ModRoles.LOCKSMITH_ID, 0);
         Harpymodloader.setRoleMaximum(ModRoles.MA_CHEN_XU, 0);
         Harpymodloader.setRoleMaximum(ModRoles.GUEST_GHOST, 0);
+
         Harpymodloader.setOccupationRole(ModRoles.ENGINEER, ModRoles.LOCKSMITH);
         Harpymodloader.setOccupationRole(RedHouseRoles.FURANDORU, RedHouseRoles.PACHURI);
         Harpymodloader.setOccupationRole(ModRoles.MA_CHEN_XU, ModRoles.GUEST_GHOST);

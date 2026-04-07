@@ -99,6 +99,7 @@ public class CustomRoleGameModeTeamsPlayerComponent
         CustomRoleGameModeWorldComponent crgmwcca = CustomRoleGameModeWorldComponent.KEY.get(this.player.level());
         ArrayList<ResourceLocation> result = new ArrayList<>();
         result.addAll(crgmwcca.getRole(this.team).stream().map(t -> t.identifier()).toList());
+        
         return result;
     }
 
