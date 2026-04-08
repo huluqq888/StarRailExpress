@@ -457,7 +457,22 @@ public class SREClient implements ClientModInitializer {
         SyncMapConfigPayload.registerReceiver();
         FourthRoomStatePayload.registerReceiver();
         FourthRoomTableEffectsPayload.registerReceiver();
-        OpenFourthRoomPeekDeckPayload.registerReceiver();
+        ClientPlayNetworking.registerGlobalReceiver(OpenFourthRoomPeekDeckPayload.ID,
+                (payload, context) -> context.client().execute(() -> {
+                    var client = context.client();
+                    if (client.level == null || client.player == null) {
+                        return;
+                    }
+                    if (!FourthRoomClientState.snapshot().active()
+                            || FourthRoomClientState.snapshot().viewer().peekCards().isEmpty()) {
+                        return;
+                    }
+                    if (client.screen instanceof io.wifi.starrailexpress.client.gui.screen.ingame.FourthRoomPeekDeckScreen) {
+                        return;
+                    }
+                    client.setScreen(new io.wifi.starrailexpress.client.gui.screen.ingame.FourthRoomPeekDeckScreen(
+                            client.screen));
+                }));
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> FourthRoomClientState.clear());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> FourthRoomCameraDirector.clear());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
@@ -578,14 +593,15 @@ public class SREClient implements ClientModInitializer {
                             new io.wifi.starrailexpress.mail.MailboxScreen()));
                 });
         // ClientPlayNetworking.registerGlobalReceiver(
-        //         io.wifi.starrailexpress.network.OpenRoleUnlockScreenPayload.ID, (payload, context) -> {
-        //             context.client().execute(() -> {
-        //                 io.wifi.starrailexpress.unlock.RoleUnlockManager.getInstance()
-        //                         .updateClientData(payload.globalGamesPlayed(), payload.forceUnlockedRoles());
-        //                 context.client().setScreen(
-        //                         new io.wifi.starrailexpress.client.gui.screen.RoleUnlockProgressScreen());
-        //             });
-        //         });
+        // io.wifi.starrailexpress.network.OpenRoleUnlockScreenPayload.ID, (payload,
+        // context) -> {
+        // context.client().execute(() -> {
+        // io.wifi.starrailexpress.unlock.RoleUnlockManager.getInstance()
+        // .updateClientData(payload.globalGamesPlayed(), payload.forceUnlockedRoles());
+        // context.client().setScreen(
+        // new io.wifi.starrailexpress.client.gui.screen.RoleUnlockProgressScreen());
+        // });
+        // });
         // ClientPlayNetworking.registerGlobalReceiver(
         // io.wifi.starrailexpress.network.RoleUnlockedHudPayload.ID, (payload, context)
         // -> {
