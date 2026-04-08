@@ -116,6 +116,12 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         }
         if (this.psychoTicks <= 0)
             return;
+        if (this.psychoTicks > 0) {
+            if (this.player.isSpectator()) {
+                this.stopPsychoAndRefreshPsychoCount(true);
+                return;
+            }
+        }
         if (--this.psychoTicks == 0) {
             this.stopPsycho();
             this.sync();
