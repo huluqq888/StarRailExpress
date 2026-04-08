@@ -46,6 +46,7 @@ public final class FourthRoomBattleScreen extends Screen {
     private String pendingShopItemId = "";
     private int lastSeenActionSequence;
     private int lastSeenDrawSequence;
+    private int lastPeekCardCount;
     private int actionBannerTicks;
     private int drawBannerTicks;
     private String drawBannerText = "";
@@ -200,6 +201,14 @@ public final class FourthRoomBattleScreen extends Screen {
             drawBannerText = "抽到牌: " + snapshot.viewer().recentDrawSummary();
             drawBannerTicks = 62;
         }
+
+        // Check for new peek cards and auto-open GUI
+        int currentPeekCount = snapshot.viewer().peekCards().size();
+        if (lastPeekCardCount == 0 && currentPeekCount > 0) {
+            // New peek cards received, auto-open peek GUI
+            minecraft.setScreen(new FourthRoomPeekDeckScreen(this));
+        }
+        lastPeekCardCount = currentPeekCount;
     }
 
     private void primeSelections(FourthRoomClientSnapshot snapshot) {

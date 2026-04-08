@@ -218,7 +218,7 @@ public final class FourthRoomGameManager {
         if (roomState == null || card == null) {
             return List.of();
         }
-        boolean allowSelf = "veto".equals(card.id());
+        boolean allowSelf = "veto".equals(card.id()) || "point_kill".equals(card.id());
         List<UUID> targets = new ArrayList<>();
         for (UUID occupantId : roomState.occupants) {
             FourthRoomPlayerState occupant = data.players.get(occupantId);
@@ -329,9 +329,11 @@ public final class FourthRoomGameManager {
         if (state == null || state.discardPile.isEmpty()) {
             return;
         }
-        state.drawPile.addAll(state.discardPile);
+        // 将弃牌堆的牌洗匀后放到抽牌堆的底部
+        List<CardInstance> shuffledDiscard = new ArrayList<>(state.discardPile);
+        Collections.shuffle(shuffledDiscard);
+        state.drawPile.addAll(0, shuffledDiscard);
         state.discardPile.clear();
-        Collections.shuffle(state.drawPile);
         data.setDirty(true);
     }
 

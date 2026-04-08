@@ -82,13 +82,13 @@ public enum DeckPreset {
             // 点杀 x2 + 点杀（金卡）x1
             deck.add(new CardInstance(BasicCard.POINT_KILL.id(), false));
             deck.add(new CardInstance(BasicCard.POINT_KILL.id(), false));
-            deck.add(new CardInstance(BasicCard.POINT_KILL.id(), false));
             deck.add(new CardInstance(BasicCard.POINT_KILL.id(), true));
             // 拆解 x2
             deck.add(new CardInstance(BasicCard.DISMANTLE.id(), false));
             deck.add(new CardInstance(BasicCard.DISMANTLE.id(), false));
             // 窥视 x1
             deck.add(new CardInstance(BasicCard.PEEK.id(), false));
+            deck.add(new CardInstance(BasicCard.PEEK.id(), true));
             deck.add(new CardInstance(BasicCard.PEEK.id(), true));
             deck.add(new CardInstance(BasicCard.PEEK.id(), false));
             // 命格 x1 (减少防御)
