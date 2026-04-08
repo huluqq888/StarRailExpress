@@ -167,7 +167,7 @@ public class CustomRoleGameModeWorldComponent implements AutoSyncedComponent {
                     .withStyle(ChatFormatting.GOLD), true);
             RoleUtils.changeRole(player, role);
             this.available_roles.remove(role);
-            this.sync();
+            this.syncToSpecificRoleTypePlayers(PlayerRoleWeightManager.getRoleType(role));
         } else {
             player.displayClientMessage(Component
                     .translatable("gui.noellesroles.gambler.failed", RoleUtils.getRoleOrModifierNameWithColor(role))
@@ -192,5 +192,9 @@ public class CustomRoleGameModeWorldComponent implements AutoSyncedComponent {
             if (role != null)
                 this.available_roles.add(role);
         }
+    }
+
+    public void syncToSpecificRoleTypePlayers(int roletype){
+        
     }
 }
