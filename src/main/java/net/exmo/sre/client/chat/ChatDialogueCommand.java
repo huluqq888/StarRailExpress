@@ -37,7 +37,7 @@ public class ChatDialogueCommand {
 
   public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
     dispatcher.register(
-        Commands.literal("tmm:chat")
+        Commands.literal("sre:chat")
             .requires((t) -> Harpymodloader.isMojangVerify) // 支持正版
             .requires(source -> source.hasPermission(2))
             .then(Commands.literal("open")
