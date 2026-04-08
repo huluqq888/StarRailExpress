@@ -166,8 +166,8 @@ public class WatheBlocker implements PreLaunchEntrypoint {
                                 "accessWidener");
 
                         if (customField == null) {
-                            LOGGER.warn("[WatheBlocker] accessWidener not found. All: ");
-                            printAllFields(meta);
+                            LOGGER.warn("[WatheBlocker] accessWidener not found.");
+                            // printAllFields(meta);
                             return;
                         }
 
