@@ -542,15 +542,8 @@ public class InstinctRenderer {
                     if (target_role != null) {
                         if (RoleUtils.compareRole(target_role, RedHouseRoles.PACHURI)) {
                             return RedHouseRoles.PACHURI.color();
-                        } else if (target_role.canUseKiller()) {
-                            return TMMRoles.KILLER.color();
-                        } else if (target_role.isNeutralForKiller()) {
-                            return TMMRoles.KILLER.color();
-                        } else if (target_role.isNeutrals()) {
-                            return Color.YELLOW.getRGB();
-                        } else {
-                            return TMMRoles.CIVILIAN.color();
-                        }
+                        }return RedHouseRoles.FURANDORU.color();
+
                     }
                     return -1;
                 }
