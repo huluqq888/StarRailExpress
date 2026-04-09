@@ -119,6 +119,18 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         this.world = world;
     }
 
+    // 记录开局时的玩家数量（用于基于开局人数计算的逻辑）
+    private int startingPlayerCount = 0;
+
+    public int getStartingPlayerCount() {
+        return startingPlayerCount;
+    }
+
+    public void setStartingPlayerCount(int count) {
+        this.startingPlayerCount = Math.max(0, count);
+        this.sync();
+    }
+
     public void sync() {
         SREGameWorldComponent.KEY.sync(this.world);
     }

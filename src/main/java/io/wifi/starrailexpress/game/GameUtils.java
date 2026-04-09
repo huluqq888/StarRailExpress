@@ -279,6 +279,8 @@ public class GameUtils {
 
         RoleMethodDispatcher.onStartGame(serverWorld);
         ArrayList<ServerPlayer> readyPlayerList = new ArrayList<>(getStartingPlayers(serverWorld));
+        // 记录开局玩家数量，供基于开局人数的逻辑使用
+        gameComponent.setStartingPlayerCount(readyPlayerList.size());
         clearForcedReadyPlayers();
         // serverWorld.setWeatherParameters(0, -1, true, true);
         List<ServerPlayer> players = new ArrayList<>(serverWorld.getServer().getPlayerList().getPlayers());

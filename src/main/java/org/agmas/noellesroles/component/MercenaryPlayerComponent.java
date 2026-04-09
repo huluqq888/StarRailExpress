@@ -70,7 +70,12 @@ public class MercenaryPlayerComponent implements RoleComponent, ServerTickingCom
         bonusShields = 0;
         boughtShieldThisContract = false;
         idleShieldsGranted = false;
-        requiredContractKills = Math.max(1, player.level().players().size() / 10 + 1);
+        // 基于开局玩家人数计算所需击杀数；若不可用则回退到当前在线玩家数
+        SREGameWorldComponent gwc = SREGameWorldComponent.KEY.get(player.level());
+        int basePlayers = (gwc != null && gwc.getStartingPlayerCount() > 0)
+            ? gwc.getStartingPlayerCount()
+            : player.level().players().size();
+        requiredContractKills = Math.max(1, basePlayers / 10 + 1);
         contractCooldown = 0;
         enterIdleState(true);
         sync();
@@ -276,7 +281,12 @@ public class MercenaryPlayerComponent implements RoleComponent, ServerTickingCom
             return;
         }
 
-        requiredContractKills = Math.max(1, player.level().players().size() / 10 + 1);
+        // 动态使用开局人数保持一致性（避免中途玩家离开影响目标要求）
+        SREGameWorldComponent gwc = SREGameWorldComponent.KEY.get(player.level());
+        int basePlayers = (gwc != null && gwc.getStartingPlayerCount() > 0)
+            ? gwc.getStartingPlayerCount()
+            : player.level().players().size();
+        requiredContractKills = Math.max(1, basePlayers / 10 + 1);
 
         // 处理合约冷却
         if (contractCooldown > 0) {
