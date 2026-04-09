@@ -57,6 +57,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.harpymodloader.events.GameInitializeEvent;
+import org.agmas.harpymodloader.events.ResetPlayerEvent;
 import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.role.ModRoles;
@@ -889,6 +890,8 @@ public class GameUtils {
         SREPlayerPsychoComponent.KEY.get(player).clear();
         SREPlayerNoteComponent.KEY.get(player).clear();
         SREArmorPlayerComponent.KEY.get(player).clear();
+        ResetPlayerEvent.EVENT.invoker().resetPlayer(player);
+
         if (!TrainVoicePlugin.isVoiceChatMissing()) {
             TrainVoicePlugin.resetPlayer(player.getUUID());
         }

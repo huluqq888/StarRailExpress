@@ -636,63 +636,6 @@ public class ModEventsRegister {
             }
             return true;
         });
-        // 不屈修饰符：一次性免疫被平民误杀；杀手阵营对杀手攻击免疫
-        AllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
-            if (victim == null || victim.level().isClientSide())
-                return true;
-
-            var worldModifiers = WorldModifierComponent.KEY.get(victim.level());
-            if (worldModifiers == null)
-                return true;
-
-            if (!worldModifiers.isModifier(victim.getUUID(),
-                    pro.fazeclan.river.stupid_express.constants.SEModifiers.UNYIELDING)) {
-                return true;
-            }
-
-            SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(victim.level());
-            var victimRole = gameWorld.getRole(victim);
-            var killerRole = killer != null ? gameWorld.getRole(killer) : null;
-
-            // 若受害者为杀手阵营，且攻击者也为杀手阵营，则免疫此杀戮（要求双方均为非中立）
-            if (victimRole != null
-                    && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(victimRole)) {
-                if (killer != null && killer != victim && killerRole != null
-                        && io.wifi.starrailexpress.cca.SREGameWorldComponent.isKillerTeamRoleStatic(killerRole)
-                        && !victimRole.isNeutrals() && !killerRole.isNeutrals() && !killerRole.isNeutralForKiller()) {
-                    // 若该职业通过 setNeutralForKiller 标记为对杀手中立，则不触发不屈的“杀手间免疫”效果
-                    if (victimRole.isNeutralForKiller()) {
-                        // skip unyielding killer-team immunity for neutral-for-killer roles
-                    } else {
-                        if (victim instanceof ServerPlayer sp) {
-                            sp.displayClientMessage(Component.translatable("message.sre.unyielding.immune_killer")
-                                    .withStyle(ChatFormatting.RED), true);
-                        }
-                        return false;
-                    }
-                }
-            }
-
-            // 若受害者与击杀者均为平民（无杀手能力），则消耗一次免疫并阻止死亡
-            if (victimRole != null && victimRole.isInnocent() && killer != null && killer != victim
-                    && killerRole != null && killerRole.isInnocent()) {
-                if (!pro.fazeclan.river.stupid_express.constants.SEModifiers.UNYIELDING_IMMUNITY_USED
-                        .contains(victim.getUUID())) {
-                    pro.fazeclan.river.stupid_express.constants.SEModifiers.UNYIELDING_IMMUNITY_USED
-                            .add(victim.getUUID());
-                    // 播放提示音并向玩家发送提示
-                    victim.level().playSound(null, victim.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.MASTER,
-                            1.0F, 1.0F);
-                    if (victim instanceof ServerPlayer sp) {
-                        sp.displayClientMessage(Component.translatable("message.sre.unyielding.immune_civilian")
-                                .withStyle(ChatFormatting.GREEN), true);
-                    }
-                    return false;
-                }
-            }
-
-            return true;
-        });
         MaChenXuEventHandler.register();
         VeteranKnifeHandler.register();
         GamblerHandler.register();

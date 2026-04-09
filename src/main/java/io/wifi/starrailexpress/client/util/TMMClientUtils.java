@@ -6,9 +6,16 @@ import java.util.UUID;
 
 public class TMMClientUtils {
     public static UUID getPlayerUidByName(String name) {
-        return Minecraft.getInstance().getConnection().getPlayerInfo(name).getProfile().getId();
+        var s = Minecraft.getInstance().getConnection().getPlayerInfo(name);
+        if (s == null)
+            return null;
+        return s.getProfile().getId();
     }
+
     public static String getPlayerNameByUid(UUID uid) {
-        return Minecraft.getInstance().getConnection().getPlayerInfo(uid).getProfile().getName();
+        var s = Minecraft.getInstance().getConnection().getPlayerInfo(uid);
+        if (s == null)
+            return null;
+        return s.getProfile().getName();
     }
 }

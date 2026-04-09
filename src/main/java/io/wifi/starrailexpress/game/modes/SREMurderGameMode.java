@@ -78,10 +78,6 @@ public class SREMurderGameMode extends GameMode {
         ((SRETrainWorldComponent) SRETrainWorldComponent.KEY.get(serverWorld))
                 .setTimeOfDay(SRETrainWorldComponent.TimeOfDay.MIDNIGHT);
         gameWorldComponent.clearRoleMap();
-        for (ServerPlayer player : players) {
-            ResetPlayerEvent.EVENT.invoker().resetPlayer(player);
-            // 暂时不直接添加角色，而是记录到映射表中
-        }
 
         // 将所有玩家添加到队伍中
         addPlayersToTeam(serverWorld.getServer().createCommandSourceStack(), players, "harpymodloader_game");

@@ -3,11 +3,13 @@ package pro.fazeclan.river.stupid_express.constants;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.event.OnGameEnd;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
+import org.agmas.harpymodloader.events.GameInitializeEvent;
 import org.agmas.harpymodloader.events.ModifierAssigned;
 import org.agmas.harpymodloader.events.ModifierRemoved;
 import org.agmas.harpymodloader.events.ResetPlayerEvent;
@@ -455,12 +457,27 @@ public class SEModifiers {
             }
 
         }));
+        GameInitializeEvent.EVENT.register((level, gameWorldComponent, readyPlayerList) -> {
+            // Reset refugee component
+            var refugeeC = RefugeeComponent.KEY.get(level);
+            if (refugeeC != null) {
+                refugeeC.reset();
+            }
+            UNYIELDING_IMMUNITY_USED.clear();
 
+        });
+        OnGameEnd.EVENT.register((level, gameWorldComponent) -> {
+
+            // Reset refugee component
+            var refugeeC = RefugeeComponent.KEY.get(level);
+            if (refugeeC != null) {
+                refugeeC.reset();
+            }
+            UNYIELDING_IMMUNITY_USED.clear();
+
+        });
         ResetPlayerEvent.EVENT.register(player -> {
-            // Remove tiny modifier
-            player.getAttribute(Attributes.SCALE).removeModifier(tinyModifier);
-            // Remove tall modifier
-            player.getAttribute(Attributes.SCALE).removeModifier(tallModifier);
+
             // Reset lovers component
             var component = LoversComponent.KEY.get(player);
             component.reset();
@@ -490,19 +507,6 @@ public class SEModifiers {
             SkinSplitPersonalityComponent skinSplitPersonalityComponent = SkinSplitPersonalityComponent.KEY.get(player);
             skinSplitPersonalityComponent.clear();
             splitPersonalityComponent.sync();
-            // Reset refugee component
-            var refugeeC = RefugeeComponent.KEY.get(player.level());
-            if (refugeeC != null) {
-                refugeeC.reset();
-            }
-            // 清理矫健带来的效果
-            try {
-                player.removeEffect(ModEffects.STAMINA_BOOST);
-                player.removeEffect(ModEffects.STAMINA_RECOVERY);
-            } catch (Exception ignored) {
-            }
-            // 清理不屈的一次性免疫标记
-            UNYIELDING_IMMUNITY_USED.remove(player.getUUID());
         });
 
     }
