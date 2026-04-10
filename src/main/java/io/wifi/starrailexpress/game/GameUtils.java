@@ -42,6 +42,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -1165,6 +1166,8 @@ public class GameUtils {
             }
             if (spawnBody) {
                 PlayerBodyEntity body = TMMEntities.PLAYER_BODY.create(victim.level());
+                double scale = victim.getAttributeValue(Attributes.SCALE);
+                body.getAttribute(Attributes.SCALE).setBaseValue(scale);
                 if (body != null) {
                     if (killer != null) {
                         body.setKillerUuid(killer.getUUID());
