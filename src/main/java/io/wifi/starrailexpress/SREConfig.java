@@ -31,7 +31,7 @@ public class SREConfig implements ConfigData {
     @ConfigEntry.Category(value = "gamemodes")
     public double antWarPlayerScale = -0.5;
     @ConfigEntry.Category(value = "gamemodes")
-    public int antWarPlayerSpeedLvl = 5;
+    public int antWarPlayerSpeedLvl = 1;
     @ConfigEntry.Category(value = "gamemodes")
     public int antWarClockStopTick = 20;
     @ConfigEntry.Category(value = "gamemodes")

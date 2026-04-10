@@ -250,6 +250,11 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "imitator"),
       ImitatorPlayerComponent.class);
 
+  /** 超级亡命徒 */
+  public static final ComponentKey<SuperLooseEndPlayerComponent> SUPER_LOOSE_END = ComponentRegistry.getOrCreate(
+          ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "super_loose_end"),
+          SuperLooseEndPlayerComponent.class);
+
   public ModComponents() {
     // CCA 需要无参构造函数
   }
