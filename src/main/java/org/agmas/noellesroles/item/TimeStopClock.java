@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * 时停钟
  * <p>
- *     可以触发时停效果
+ * 可以触发时停效果
  * </p>
  */
 public class TimeStopClock extends Item {
@@ -36,6 +36,7 @@ public class TimeStopClock extends Item {
     public TimeStopClock(Properties properties) {
         super(properties);
     }
+
     @Override
     public @NonNull ItemStack getDefaultInstance() {
         // 创建带默认组件的物品栈
@@ -47,13 +48,18 @@ public class TimeStopClock extends Item {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(defaultTag));
         return stack;
     }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
         var stack = player.getItemInHand(hand);
         if (stack.getItem() instanceof TimeStopClock) {
             if (!world.isClientSide) {
-                TimeStopEffect.triggerStart((ServerPlayer) player,
-                        ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_STOP_TIME), Component.literal("Time Stop"));
+                if (!TimeStopEffect.tryTriggerStart((ServerPlayer) player,
+                        ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_STOP_TIME),
+                        Component.translatable("item.noellesroles.time_stop_clock")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))) {
+                    return InteractionResultHolder.fail(stack);
+                }
                 if (!player.isCreative()) {
                     player.getCooldowns().addCooldown(this,
                             ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_COOLDOWN));
@@ -64,10 +70,12 @@ public class TimeStopClock extends Item {
         }
         return InteractionResultHolder.fail(stack);
     }
+
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag type) {
         tooltip.add(Component.translatable("item.noellesroles.time_stop_clock.tooltip",
-                        ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_STOP_TIME) / 20, (MAX_DURABILITY - stack.getDamageValue()))
+                ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_STOP_TIME) / 20,
+                (MAX_DURABILITY - stack.getDamageValue()))
                 .withStyle(ChatFormatting.AQUA));
         tooltip.add(Component.translatable("item.noellesroles.time_stop_clock.tooltip.cooldown",
                 ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_COOLDOWN) / 20));

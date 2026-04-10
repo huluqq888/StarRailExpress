@@ -325,10 +325,12 @@ public class GameUtilsCommand {
                                   }))))))))
               .then(Commands.literal("timestop")
                   .then(Commands.argument("duration", IntegerArgumentType.integer(20, 1200))
-                      .executes((context) -> {
-                        int duration = IntegerArgumentType.getInteger(context, "duration");
-                        return executeTimeStop(context, duration);
-                      }))
+                      .then(Commands.argument("message", ComponentArgument.textComponent(registryAccess))
+                          .executes((context) -> {
+                            int duration = IntegerArgumentType.getInteger(context, "duration");
+                            Component message = ComponentArgument.getComponent(context, "message");
+                            return executeTimeStop(context, duration, message);
+                          })))
                   .then(Commands.literal("stop")
                       .executes((context) -> {
                         return executeTimeStopStop(context);
@@ -582,7 +584,7 @@ public class GameUtilsCommand {
    * @param duration 持续时间（tick）
    * @return 1 表示成功
    */
-  public static int executeTimeStop(CommandContext<CommandSourceStack> context, int duration) {
+  public static int executeTimeStop(CommandContext<CommandSourceStack> context, int duration, Component message) {
     var source = context.getSource();
     ServerPlayer executor = source.getPlayer();
 
@@ -592,7 +594,7 @@ public class GameUtilsCommand {
     }
 
     // 触发时间停止效果
-    TimeStopEffect.tryTriggerStart(executor, duration, Component.translatable("Test Time Stop!"));
+    TimeStopEffect.tryTriggerStart(executor, duration, message);
 
     source.sendSuccess(() -> Component.translatable("Triggered time stop for %s ticks! Only you can move.", duration)
         .withStyle(ChatFormatting.GOLD), true);
