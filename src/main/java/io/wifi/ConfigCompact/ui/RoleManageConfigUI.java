@@ -12,6 +12,7 @@ import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
 import org.agmas.harpymodloader.modifiers.HMLModifiers;
 import org.agmas.noellesroles.utils.RoleUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -108,19 +109,19 @@ public class RoleManageConfigUI {
         }
 
         builder.setSavingRunnable(() -> {
-            HarpyModLoaderConfig.HANDLER.instance().getDisabled().clear();
+            // HarpyModLoaderConfig.HANDLER.instance().getDisabled().clear();
+            ArrayList<String> disabled = new ArrayList<>();
+            ArrayList<String> disabledModifiers = new ArrayList<>();
             for (Entry<ResourceLocation, Boolean> entry : RoleEnableStatus.entrySet()) {
                 if (!entry.getValue()) {
-                    HarpyModLoaderConfig.HANDLER.instance().getDisabled().add(entry.getKey().toString());
+                    disabled.add(entry.getKey().toString());
                 }
             }
-            HarpyModLoaderConfig.HANDLER.instance().disabledModifiers.clear();
             for (Entry<ResourceLocation, Boolean> entry : ModifierEnableStatus.entrySet()) {
                 if (!entry.getValue()) {
-                    HarpyModLoaderConfig.HANDLER.instance().disabledModifiers.add(entry.getKey().toString());
+                    disabledModifiers.add(entry.getKey().toString());
                 }
             }
-            HarpyModLoaderConfig.HANDLER.save();
 
             if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.connection != null) {
                 if (Minecraft.getInstance().player.hasPermissions(2)) {
@@ -130,11 +131,11 @@ public class RoleManageConfigUI {
                         Minecraft.getInstance().player.connection.sendCommand(roleCommandPrefix + " enableAll");
                         Minecraft.getInstance().player.connection.sendCommand(modifierCommandPrefix + " enableAll");
                     }
-                    for (var role : HarpyModLoaderConfig.HANDLER.instance().disabledModifiers) {
+                    for (var role : disabledModifiers) {
                         Minecraft.getInstance().player.connection
                                 .sendCommand(modifierCommandPrefix + " " + role + " false");
                     }
-                    for (var role : HarpyModLoaderConfig.HANDLER.instance().getDisabled()) {
+                    for (var role : disabled) {
                         Minecraft.getInstance().player.connection
                                 .sendCommand(roleCommandPrefix + " " + role + " false");
                     }

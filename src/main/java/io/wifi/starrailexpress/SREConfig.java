@@ -27,7 +27,7 @@ public class SREConfig implements ConfigData {
     @ConfigEntry.Category(value = "gamemodes")
     public int gamblerModeGamblerKillTime = 190;
     @ConfigEntry.Category(value = "gamemodes")
-    public int customRoleModeForceSelectTime = 15;
+    public int customRoleModeForceSelectTime = 20;
     @ConfigEntry.Category(value = "gamemodes")
     public double antWarPlayerScale = -0.5;
     @ConfigEntry.Category(value = "gamemodes")
