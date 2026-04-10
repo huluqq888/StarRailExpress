@@ -53,10 +53,10 @@ public class TimeStopClock extends Item {
         if (stack.getItem() instanceof TimeStopClock) {
             if (!world.isClientSide) {
                 TimeStopEffect.triggerStart((ServerPlayer) player,
-                        ItemComponentUtils.getTagIntValue(stack, TAG_STOP_TIME), Component.literal("Time Stop"));
+                        ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_STOP_TIME), Component.literal("Time Stop"));
                 if (!player.isCreative()) {
                     player.getCooldowns().addCooldown(this,
-                            ItemComponentUtils.getTagIntValue(stack, TAG_COOLDOWN));
+                            ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_COOLDOWN));
                     stack.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
                 }
                 return InteractionResultHolder.success(stack);
@@ -67,10 +67,10 @@ public class TimeStopClock extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag type) {
         tooltip.add(Component.translatable("item.noellesroles.time_stop_clock.tooltip",
-                        ItemComponentUtils.getTagIntValue(stack, TAG_STOP_TIME) / 20, (MAX_DURABILITY - stack.getDamageValue()))
+                        ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_STOP_TIME) / 20, (MAX_DURABILITY - stack.getDamageValue()))
                 .withStyle(ChatFormatting.AQUA));
         tooltip.add(Component.translatable("item.noellesroles.time_stop_clock.tooltip.cooldown",
-                ItemComponentUtils.getTagIntValue(stack, TAG_COOLDOWN) / 20));
+                ItemComponentUtils.getCustomDataTagIntValue(stack, TAG_COOLDOWN) / 20));
         super.appendHoverText(stack, context, tooltip, type);
     }
 }

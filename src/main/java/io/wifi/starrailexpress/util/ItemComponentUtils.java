@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
 public class ItemComponentUtils {
-    public static void setTagIntValue(ItemStack stack, String key, int value) {
+    public static void setCustomDataTagIntValue(ItemStack stack, String key, int value) {
         // 获取现有的自定义数据
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         CompoundTag tag;
@@ -22,7 +22,7 @@ public class ItemComponentUtils {
     }
 
     // 从 ItemStack 读取
-    public static int getTagIntValue(ItemStack stack, String key) {
+    public static int getCustomDataTagIntValue(ItemStack stack, String key) {
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData != null) {
             CompoundTag tag = customData.copyTag();
