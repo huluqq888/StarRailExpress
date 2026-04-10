@@ -145,8 +145,12 @@ public class SEInitiateEventHandler {
             clearAllKnives(player);
             // StupidExpress.LOGGER.info(player.getDisplayName().getString());
             StupidRoleUtils.changeRole(player, newInitiateRole);
-            if (newInitiateRole.canUseKiller())
-                SREPlayerShopComponent.KEY.get(player).addToBalance(100);
+            if (newInitiateRole.canUseKiller()) {
+                var sc = SREPlayerShopComponent.KEY.get(player);
+                if (sc.balance < 120) {
+                    sc.setBalance(120);
+                }
+            }
             // 播放全场音效
             player.level().playSound(null, player.blockPosition(),
                     net.minecraft.sounds.SoundEvents.CONDUIT_ATTACK_TARGET,
@@ -191,12 +195,18 @@ public class SEInitiateEventHandler {
 
             // 清除物品栏中的所有刀
             clearAllKnives(killer);
-
+            clearAllKnives(victim);
+            
             StupidRoleUtils.changeRole(killer, role, true);
             StupidRoleUtils.changeRole(victim, SERoles.AMNESIAC, true);
 
-            if (role.canUseKiller())
-                SREPlayerShopComponent.KEY.get(killer).addToBalance(100);
+            if (role.canUseKiller()){
+                var sc = SREPlayerShopComponent.KEY.get(killer);
+                if (sc.balance < 120) {
+                    sc.setBalance(120);
+                }
+            }
+                
 
             SREPlayerShopComponent.KEY.get(killer).addToBalance(100);
             StupidRoleUtils.sendWelcomeAnnouncement((ServerPlayer) killer);
