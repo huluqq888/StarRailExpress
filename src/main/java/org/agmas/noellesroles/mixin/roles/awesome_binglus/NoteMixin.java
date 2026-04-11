@@ -41,7 +41,7 @@ public abstract class NoteMixin extends Item {
             SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(serverPlayer.level());
             if (gameWorld.isRole(player, ModRoles.AWESOME_BINGLUS)) {
                 final var playerShopComponent = SREPlayerShopComponent.KEY.get(serverPlayer);
-                if (playerShopComponent.balance >= 75) {
+                if (playerShopComponent.balance >= 50) {
                     if (player != null && !player.isShiftKeyDown()) {
                         SREPlayerNoteComponent component = (SREPlayerNoteComponent) SREPlayerNoteComponent.KEY.get(player);
                         if (!component.written) {
@@ -54,7 +54,7 @@ public abstract class NoteMixin extends Item {
                                 return InteractionResult.PASS;
                             } else {
                                 NoteEntity note = (NoteEntity) TMMEntities.NOTE.create(world);
-                                playerShopComponent.addToBalance(-75);
+                                playerShopComponent.addToBalance(-50);
 
                                 note.setAttached(ModRoles.ENTITY_NOTE_MAKER, livingEntity.getUUID().toString());
                                 {
