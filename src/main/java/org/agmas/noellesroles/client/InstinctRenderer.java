@@ -478,7 +478,7 @@ public class InstinctRenderer {
                     ExecutionerPlayerComponent executionerPlayerComponent = (ExecutionerPlayerComponent) ExecutionerPlayerComponent.KEY
                             .get(self);
                     if (executionerPlayerComponent != null && executionerPlayerComponent.target != null) {
-                        if (executionerPlayerComponent.target.equals(target.getUUID())) {
+                        if (executionerPlayerComponent.target.equals(target.getUUID()) && !SREClient.gameComponent.isRole(target.getUUID(), ModRoles.GHOST)) {
                             return new java.awt.Color(0, 254, 254).getRGB();
                         }
                     }
