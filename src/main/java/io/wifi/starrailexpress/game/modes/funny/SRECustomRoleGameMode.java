@@ -25,6 +25,7 @@ import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent;
 import io.wifi.starrailexpress.cca.SREPlayerProgressionComponent.FactionCardType;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
+import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
 import io.wifi.starrailexpress.cca.SRERoleWorldComponent;
 import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
@@ -281,5 +282,31 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
 
         return AllowGameEnd.EVENT.invoker().allowGameEnd(serverWorld,
                 winStatus, false);
+    }
+    
+    @Override
+    public void recordPlayerStats(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+            ArrayList<ServerPlayer> readyPlayerList) {
+        for (ServerPlayer player : readyPlayerList) {
+            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
+            var crgmtpc = CustomRoleGameModeTeamsPlayerComponent.KEY.get(player);
+            stats.incrementTotalGamesPlayed();
+            SRERole playerRole = gameComponent.getRole(player);
+            int roleType = crgmtpc.getTeam();
+            if (playerRole != null) {
+                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
+
+                // 统计阵营场次
+                if (roleType == 5) {
+                    stats.incrementTotalSheriffGames();
+                } else if (roleType == 4) {
+                    stats.incrementTotalKillerGames();
+                } else if (roleType == 2 || roleType == 3) {
+                    stats.incrementTotalNeutralGames();
+                } else {
+                    stats.incrementTotalCivilianGames();
+                }
+            }
+        }
     }
 }

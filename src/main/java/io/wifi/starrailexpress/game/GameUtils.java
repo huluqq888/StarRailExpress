@@ -341,31 +341,10 @@ public class GameUtils {
         // ServerPlayNetworking.send(player, unlockPayload);
         // }
         // }
+        gameComponent.getGameMode().recordPlayerStats(serverWorld, gameComponent, readyPlayerList);
 
-        for (ServerPlayer player : readyPlayerList) {
+        gameComponent.getGameMode().afterInitializeGame(serverWorld, gameComponent, readyPlayerList);
 
-            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
-            stats.incrementTotalGamesPlayed();
-            SRERole playerRole = gameComponent.getRole(player);
-            if (playerRole != null) {
-                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
-
-                // 统计阵营场次
-                if (playerRole.isVigilanteTeam()) {
-                    stats.incrementTotalSheriffGames();
-                } else if (playerRole.canUseKiller()) {
-                    stats.incrementTotalKillerGames();
-                } else if (playerRole.isNeutrals()) {
-                    stats.incrementTotalNeutralGames();
-                } else if (playerRole.isInnocent() && !playerRole.isVigilanteTeam()) {
-                    stats.incrementTotalCivilianGames();
-                }
-            }
-        }
-        int SAFE_TIME_COOLDOWN = SREConfig.instance().safeTimeCooldown * 20;
-        if (gameComponent.getGameMode().hasSafeTime()) {
-            addItemCooldowns(serverWorld, SAFE_TIME_COOLDOWN);
-        }
         OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
         // --- 结束新增统计数据更新逻辑 ---
         executeFunction(serverWorld.getServer().createCommandSourceStack(),

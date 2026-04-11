@@ -1,6 +1,9 @@
 package io.wifi.starrailexpress.api;
 
+import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -8,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class GameMode {
@@ -48,6 +52,51 @@ public abstract class GameMode {
 
     public boolean isLooseEndMode() {
         return false;
+    }
+
+    /**
+     * 记录玩家数据
+     * 
+     * @param serverWorld
+     * @param gameComponent
+     * @param readyPlayerList
+     */
+    public void recordPlayerStats(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+            ArrayList<ServerPlayer> readyPlayerList) {
+        for (ServerPlayer player : readyPlayerList) {
+            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
+            stats.incrementTotalGamesPlayed();
+            SRERole playerRole = gameComponent.getRole(player);
+            if (playerRole != null) {
+                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
+
+                // 统计阵营场次
+                if (playerRole.isVigilanteTeam()) {
+                    stats.incrementTotalSheriffGames();
+                } else if (playerRole.canUseKiller()) {
+                    stats.incrementTotalKillerGames();
+                } else if (playerRole.isNeutrals()) {
+                    stats.incrementTotalNeutralGames();
+                } else if (playerRole.isInnocent() && !playerRole.isVigilanteTeam()) {
+                    stats.incrementTotalCivilianGames();
+                }
+            }
+        }
+    }
+
+    /**
+     * 在游戏开始initializeGame后触发，在OnGameTrueStarted前触发
+     * 
+     * @param serverWorld
+     * @param gameComponent
+     * @param readyPlayerList
+     */
+    public void afterInitializeGame(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+            ArrayList<ServerPlayer> readyPlayerList) {
+        int SAFE_TIME_COOLDOWN = SREConfig.instance().safeTimeCooldown * 20;
+        if (gameComponent.getGameMode().hasSafeTime()) {
+            GameUtils.addItemCooldowns(serverWorld, SAFE_TIME_COOLDOWN);
+        }
     }
 
     public boolean enforcesPlayAreaElimination() {
