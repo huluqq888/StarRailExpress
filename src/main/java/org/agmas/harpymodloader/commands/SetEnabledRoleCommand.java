@@ -51,7 +51,7 @@ public class SetEnabledRoleCommand {
         }
         HarpyModLoaderConfig.HANDLER.save();
         context.getSource()
-                .sendSuccess(() -> Component.translatable("commands.setenabledrole.enable.success", "ALL"), true);
+                .sendSuccess(() -> Component.translatable("commands.setenabledrole.disable.success", "ALL"), true);
 
         return 1;
     }
