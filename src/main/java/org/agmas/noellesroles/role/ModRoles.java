@@ -172,7 +172,7 @@ public class ModRoles {
   public static final ResourceLocation NIAN_SHOU_ID = Noellesroles.id("nianshou");
   public static final ResourceLocation OLDMAN_ID = Noellesroles.id("oldman");
   public static final ResourceLocation THIEF_ID = Noellesroles.id("thief");
-    public static final ResourceLocation MERCENARY_ID = Noellesroles.id("mercenary");
+  public static final ResourceLocation MERCENARY_ID = Noellesroles.id("mercenary");
   public static final ResourceLocation CANDLE_BEARER_ID = Noellesroles.id("candlebearer");
   public static final ResourceLocation FORTUNETELLER_ID = Noellesroles.id("fortuneteller");
 
@@ -733,7 +733,8 @@ public class ModRoles {
       .setNeutralForKiller(true).setCanSeeTeammateKiller(false).setCanSeeBodyDeathReason(true);
   public static SRERole CORONER = TMMRoles
       .registerRole(new NormalRole(CORONER_ID, new Color(122, 122, 122).getRGB(), true,
-          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);
+          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false))
+      .setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);
 
   // ==================== 自定义角色对象定义 ====================
   // 乘客阵营角色
@@ -1186,7 +1187,7 @@ public class ModRoles {
       SRERole.MoodType.FAKE, // 假心情
       TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
       true // 隐藏计分板
-  )).setComponentKey(RecorderPlayerComponent.KEY).setCanUseInstinct(true);
+  )).setComponentKey(RecorderPlayerComponent.KEY).setCanUseInstinct(true).setNeutrals(true);
 
   /**
    * 故障机器人角色
