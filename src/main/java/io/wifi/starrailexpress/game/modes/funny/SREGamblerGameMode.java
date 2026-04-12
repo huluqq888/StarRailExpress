@@ -88,6 +88,15 @@ public class SREGamblerGameMode extends SREMurderGameMode {
                     false, // showParticles - 不显示粒子
                     false // showIcon - 不显示图标
             ));
+            
+            player.addEffect(new MobEffectInstance(
+                    ModEffects.SKILL_BANED,
+                    20 * 15,
+                    10, // 10级别确保不会被替换
+                    true, // ambient - 环境效果（粒子更少更透明）
+                    false, // showParticles - 不显示粒子
+                    false // showIcon - 不显示图标
+            ));
         }
         gameWorldComponent.syncRoles();
         int modifierRoleCount = (int) ((float) players.size()
