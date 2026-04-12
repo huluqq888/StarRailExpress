@@ -335,9 +335,9 @@ public class TarotAssemblyManager {
             giveOnceRevolverReward(fool);
         } else if (hereticUuid != null) {
             // 产生异端
-            comp.setHeretic(hereticUuid, currentTick + HERETIC_DURATION_TICKS);
+            comp.setHeretic(hereticUuid, 0);
             comp.setProtection(hereticUuid);
-
+            ExecutionerGunItem.ensureExecutionerGun(fool);
             comp.executionerBullets = 1;
             fool.displayClientMessage(
                 Component.translatable("message.noellesroles.fool.vote_target_locked",
@@ -367,11 +367,6 @@ public class TarotAssemblyManager {
     public static void serverTick(ServerPlayer player, SREGameWorldComponent gameComponent) {
         FoolPlayerComponent comp = FoolPlayerComponent.KEY.get(player);
         long currentTick = player.level().getGameTime();
-
-        // 检查异端效果是否过期
-        if (comp.hereticTarget != null && currentTick >= comp.hereticEndTick) {
-            comp.clearHeretic();
-        }
 
         // 检查灵性斗篷效果是否过期
         if (comp.cloakActive && currentTick >= comp.cloakEndTick) {
@@ -539,6 +534,29 @@ public class TarotAssemblyManager {
                 Component.translatable("message.noellesroles.fool.vote_no_heretic")
                         .withStyle(ChatFormatting.YELLOW),
                 false);
+    }
+
+    public static void clearTrackedTarget(ServerLevel serverLevel, UUID targetUuid) {
+        SREGameWorldComponent gameComponent = SREGameWorldComponent.KEY.get(serverLevel);
+        ServerPlayer fool = findFoolPlayer(serverLevel, gameComponent);
+        if (fool == null) {
+            return;
+        }
+
+        FoolPlayerComponent comp = FoolPlayerComponent.KEY.get(fool);
+        boolean changed = false;
+        if (targetUuid.equals(comp.hereticTarget)) {
+            comp.hereticTarget = null;
+            comp.hereticEndTick = 0;
+            changed = true;
+        }
+        if (targetUuid.equals(comp.protectionSource)) {
+            comp.protectionSource = null;
+            changed = true;
+        }
+        if (changed) {
+            comp.sync();
+        }
     }
 
     private static void syncParticipantMeetingState(ServerPlayer player, boolean inMeeting, long meetingEndTick,

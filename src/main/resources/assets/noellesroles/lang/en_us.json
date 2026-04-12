@@ -1727,9 +1727,11 @@
   "message.noellesroles.fool.cloak_activated": "Spirit Cloak activated — 5s spirit form",
   "message.noellesroles.fool.protection_triggered": "Protection triggered! You are immune to the next attack from the heretic!",
 
-  "hud.noellesroles.fool.bullets": "Executioner Ammo: %d/1",
+  "hud.noellesroles.fool.gun": "Executioner's Pistol: %s",
+  "hud.noellesroles.fool.gun_ready": "equipped",
+  "hud.noellesroles.fool.gun_missing": "missing",
   "hud.noellesroles.fool.tarot_members": "Tarot Members: %d",
-  "hud.noellesroles.fool.heretic": "Heretic: %s (%ds)",
+  "hud.noellesroles.fool.heretic": "Heretic: %s",
   "hud.noellesroles.fool.meeting_active": "§6Tarot Assembly: %ss (press G to end, J to vote)",
   "hud.noellesroles.fool.member_meeting_active": "§6Tarot Assembly: %ss",
   "hud.noellesroles.fool.member_vote_hint": "§ePress J to open voting, right click to leave",

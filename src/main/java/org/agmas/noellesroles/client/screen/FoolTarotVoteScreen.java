@@ -7,9 +7,12 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.agmas.noellesroles.roles.fool.FoolTarotVoteC2SPacket;
 
 import java.awt.Color;
@@ -83,8 +86,8 @@ public class FoolTarotVoteScreen extends Screen {
 
         int columns = Math.min(4, Math.max(1, countOnPage == 0 ? 4 : countOnPage));
         int rows = Math.max(1, (int) Math.ceil(countOnPage / 4.0));
-        int buttonWidth = 120;
-        int buttonHeight = 28;
+        int buttonWidth = 150;
+        int buttonHeight = 32;
         int spacingX = 10;
         int spacingY = 8;
         int totalWidth = columns * (buttonWidth + spacingX) - spacingX;
@@ -155,6 +158,17 @@ public class FoolTarotVoteScreen extends Screen {
         return Component.literal(fallback.substring(0, Math.min(8, fallback.length())));
     }
 
+    private ResourceLocation resolveSkin(UUID playerUuid) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.getConnection() != null) {
+            PlayerInfo playerInfo = client.getConnection().getPlayerInfo(playerUuid);
+            if (playerInfo != null) {
+                return playerInfo.getSkin().texture();
+            }
+        }
+        return DefaultPlayerSkin.get(playerUuid).texture();
+    }
+
     @Override
     public void onClose() {
         super.onClose();
@@ -207,10 +221,12 @@ public class FoolTarotVoteScreen extends Screen {
             context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bgColor);
             context.renderOutline(this.getX(), this.getY(), this.width, this.height, borderColor);
 
+            PlayerFaceRenderer.draw(context, parent.resolveSkin(this.candidate.candidateId()), this.getX() + 4, this.getY() + 4, 24);
+
             Component name = parent.resolvePlayerName(this.candidate.candidateId());
-            String nameText = renderer.plainSubstrByWidth(name.getString(), this.width - 10);
+            String nameText = renderer.plainSubstrByWidth(name.getString(), this.width - 62);
             int nameColor = this.candidate.alive() ? 0xF7E6B0 : 0xD49A9A;
-            context.drawString(renderer, nameText, this.getX() + 5, this.getY() + 6, nameColor);
+            context.drawString(renderer, nameText, this.getX() + 34, this.getY() + 6, nameColor);
 
             Component votesText = Component.translatable("screen.noellesroles.fool.vote.entry_votes",
                     this.candidate.voteCount());
@@ -223,7 +239,7 @@ public class FoolTarotVoteScreen extends Screen {
             Component stateText = this.candidate.alive()
                     ? Component.translatable("screen.noellesroles.fool.vote.entry_alive")
                     : Component.translatable("screen.noellesroles.fool.vote.entry_dead");
-            context.drawString(renderer, stateText, this.getX() + 5, this.getY() + 17,
+                context.drawString(renderer, stateText, this.getX() + 34, this.getY() + 18,
                     this.candidate.alive() ? 0x7CD67C : 0xD67676);
         }
 
