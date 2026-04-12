@@ -1046,7 +1046,12 @@ public class CommonClientHudRenderer {
 
       // 显示冷却或就绪状态
       int dy = yOffset - font.lineHeight - 4;
-      if (thiefComponent.cooldown > 0) {
+      if (client.player.hasEffect(ModEffects.NO_COLLIDE)) {
+        var cdText = Component.translatable("hud.noellesroles.safe_time", thiefComponent.cooldown / 20)
+            .withStyle(ChatFormatting.RED);
+        guiGraphics.drawString(font, cdText, xOffset - font.width(cdText), dy, Color.WHITE.getRGB());
+        dy -= font.lineHeight;
+      } else if (thiefComponent.cooldown > 0) {
         var cdText = Component.translatable("hud.thief.cooldown", thiefComponent.cooldown / 20)
             .withStyle(ChatFormatting.RED);
         guiGraphics.drawString(font, cdText, xOffset - font.width(cdText), dy, Color.WHITE.getRGB());
