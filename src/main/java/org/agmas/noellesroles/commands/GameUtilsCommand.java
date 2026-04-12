@@ -67,6 +67,10 @@ public class GameUtilsCommand {
                             SRERole role = RoleArgumentType.getRole(ctx, "role");
                             var cca = SRERoleWorldComponent.KEY.get(player.level());
                             cca.addRole(player, role);
+                            ctx.getSource().sendSuccess(
+                                () -> Component.translatable("Successfully silently change the role of %s to %s",
+                                    player.getName(), RoleUtils.getRoleOrModifierNameWithColor(role)),
+                                true);
                             return 1;
                           })
                               .then(Commands.literal("no_sync").executes((ctx) -> {
@@ -74,16 +78,55 @@ public class GameUtilsCommand {
                                 SRERole role = RoleArgumentType.getRole(ctx, "role");
                                 var cca = SRERoleWorldComponent.KEY.get(player.level());
                                 cca.addRole(player.getUUID(), role, false);
+                                ctx.getSource().sendSuccess(
+                                    () -> Component.translatable("Successfully silently change the role of %s to %s",
+                                        player.getName(), RoleUtils.getRoleOrModifierNameWithColor(role)),
+                                    true);
                                 return 1;
                               }))))
                       .then(Commands.literal("send_welcome").executes((ctx) -> {
                         ServerPlayer player = ctx.getSource().getPlayerOrException();
                         RoleUtils.sendWelcomeAnnouncement(player);
+
+                        ctx.getSource().sendSuccess(
+                            () -> Component.translatable("Successfully send welcome payload to %s",
+                                player.getName()),
+                            true);
                         return 1;
-                      }))
+                      }).then(Commands.argument("killer_count", IntegerArgumentType.integer()).executes((ctx) -> {
+                        int killerCount = IntegerArgumentType.getInteger(ctx, "killer_count");
+                        ServerPlayer player = ctx.getSource().getPlayerOrException();
+                        SRERole role = SRERoleWorldComponent.KEY.get(player.level()).getRole(player);
+                        if (role == null) {
+                          throw ConfigCommand
+                              .createSimpleSyntaxException(new Exception("Player doesn't have any roles!"));
+                        }
+                        RoleUtils.sendWelcomeAnnouncement(player, role.identifier(), killerCount);
+
+                        ctx.getSource().sendSuccess(
+                            () -> Component.translatable("Successfully send welcome payload to %s",
+                                player.getName()),
+                            true);
+                        return 1;
+                      }).then(Commands.argument("role", RoleArgumentType.create(false)).executes((ctx) -> {
+
+                        int killerCount = IntegerArgumentType.getInteger(ctx, "killer_count");
+                        ServerPlayer player = ctx.getSource().getPlayerOrException();
+                        SRERole role = RoleArgumentType.getRole(ctx, "role");
+                        RoleUtils.sendWelcomeAnnouncement(player, role.identifier(), killerCount);
+                        ctx.getSource().sendSuccess(
+                            () -> Component.translatable("Successfully send [%s] welcome payload to %s",
+                                RoleUtils.getRoleOrModifierNameWithColor(role), player.getName()),
+                            true);
+                        return 1;
+                      }))))
                       .then(Commands.literal("sync_roles").executes((ctx) -> {
                         ServerLevel level = ctx.getSource().getLevel();
                         SRERoleWorldComponent.KEY.get(level).sync();
+
+                        ctx.getSource().sendSuccess(
+                            () -> Component.translatable("Successfully sync SRERoleWorldComponent to all players!"),
+                            true);
                         return 1;
                       }))
                       .then(Commands.literal("assign_event").executes((ctx) -> {
@@ -94,6 +137,11 @@ public class GameUtilsCommand {
                               .createSimpleSyntaxException(new Exception("Player doesn't have any roles!"));
                         }
                         ModdedRoleAssigned.EVENT.invoker().assignModdedRole(player, role);
+
+                        ctx.getSource().sendSuccess(
+                            () -> Component.translatable("Successfully triggered role assigned events to %s (%s)",
+                                player.getName(), RoleUtils.getRoleOrModifierNameWithColor(role)),
+                            true);
                         return 1;
                       }))
                       .then(Commands.literal("remove_event").executes((ctx) -> {
@@ -104,6 +152,11 @@ public class GameUtilsCommand {
                               .createSimpleSyntaxException(new Exception("Player doesn't have any roles!"));
                         }
                         ModdedRoleRemoved.EVENT.invoker().removeModdedRole(player, role);
+
+                        ctx.getSource().sendSuccess(
+                            () -> Component.translatable("Successfully triggered role removed events to %s (%s)",
+                                player.getName(), RoleUtils.getRoleOrModifierNameWithColor(role)),
+                            true);
                         return 1;
                       })))
                   .then(Commands.literal("tests")

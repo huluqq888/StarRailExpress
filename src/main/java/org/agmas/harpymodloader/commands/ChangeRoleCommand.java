@@ -75,7 +75,7 @@ public class ChangeRoleCommand {
             }
 
             // 通知玩家角色已改变
-            targetPlayer.displayClientMessage(Component.translatable("commands.changerole.player.notification", newRoleText), false);
+            // targetPlayer.displayClientMessage(Component.translatable("commands.changerole.player.notification", newRoleText), false);
         } catch (Exception e) {
             e.printStackTrace();
             context.getSource().sendFailure(Component.literal(e.getMessage()));
