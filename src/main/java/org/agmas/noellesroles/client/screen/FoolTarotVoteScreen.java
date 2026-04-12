@@ -243,8 +243,10 @@ public class FoolTarotVoteScreen extends Screen {
 //                    : Component.translatable("screen.noellesroles.fool.vote.entry_dead");
             Component stateText = Component.translatable("screen.noellesroles.fool.vote.entry_alive");
 
+//                context.drawString(renderer, stateText, this.getX() + 34, this.getY() + 18,
+//                    this.candidate.alive() ? 0x7CD67C : 0xD67676);
                 context.drawString(renderer, stateText, this.getX() + 34, this.getY() + 18,
-                    this.candidate.alive() ? 0x7CD67C : 0xD67676);
+                     0x7CD67C );
         }
 
         @Override

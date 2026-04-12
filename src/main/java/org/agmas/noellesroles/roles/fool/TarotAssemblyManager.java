@@ -200,10 +200,11 @@ public class TarotAssemblyManager {
         player.teleportTo(serverLevel, targetX, MEETING_Y + 1.0D, targetZ, Set.of(), yaw, 0.0F);
         player.setDeltaMovement(0.0D, 0.0D, 0.0D);
         player.fallDistance = 0.0F;
-        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION_TICKS, 0, false, false,
-            false));
+
         if (foolComp.getPlayer()!=player) {
             player.addEffect(new MobEffectInstance(ModEffects.TAROT_ASSEMBLY, BLINDNESS_DURATION_TICKS, 0, false, false,
+                    false));
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION_TICKS, 0, false, false,
                     false));
         }
         ServerPlayNetworking.send(player, new CloseUiPayload());
