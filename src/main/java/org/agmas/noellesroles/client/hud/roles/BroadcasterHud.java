@@ -58,7 +58,7 @@ public class BroadcasterHud {
                                 y + lineHeight * c + lineHeightPadding * c, 0xFFFFFFFF);
                         c++;
                     }
-                    y += totalHeight + 4;
+                    y += totalHeight + padding * 2 + 4;
                     i = count - 1;
                 }
                 var info = NoellesrolesClient.currentBroadcastMessage.get(i);
@@ -84,7 +84,7 @@ public class BroadcasterHud {
                             y + lineHeight * c + lineHeightPadding * c, 0xFFFFFFFF);
                     c++;
                 }
-                y += totalHeight + 4;
+                y += totalHeight + padding * 2 + 4;
             }
         }
     }
