@@ -1,5 +1,7 @@
 package io.wifi.starrailexpress.mixin.command;
 
+import java.util.Collections;
+
 import org.agmas.harpymodloader.commands.argument.ModifierArgumentType;
 import org.agmas.harpymodloader.commands.argument.RoleArgumentType;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
@@ -7,15 +9,15 @@ import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
 import org.agmas.harpymodloader.modifiers.SREModifier;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.CommandNode;
 
 import io.wifi.starrailexpress.api.SRERole;
@@ -25,19 +27,37 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.commands.ExecuteCommand;
 import net.minecraft.server.level.ServerPlayer;
 
 @Mixin(ExecuteCommand.class)
 public abstract class ExecuteCommandInvoker {
 
-  @Shadow
-  private static <T extends ArgumentBuilder<CommandSourceStack, T>> T addConditional(
-      CommandNode<CommandSourceStack> node,
-      T builder,
+  @Unique
+  private static ArgumentBuilder<CommandSourceStack, ?> sre$addConditional(
+      CommandNode<CommandSourceStack> commandNode,
+      ArgumentBuilder<CommandSourceStack, ?> argumentBuilder,
       boolean isIf,
-      @Coerce CommandPredicate predicate) {
-    throw new AssertionError();
+      CommandPredicate predicate) {
+    return argumentBuilder
+        .fork(commandNode, ctx -> {
+          // 对应原版 expect()
+          boolean result = predicate.test(ctx);
+          return (result == isIf)
+              ? Collections.singleton((CommandSourceStack) ctx.getSource())
+              : Collections.emptyList();
+        })
+        .executes(ctx -> {
+          if (isIf == predicate.test(ctx)) {
+            ((CommandSourceStack) ctx.getSource()).sendSuccess(
+                () -> Component.translatable("commands.execute.conditional.pass"), false);
+            return 1;
+          } else {
+            throw new SimpleCommandExceptionType(
+                Component.translatable("commands.execute.conditional.fail")).create();
+          }
+        });
   }
 
   @Inject(method = "addConditionals", at = @At("RETURN"), cancellable = true)
@@ -49,7 +69,7 @@ public abstract class ExecuteCommandInvoker {
       CallbackInfoReturnable<ArgumentBuilder<CommandSourceStack, ?>> cir) {
     literalArgumentBuilder.then(
         Commands.literal("sre:role")
-            .then(addConditional(
+            .then(sre$addConditional(
                 commandNode,
                 Commands.argument("target_player", EntityArgument.player())
                     .then(Commands.argument("role_id", RoleArgumentType.create(false))),
@@ -69,7 +89,7 @@ public abstract class ExecuteCommandInvoker {
                 })));
     literalArgumentBuilder.then(
         Commands.literal("sre:modifier")
-            .then(addConditional(
+            .then(sre$addConditional(
                 commandNode,
                 Commands.argument("target_player", EntityArgument.player())
                     .then(Commands.argument("modifier_id", ModifierArgumentType.create())),
@@ -88,7 +108,7 @@ public abstract class ExecuteCommandInvoker {
                 })));
     literalArgumentBuilder.then(
         Commands.literal("sre:role_type")
-            .then(addConditional(
+            .then(sre$addConditional(
                 commandNode,
                 Commands.argument("target_player", EntityArgument.player())
                     .then(Commands.argument("role_type", IntegerArgumentType.integer(0, 5))),
