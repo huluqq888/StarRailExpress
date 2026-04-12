@@ -56,10 +56,15 @@ public class GrenadeEntity extends ThrowableItemProjectile {
             var hitted_players = getPlayersAffectedByExplosion(world, explosionPos.x, explosionPos.y, explosionPos.z,
                     EXPLOSION_RADIUS);
             int count = 0;
-            for (Player player : hitted_players) {
-                GameUtils.killPlayer(player, true,
-                        this.getOwner() instanceof Player playerEntity ? playerEntity : null,
-                        GameConstants.DeathReasons.GRENADE);
+            for (var entity : hitted_players) {
+                if (entity instanceof Player player) {
+                    GameUtils.killPlayer(player, true,
+                            this.getOwner() instanceof Player playerEntity ? playerEntity : null,
+                            GameConstants.DeathReasons.GRENADE);
+                }
+                if (entity instanceof PuppeteerBodyEntity puppeteerBodyEntity){
+                    puppeteerBodyEntity.playerHurt(this.getOwner() instanceof Player playerEntity ? playerEntity : null, GameConstants.DeathReasons.GRENADE);
+                }
                 count++;
                 if (count >= MAX_KILL_PLAYER_COUNT)
                     break;
@@ -68,7 +73,7 @@ public class GrenadeEntity extends ThrowableItemProjectile {
         }
     }
 
-    public static ArrayList<Player> getPlayersAffectedByExplosion(Level level, double x, double y, double z,
+    public static ArrayList<Entity> getPlayersAffectedByExplosion(Level level, double x, double y, double z,
             float radius) {
         float diameter = radius;
         int minX = Mth.floor(x - diameter - 1.0F);
@@ -83,7 +88,7 @@ public class GrenadeEntity extends ThrowableItemProjectile {
                 new AABB(minX, minY, minZ, maxX, maxY, maxZ));
 
         Vec3 center = new Vec3(x, y, z);
-        ArrayList<Player> affected = new ArrayList<>();
+        ArrayList<Entity> affected = new ArrayList<>();
 
         for (Entity entity : candidates) {
             if ((entity instanceof Player player)) {
@@ -105,14 +110,14 @@ public class GrenadeEntity extends ThrowableItemProjectile {
                 var owner = puppeteerBodyEntity.getOwner();
                 if (owner instanceof Player player) {
                     if (GameFunctions.isPlayerAliveAndSurvival(player)) continue;
-                    double distance = Math.sqrt(entity.distanceToSqr(center));
+                    double distance = Math.sqrt(puppeteerBodyEntity.distanceToSqr(center));
                     double v = distance / diameter;
                     if (v > 1.0)
                         continue;
-                    double seenPercent = Explosion.getSeenPercent(center, entity);
+                    double seenPercent = Explosion.getSeenPercent(center, puppeteerBodyEntity);
                         if (seenPercent == 0.0)
                             continue;
-                        affected.add(player);
+                        affected.add(puppeteerBodyEntity);
                 }
             }
         }
