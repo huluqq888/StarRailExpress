@@ -17,13 +17,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(RevolverItem.class)
 public class PuppeteerBodyGunTargetMixin {
     
-//    @Inject(method = "getGunTarget", at = @At("HEAD"), cancellable = true)
-//    private static void allowPuppeteerBodyTarget(Player user, CallbackInfoReturnable<HitResult> cir) {
-//        // 扩展目标检测，包含 PuppeteerBodyEntity
-//        HitResult result = ProjectileUtil.getHitResultOnViewVector(user,
-//            entity -> (entity instanceof Player player && GameFunctions.isPlayerAliveAndSurvival( player))
-//                    || entity instanceof PuppeteerBodyEntity,
-//            20f);
-//        cir.setReturnValue(result);
-//    }
+    @Inject(method = "getGunTarget", at = @At("HEAD"), cancellable = true)
+    private static void allowPuppeteerBodyTarget(Player user, CallbackInfoReturnable<HitResult> cir) {
+        // 扩展目标检测，包含 PuppeteerBodyEntity
+        HitResult result = ProjectileUtil.getHitResultOnViewVector(user,
+            entity -> (entity instanceof Player player && GameFunctions.isPlayerAliveAndSurvival( player))
+                    || entity instanceof PuppeteerBodyEntity,
+            20f);
+        cir.setReturnValue(result);
+    }
 }

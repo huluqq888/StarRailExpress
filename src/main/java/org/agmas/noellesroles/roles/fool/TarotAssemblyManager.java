@@ -206,6 +206,9 @@ public class TarotAssemblyManager {
                     false));
             player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION_TICKS, 0, false, false,
                     false));
+        }else {
+            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, BLINDNESS_DURATION_TICKS, 0, false, false,
+                    false));
         }
         ServerPlayNetworking.send(player, new CloseUiPayload());
         player.displayClientMessage(

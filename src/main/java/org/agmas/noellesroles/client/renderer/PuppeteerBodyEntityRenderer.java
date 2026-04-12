@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import org.agmas.noellesroles.entity.PuppeteerBodyEntity;
@@ -37,6 +38,11 @@ public class PuppeteerBodyEntityRenderer extends LivingEntityRenderer<PuppeteerB
         modelNormal = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER ),false);
     }
     public static PlayerModel<PuppeteerBodyEntity> modelNormal;
+
+    @Override
+    protected void renderNameTag(PuppeteerBodyEntity entity, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float f) {
+
+    }
 
     @Override
     public void render(PuppeteerBodyEntity entity, float yaw, float tickDelta, PoseStack matrices,

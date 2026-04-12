@@ -1,7 +1,10 @@
 package org.agmas.noellesroles.entity;
 
 import com.mojang.authlib.GameProfile;
+import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -19,6 +22,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.component.PuppeteerPlayerComponent;
+import org.agmas.noellesroles.init.ModEffects;
+import org.agmas.noellesroles.role.ModRoles;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -178,8 +183,17 @@ public class PuppeteerBodyEntity extends LivingEntity {
         Player owner = getOwner();
         if (owner != null) {
             // 通知傀儡师组件本体死亡
-            PuppeteerPlayerComponent puppeteerComp = ModComponents.PUPPETEER.get(owner);
-            puppeteerComp.onBodyDeath(player, deathReason);
+            SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(level());
+            if (gameWorld.isRole( owner, ModRoles.PUPPETEER)) {
+                PuppeteerPlayerComponent puppeteerComp = ModComponents.PUPPETEER.get(owner);
+                puppeteerComp.onBodyDeath(player, deathReason);
+            }else {
+                owner.teleportTo(owner.getX(), owner.getY(), owner.getZ());
+                ModEffects.pierceDeath = true;
+                GameUtils.killPlayer(owner, true, player, deathReason);
+                ModEffects.pierceDeath = false;
+                discard();
+            }
         }
         return true;
     }

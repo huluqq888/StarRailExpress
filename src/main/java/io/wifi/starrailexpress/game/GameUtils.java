@@ -1,5 +1,6 @@
 package io.wifi.starrailexpress.game;
 
+import dev.doctor4t.wathe.cca.GameWorldComponent;
 import io.wifi.starrailexpress.DeathInfo;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
@@ -94,6 +95,8 @@ public class GameUtils {
     public static boolean isStartingGame = false;
 
     public static void limitPlayerToBox(ServerPlayer player, AABB box) {
+        SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.serverLevel());
+        if (gameWorldComponent.isRole(player,ModRoles.THE_FOOL))return;
         Vec3 playerPos = player.position();
         Vec3 teleportPos = playerPos;
 

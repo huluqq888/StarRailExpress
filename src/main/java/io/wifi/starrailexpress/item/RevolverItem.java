@@ -89,10 +89,10 @@ public class RevolverItem extends SkinableItem {
     public static HitResult getGunTarget(Player user) {
         return ProjectileUtil.getHitResultOnViewVector(user,
                 entity ->{
-                    if (entity instanceof PuppeteerBodyEntity puppeteerBodyEntity){
-                        var owner = puppeteerBodyEntity.getOwner();
-                        return owner != null && GameUtils.isPlayerAliveAndSurvival(owner);
-                    }
+//                    if (entity instanceof PuppeteerBodyEntity puppeteerBodyEntity){
+//                        var owner = puppeteerBodyEntity.getOwner();
+//                        return owner != null && GameUtils.isPlayerAliveAndSurvival(owner);
+//                    }
                     return entity instanceof Player player && GameUtils.isPlayerAliveAndSurvival(player);
 
                 }, 20f);

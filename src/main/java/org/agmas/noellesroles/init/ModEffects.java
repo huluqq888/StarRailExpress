@@ -231,9 +231,14 @@ public class ModEffects {
     /**
      * 初始化所有药水效果
      */
+    public static boolean pierceDeath = false;
     public static void init() {
         AllowPlayerDeath.EVENT.register( (player, deathReason) -> {
-            if (player.hasEffect(ModEffects.INVINCIBLE)){
+            if (pierceDeath){
+                pierceDeath = false;
+                return true;
+            }
+            if (player.hasEffect(ModEffects.INVINCIBLE)|| player.hasEffect(ModEffects.TAROT_ASSEMBLY)){
                 return false;
             }
             return true;

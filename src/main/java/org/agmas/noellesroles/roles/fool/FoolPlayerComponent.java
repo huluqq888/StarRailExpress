@@ -129,6 +129,7 @@ public class FoolPlayerComponent implements RoleComponent {
             SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(player.level());
             if (gameWorld.isRole(player, ModRoles.THE_FOOL)) {
                 FoolPlayerComponent foolPlayerComponent = KEY.get(player);
+                if (foolPlayerComponent.protectionSource==null)return true;
                 if (foolPlayerComponent.protectionSource.equals(killer.getUUID())) {
                     if (player instanceof ServerPlayer serverPlayer) {
                         serverPlayer
