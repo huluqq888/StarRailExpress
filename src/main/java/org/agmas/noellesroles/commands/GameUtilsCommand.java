@@ -31,6 +31,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 import org.agmas.harpymodloader.Harpymodloader;
@@ -78,6 +79,11 @@ public class GameUtilsCommand {
                       .then(Commands.literal("send_welcome").executes((ctx) -> {
                         ServerPlayer player = ctx.getSource().getPlayerOrException();
                         RoleUtils.sendWelcomeAnnouncement(player);
+                        return 1;
+                      }))
+                      .then(Commands.literal("sync_roles").executes((ctx) -> {
+                        ServerLevel level = ctx.getSource().getLevel();
+                        SRERoleWorldComponent.KEY.get(level).sync();
                         return 1;
                       }))
                       .then(Commands.literal("assign_event").executes((ctx) -> {
