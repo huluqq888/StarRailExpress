@@ -837,11 +837,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             }
 
             if (abilityPressed) {
-                if (SREClient.gameComponent.isRole(client.player, ModRoles.THE_FOOL)) {
-                    ClientPlayNetworking.send(new AbilityC2SPacket());
-                } else {
-                    ClientAbilityHandler.handler(client);
-                }
+                ClientAbilityHandler.handler(client);
             }
 
             if (inTarotAssembly) {

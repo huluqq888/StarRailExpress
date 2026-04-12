@@ -14,7 +14,7 @@ public class ClientAbilityHandler {
     public static void handler(Minecraft client) {
 
         SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
-                .get(Minecraft.getInstance().player.level());
+                .get(client.player.level());
         // 游戏模式：自选职业
         if (gameWorldComponent.isRunning() && gameWorldComponent.getGameMode().equals(SREGameModes.CUSTOM_SELECTED_MODE)
                 && gameWorldComponent.isRole(client.player, SpecialGameModeRoles.CUSTOM_PENDING)) {
@@ -26,7 +26,7 @@ public class ClientAbilityHandler {
         // 慕恋者持续按键检测（窥视）
 
         RicesRoleRhapsodyClient.handleAdmirerContinuousInput(client);
-        if (Minecraft.getInstance().player == null)
+        if (client.player == null)
             return;
 
         if (GKeyRoleSkill.trigger(client, gameWorldComponent, true)) {
