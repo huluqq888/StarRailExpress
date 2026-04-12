@@ -1094,8 +1094,8 @@
   "itemstack.executioner.psychoitem.item_lore.2": "狂暴時間內射擊冷卻-50%%、槍不會掉落、不會受鎖定目標影響",
   "message.avenger.target_died": "你綁定的目標 %s 被 %s 殺死了",
   "message.note.write_sth": "我應該先寫下點東西",
-  "message.note.put_back": "你花費75\uE781將一張便簽貼到了 %s 的背上",
-  "message.note.not_enough_money": "你沒有足夠的錢 - 需要75\uE781來將便簽放到人身上",
+  "message.note.put_back": "你花費50\uE781將一張便簽貼到了 %s 的背上",
+  "message.note.not_enough_money": "你沒有足夠的錢 - 需要50\uE781來將便簽放到人身上",
   "item.noellesroles.giant_note": "巨大便簽",
   "message.arrow.near_by_players": "附近玩家數量：%s",
   "message.bartender.armor_broke": "目標的盾被破壞了",
@@ -1802,5 +1802,13 @@
   "announcement.star.role.imitator": "模仿者",
   "announcement.star.role.noellesroles.imitator": "模仿者",
   "announcement.star.goals.imitator": "一名善變的殺手會懂得將他人的能力化為己用！",
-  "announcement.star.win.imitator": "殺手陣營勝利！"
+  "announcement.star.win.imitator": "殺手陣營勝利！",
+  "message.noellesroles.fool.vote_started": "塔羅會匿名投票開始了",
+  "hud.noellesroles.fool.meeting_active": "§6塔羅會進行中: %ds (按G結束，按J投票)",
+  "hud.noellesroles.fool.member_meeting_active": "§6塔羅會進行中: %ds",
+  "hud.noellesroles.fool.member_vote_hint": "§e按 J 開啟投票頁面，右鍵離開會議",
+  "hud.noellesroles.fool.vote_active": "§6投票階段剩餘: %ds",
+  "screen.noellesroles.fool.vote.title": "塔羅會投票",
+  "screen.noellesroles.fool.vote.subtitle": "請選擇一名其他存活參會者",
+  "screen.noellesroles.fool.vote.remaining": "剩餘時間：%s秒"
 }

@@ -705,6 +705,37 @@ public class ModPacketsReciever {
             creeperComponent.ignite();
           }
         });
+
+    // ==================== 愚者网络包处理 ====================
+
+    // V键祷告/加入会议
+    ServerPlayNetworking.registerGlobalReceiver(
+        org.agmas.noellesroles.roles.fool.FoolPrayerC2SPacket.ID,
+        (payload, context) -> {
+          ServerPlayer player = context.player();
+          SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
+              .get(player.level());
+
+          if (!gameWorldComponent.isSkillAvailable) return;
+
+          org.agmas.noellesroles.roles.fool.PrayerHandler.startPrayer(player);
+        });
+
+    // 退出塔罗会
+    ServerPlayNetworking.registerGlobalReceiver(
+        org.agmas.noellesroles.roles.fool.FoolLeaveMeetingC2SPacket.ID,
+        (payload, context) -> {
+          ServerPlayer player = context.player();
+          org.agmas.noellesroles.roles.fool.TarotAssemblyManager.memberLeaveMeeting(player);
+        });
+
+    // 塔罗会投票
+    ServerPlayNetworking.registerGlobalReceiver(
+        org.agmas.noellesroles.roles.fool.FoolTarotVoteC2SPacket.ID,
+        (payload, context) -> {
+          ServerPlayer player = context.player();
+        org.agmas.noellesroles.roles.fool.TarotAssemblyManager.submitVote(player, payload.votedFor());
+        });
   }
 
 }
