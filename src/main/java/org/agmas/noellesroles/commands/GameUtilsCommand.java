@@ -109,7 +109,6 @@ public class GameUtilsCommand {
                             true);
                         return 1;
                       }).then(Commands.argument("role", RoleArgumentType.create(false)).executes((ctx) -> {
-
                         int killerCount = IntegerArgumentType.getInteger(ctx, "killer_count");
                         ServerPlayer player = ctx.getSource().getPlayerOrException();
                         SRERole role = RoleArgumentType.getRole(ctx, "role");
