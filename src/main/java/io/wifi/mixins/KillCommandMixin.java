@@ -21,7 +21,10 @@ public abstract class KillCommandMixin {
   public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
     commandDispatcher.register(
         ((Commands.literal("kill").requires((commandSourceStack) -> {
-          return commandSourceStack.hasPermission(3);
+          if (commandSourceStack.isPlayer())
+            return commandSourceStack.hasPermission(3);
+          else
+            return commandSourceStack.hasPermission(2);
         }))
             .executes((commandContext) -> sre$kill(commandContext.getSource(),
                 ImmutableList.of((commandContext.getSource()).getEntityOrException()))))
