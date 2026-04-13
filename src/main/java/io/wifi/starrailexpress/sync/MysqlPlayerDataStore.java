@@ -192,7 +192,7 @@ public final class MysqlPlayerDataStore {
         return "jdbc:mysql://" + SREConfig.instance().mysqlSyncHost + ":" + SREConfig.instance().mysqlSyncPort
                 + "/" + SREConfig.instance().mysqlSyncDatabase
                 + "?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL="
-                + SREConfig.instance().mysqlSyncUseSsl;
+                + SREConfig.instance().mysqlSyncUseSsl + "&connectTimeout=2000&socketTimeout=5000";
     }
 
     private static void ensureSchema(Connection connection) throws SQLException {
@@ -205,6 +205,7 @@ public final class MysqlPlayerDataStore {
                 + "KEY idx_updated_at (updated_at)"
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
         try (Statement statement = connection.createStatement()) {
+            statement.setQueryTimeout(5);  // 5秒，超过抛出 SQLException
             statement.execute(ddl);
         }
     }

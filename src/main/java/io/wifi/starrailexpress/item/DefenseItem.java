@@ -13,7 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.roles.super_loose_end.SuperLooseEnd;
 
 public class DefenseItem extends Item {
     public SREGameWorldComponent gameWorldComponent = null;

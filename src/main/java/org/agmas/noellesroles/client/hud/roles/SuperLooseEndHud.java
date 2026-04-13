@@ -5,7 +5,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.agmas.noellesroles.client.event.RoleHudRenderCallback;
-import org.agmas.noellesroles.component.WatcherPlayerComponent;
 import org.agmas.noellesroles.role.ModRoles;
 
 import java.awt.*;

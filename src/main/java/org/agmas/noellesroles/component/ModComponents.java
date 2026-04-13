@@ -250,10 +250,6 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "imitator"),
       ImitatorPlayerComponent.class);
 
-  /** 超级亡命徒 */
-  public static final ComponentKey<SuperLooseEndPlayerComponent> SUPER_LOOSE_END = ComponentRegistry.getOrCreate(
-          ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "super_loose_end"),
-          SuperLooseEndPlayerComponent.class);
 
   public static final ComponentKey<org.agmas.noellesroles.roles.fool.FoolPlayerComponent> FOOL = org.agmas.noellesroles.roles.fool.FoolPlayerComponent.KEY;
 
@@ -546,10 +542,6 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
         .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
         .end(WatcherPlayerComponent::new);
 
-    // 注册超级亡命徒组件
-    registry.beginRegistration(Player.class, SUPER_LOOSE_END)
-            .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
-            .end(SuperLooseEndPlayerComponent::new);
 
     // 注册愚者组件 - 存储塔罗会成员、处刑者手枪子弹、异端效果等
     registry.beginRegistration(Player.class, FOOL)
