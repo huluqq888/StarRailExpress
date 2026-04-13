@@ -178,7 +178,6 @@ public class SEModifiers {
             false));
 
     public static void init() {
-        REFUGEE.civilianOnly = true;
         SPLIT_PERSONALITY.civilianOnly = true;
         VIGOROUS.civilianOnly = true;
         assignModifierComponents();
