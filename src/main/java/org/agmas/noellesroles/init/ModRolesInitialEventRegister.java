@@ -100,7 +100,7 @@ public class ModRolesInitialEventRegister {
                 return;
             }
             if (role.identifier().equals(ModRoles.THIEF.identifier())) {
-                int totalPlayers = player.level().players().size();
+                int totalPlayers = SREGameWorldComponent.KEY.get(player.level()).getPlayerCount();
                 var tpc = ThiefPlayerComponent.KEY.get(player);
                 tpc.updateHonorCost(totalPlayers);
             }
@@ -147,6 +147,7 @@ public class ModRolesInitialEventRegister {
             if (role.identifier().equals(ModRoles.ATTENDANT.identifier())) {
                 if (player instanceof ServerPlayer sp)
                     SRE.SendRoomInfoToPlayer(sp);
+                RoleInitialItems.addInitialItemsForRole(player, role);
                 return;
             }
             if (role.identifier().equals(ModRoles.GUEST_GHOST.identifier())) {

@@ -31,7 +31,7 @@ public class DetectivePlayerComponent implements RoleComponent, ServerTickingCom
     public static final int INSPECT_COOLDOWN = 60 * 20; // 60秒
 
     // 审查费用（金币）
-    public static final int INSPECT_COST = 200;
+    public static final int INSPECT_COST = 150;
 
     // 持有该组件的玩家
     private final Player player;

@@ -443,6 +443,8 @@ public class CommonClientHudRenderer {
       Minecraft client = Minecraft.getInstance();
       Component text = null;
       int color = 0xFFFFFFFF;
+      if (client.player.hasEffect(ModEffects.SKILL_BANED))
+        return;
       GhostPlayerComponent ghostComponent = GhostPlayerComponent.KEY.get(client.player);
       if (!ghostComponent.abilityUnlocked) {
         text = Component.translatable("gui.noellesroles.ghost.locked");
@@ -596,10 +598,12 @@ public class CommonClientHudRenderer {
     // 忍者 HUD（模仿幽灵 Phantom）
     RoleHudRenderCallback.EVENT.register(ModRoles.NINJA_ID, (guiGraphics, deltaTracker) -> {
       var client = Minecraft.getInstance();
-      if (client.player == null) return;
+      if (client.player == null)
+        return;
 
       NinjaPlayerComponent ninjaComp = NinjaPlayerComponent.KEY.get(client.player);
-      if (ninjaComp == null) return;
+      if (ninjaComp == null)
+        return;
 
       int screenWidth = guiGraphics.guiWidth();
       int screenHeight = guiGraphics.guiHeight();
@@ -1042,7 +1046,12 @@ public class CommonClientHudRenderer {
 
       // 显示冷却或就绪状态
       int dy = yOffset - font.lineHeight - 4;
-      if (thiefComponent.cooldown > 0) {
+      if (client.player.hasEffect(ModEffects.NO_COLLIDE)) {
+        var cdText = Component.translatable("hud.noellesroles.safe_time", thiefComponent.cooldown / 20)
+            .withStyle(ChatFormatting.RED);
+        guiGraphics.drawString(font, cdText, xOffset - font.width(cdText), dy, Color.WHITE.getRGB());
+        dy -= font.lineHeight;
+      } else if (thiefComponent.cooldown > 0) {
         var cdText = Component.translatable("hud.thief.cooldown", thiefComponent.cooldown / 20)
             .withStyle(ChatFormatting.RED);
         guiGraphics.drawString(font, cdText, xOffset - font.width(cdText), dy, Color.WHITE.getRGB());

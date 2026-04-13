@@ -2,6 +2,7 @@ package org.agmas.noellesroles.entity;
 
 import com.mojang.authlib.GameProfile;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -10,7 +11,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,6 +18,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.component.PuppeteerPlayerComponent;
+import org.agmas.noellesroles.init.ModEffects;
+import org.agmas.noellesroles.role.ModRoles;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -50,9 +53,30 @@ public class PuppeteerBodyEntity extends LivingEntity {
     /** 所有者玩家引用（缓存） */
     private Player ownerCache = null;
 
+    @Override
+    public boolean hasCustomName() {
+        return false;
+    }
+
+    @Override
+    public void setCustomName(@Nullable Component component) {
+        return;
+    }
+
+    @Override
+    public boolean isCustomNameVisible() {
+        return false ;
+    }
+
+    @Override
+    public boolean shouldShowName() {
+        return false;
+    }
+
     public PuppeteerBodyEntity(EntityType<? extends LivingEntity> entityType, Level world) {
         super(entityType, world);
         this.setNoGravity(false); // 有重力
+        this.setCustomNameVisible(false);
         this.setHealth(20.0F); // 20点生命值（和玩家一样）
     }
 
@@ -79,6 +103,7 @@ public class PuppeteerBodyEntity extends LivingEntity {
             // 设置自定义名称
             this.setCustomName(Component.translatable("entity.manipulator_body.name", owner.getName()));
             this.setCustomNameVisible(false);
+            this.setPose(owner.getPose());
         }
     }
 
@@ -104,6 +129,7 @@ public class PuppeteerBodyEntity extends LivingEntity {
         }
         return null;
     }
+
 
     /**
      * 获取皮肤 GameProfile（用于客户端渲染）
@@ -153,8 +179,17 @@ public class PuppeteerBodyEntity extends LivingEntity {
         Player owner = getOwner();
         if (owner != null) {
             // 通知傀儡师组件本体死亡
-            PuppeteerPlayerComponent puppeteerComp = ModComponents.PUPPETEER.get(owner);
-            puppeteerComp.onBodyDeath(player, deathReason);
+            SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(level());
+            if (gameWorld.isRole( owner, ModRoles.PUPPETEER)) {
+                PuppeteerPlayerComponent puppeteerComp = ModComponents.PUPPETEER.get(owner);
+                puppeteerComp.onBodyDeath(player, deathReason);
+            }else {
+                owner.teleportTo(owner.getX(), owner.getY(), owner.getZ());
+                ModEffects.pierceDeath = true;
+                GameUtils.killPlayer(owner, true, player, deathReason);
+                ModEffects.pierceDeath = false;
+                discard();
+            }
         }
         return true;
     }

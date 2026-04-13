@@ -173,7 +173,7 @@ public class ModRoles {
   public static final ResourceLocation NIAN_SHOU_ID = Noellesroles.id("nianshou");
   public static final ResourceLocation OLDMAN_ID = Noellesroles.id("oldman");
   public static final ResourceLocation THIEF_ID = Noellesroles.id("thief");
-    public static final ResourceLocation MERCENARY_ID = Noellesroles.id("mercenary");
+  public static final ResourceLocation MERCENARY_ID = Noellesroles.id("mercenary");
   public static final ResourceLocation CANDLE_BEARER_ID = Noellesroles.id("candlebearer");
   public static final ResourceLocation FORTUNETELLER_ID = Noellesroles.id("fortuneteller");
 
@@ -183,6 +183,9 @@ public class ModRoles {
 
   // 特殊角色
   public static final ResourceLocation SUPER_LOOSE_END_ID = Noellesroles.id("super_loose_end");
+
+  // 愚者 (好人阵营)
+  public static final ResourceLocation THE_FOOL_ID = Noellesroles.id("the_fool");
 
   public static SRERole GUEST_GHOST = TMMRoles.registerRole(new NormalRole(
       GUEST_GHOST_ID, // 角色 ID
@@ -401,7 +404,7 @@ public class ModRoles {
    * - 只能购买撬锁器和刀（130金币）
    * - 10%概率刷新
    */
-  public static SRERole CREEPER = TMMRoles.registerRole(new CreeperRole(
+  public static SRERole CREEPER = TMMRoles.registerRole(new RainbowCreeperRole(
       CREEPER_ID, // 角色 ID
       new Color(0, 128, 0).getRGB(), // 绿色 - 代表苦力怕
       false, // isInnocent = 杀手阵营
@@ -737,7 +740,8 @@ public class ModRoles {
       .setNeutralForKiller(true).setCanSeeTeammateKiller(false).setCanSeeBodyDeathReason(true);
   public static SRERole CORONER = TMMRoles
       .registerRole(new NormalRole(CORONER_ID, new Color(122, 122, 122).getRGB(), true,
-          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);
+          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false))
+      .setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);
 
   // ==================== 自定义角色对象定义 ====================
   // 乘客阵营角色
@@ -1190,7 +1194,7 @@ public class ModRoles {
       SRERole.MoodType.FAKE, // 假心情
       TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
       true // 隐藏计分板
-  )).setComponentKey(RecorderPlayerComponent.KEY).setCanUseInstinct(true);
+  )).setComponentKey(RecorderPlayerComponent.KEY).setCanUseInstinct(true).setNeutrals(true);
 
   /**
    * 故障机器人角色
@@ -1425,6 +1429,27 @@ public class ModRoles {
           .setCanUseInstinct(true)
           .setCanAutoAddMoney(true)
           .setComponentKey(ModComponents.SUPER_LOOSE_END);
+
+  /**
+   * 愚者角色 - 好人阵营
+   * - 属于乘客阵营 (isInnocent = true)
+   * - 不能使用杀手能力 (canUseKiller = false)
+   * - 真实心情系统
+   * - 标准冲刺时间
+   * - 不隐藏计分板
+   * - 核心机制：尊名纸条、塔罗会、处刑者手枪
+   * - 商店：尊名纸条(50金币)、灵性斗篷(200金币)
+   */
+  public static SRERole THE_FOOL = TMMRoles.registerRole(new org.agmas.noellesroles.roles.fool.FoolRole(
+      THE_FOOL_ID, // 角色 ID
+      new Color(180, 160, 220).getRGB(), // 淡紫色 - 代表神秘与命运
+      true, // isInnocent = 好人阵营
+      false, // canUseKiller = 无杀手能力
+      SRERole.MoodType.REAL, // 真实心情
+      TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
+      false // 不隐藏计分板
+  )).setComponentKey(org.agmas.noellesroles.roles.fool.FoolPlayerComponent.KEY)
+      .setCanSeeCoin(true).setCanPickUpRevolver(true).setMax(1).setEnableChance(30).setEnableNeededPlayerCount(12);
 
   // ==================== 其他变量定义 ====================
   public static ArrayList<SRERole> SHOW_MONEY_ROLES = new ArrayList<>();

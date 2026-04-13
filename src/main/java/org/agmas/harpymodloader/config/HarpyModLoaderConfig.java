@@ -1,7 +1,6 @@
 package org.agmas.harpymodloader.config;
 
 import io.wifi.ConfigCompact.ConfigClassHandler;
-import io.wifi.starrailexpress.unlock.RoleUnlockManager;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry.Gui.Tooltip;
@@ -11,11 +10,12 @@ import java.util.HashMap;
 
 @Config(name = "harpymodloader")
 public class HarpyModLoaderConfig implements ConfigData {
-    public static final ConfigClassHandler<HarpyModLoaderConfig> HANDLER = new ConfigClassHandler<>(HarpyModLoaderConfig.class);
+    public static final ConfigClassHandler<HarpyModLoaderConfig> HANDLER = new ConfigClassHandler<>(
+            HarpyModLoaderConfig.class);
 
     // Disables roles from being in the role pool. use /listRoles to get role names,
     // use /setEnabledRole to ban/unban them in-game (saves here).
-    private ArrayList<String> disabled = new ArrayList<>();
+    public ArrayList<String> disabled = new ArrayList<>();
 
     // Which Modifiers should be disabled. Modifiers also show up in /listRoles and
     // /setEnabledModifier.
@@ -37,11 +37,18 @@ public class HarpyModLoaderConfig implements ConfigData {
     public boolean useCustomRoleWeights = true;
 
     public ArrayList<String> getDisabled() {
-
-        return disabled;
+        if (disabled != null)
+            return new ArrayList<>(disabled);
+        return new ArrayList<>();
     }
 
     public void setDisabled(ArrayList<String> disabled) {
         this.disabled = disabled;
+    }
+
+    public ArrayList<String> getDisabledModifiers() {
+        if (disabledModifiers != null)
+            return new ArrayList<>(disabledModifiers);
+        return new ArrayList<>();
     }
 }

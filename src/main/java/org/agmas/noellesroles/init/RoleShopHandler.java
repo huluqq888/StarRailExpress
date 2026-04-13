@@ -338,7 +338,9 @@ public class RoleShopHandler {
           TMMItems.KNIFE.getDefaultInstance(),
           130,
           ShopEntry.Type.TOOL));
-      SHOP.add(new ShopEntry(TMMItems.DERRINGER.getDefaultInstance(), 600,
+      SHOP.add(new ShopEntry(ModItems.FAKE_REVOLVER.getDefaultInstance(), 50,
+          ShopEntry.Type.TOOL));
+      SHOP.add(new ShopEntry(TMMItems.DERRINGER.getDefaultInstance(), 400,
           ShopEntry.Type.TOOL));
       SHOP.add(new ShopEntry(TMMItems.BODY_BAG.getDefaultInstance(), SREConfig.instance().bodyBagPrice,
           ShopEntry.Type.TOOL));
@@ -751,7 +753,7 @@ public class RoleShopHandler {
           ModRoles.AWESOME_BINGLUS_ID,
           List.of(
               new ShopEntry(TMMItems.NOTE.getDefaultInstance(), 10, ShopEntry.Type.TOOL),
-              new ShopEntry(ModItems.GIANT_NOTE.getDefaultInstance(), 150, ShopEntry.Type.TOOL)));
+              new ShopEntry(ModItems.GIANT_NOTE.getDefaultInstance(), 75, ShopEntry.Type.TOOL)));
     }
     {
       ShopContent.customEntries.put(
@@ -915,6 +917,15 @@ public class RoleShopHandler {
 
     // 乘务员商店
     {
+      // 乘务员专属商店 - 添加原版灯笼，价格 75 金币
+      ItemStack attendantLantern = Items.LANTERN.getDefaultInstance();
+      ATTENDANT_SHOP.add(new ShopEntry(attendantLantern, 75, ShopEntry.Type.TOOL) {
+        @Override
+        public boolean onBuy(@NotNull Player player) {
+          return RoleUtils.insertStackInFreeSlot(player, attendantLantern.copy());
+        }
+      });
+
       ShopContent.customEntries.put(
           ModRoles.ATTENDANT_ID, ATTENDANT_SHOP);
     }

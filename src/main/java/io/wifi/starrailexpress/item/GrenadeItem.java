@@ -20,7 +20,6 @@ import net.minecraft.world.level.Level;
 import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 
-
 public class GrenadeItem extends SkinableItem {
 	public static final ResourceLocation ITEM_ID = SRE.id("grenade");
 	public static final int MAX_CHARGE_TIME = 20; // 最大蓄力时间（ticks），对应1秒
@@ -39,7 +38,8 @@ public class GrenadeItem extends SkinableItem {
 	@Override
 	public void releaseUsing(ItemStack stack, Level world, LivingEntity user, int remainingUseTicks) {
 		if (!world.isClientSide) {
-			if (user instanceof Player player && player.getCooldowns().isOnCooldown(stack.getItem()))return;
+			if (user instanceof Player player && player.getCooldowns().isOnCooldown(stack.getItem()))
+                return;
 			if (user instanceof Player player)	 {
 				// 创造模式和超级亡命徒手雷无cd
 				if (!player.isCreative()
@@ -54,7 +54,8 @@ public class GrenadeItem extends SkinableItem {
 			chargeTime = Math.max(0, Math.min(chargeTime, MAX_CHARGE_TIME));
 
 			// 播放投掷声音
-			world.playSound(null, user.getX(), user.getY(), user.getZ(), TMMSounds.ITEM_GRENADE_THROW, SoundSource.NEUTRAL, 0.5F, 1F + (world.random.nextFloat() - .5f) / 10f);
+			world.playSound(null, user.getX(), user.getY(), user.getZ(), TMMSounds.ITEM_GRENADE_THROW,
+					SoundSource.NEUTRAL, 0.5F, 1F + (world.random.nextFloat() - .5f) / 10f);
 
 			// 创建手榴弹实体
 			GrenadeEntity grenade = new GrenadeEntity(TMMEntities.GRENADE, world);
@@ -72,9 +73,7 @@ public class GrenadeItem extends SkinableItem {
 			}
 		}
 
-
-
-//		user.incrementStat(Stats.USED.getOrCreateStat(this));
+		// user.incrementStat(Stats.USED.getOrCreateStat(this));
 		stack.consume(1, user);
 	}
 

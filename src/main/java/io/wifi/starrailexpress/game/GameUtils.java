@@ -94,6 +94,9 @@ public class GameUtils {
     public static boolean isStartingGame = false;
 
     public static void limitPlayerToBox(ServerPlayer player, AABB box) {
+        SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.serverLevel());
+        if (gameWorldComponent.isRole(player, ModRoles.THE_FOOL))
+            return;
         Vec3 playerPos = player.position();
         Vec3 teleportPos = playerPos;
 
@@ -341,31 +344,10 @@ public class GameUtils {
         // ServerPlayNetworking.send(player, unlockPayload);
         // }
         // }
+        gameComponent.getGameMode().recordPlayerStats(serverWorld, gameComponent, readyPlayerList);
 
-        for (ServerPlayer player : readyPlayerList) {
+        gameComponent.getGameMode().afterInitializeGame(serverWorld, gameComponent, readyPlayerList);
 
-            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
-            stats.incrementTotalGamesPlayed();
-            SRERole playerRole = gameComponent.getRole(player);
-            if (playerRole != null) {
-                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
-
-                // 统计阵营场次
-                if (playerRole.isVigilanteTeam()) {
-                    stats.incrementTotalSheriffGames();
-                } else if (playerRole.canUseKiller()) {
-                    stats.incrementTotalKillerGames();
-                } else if (playerRole.isNeutrals()) {
-                    stats.incrementTotalNeutralGames();
-                } else if (playerRole.isInnocent() && !playerRole.isVigilanteTeam()) {
-                    stats.incrementTotalCivilianGames();
-                }
-            }
-        }
-        int SAFE_TIME_COOLDOWN = SREConfig.instance().safeTimeCooldown * 20;
-        if (gameComponent.getGameMode().hasSafeTime()) {
-            addItemCooldowns(serverWorld, SAFE_TIME_COOLDOWN);
-        }
         OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
         // --- 结束新增统计数据更新逻辑 ---
         executeFunction(serverWorld.getServer().createCommandSourceStack(),
@@ -476,6 +458,7 @@ public class GameUtils {
             List<ServerPlayer> players) {
         if (SRE.isLobby)
             return;
+        gameComponent.setPlayerCount(players.size());
         AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
         startTime = System.currentTimeMillis();
 
@@ -675,6 +658,7 @@ public class GameUtils {
         SREGameRoundEndComponent roundEnd = SREGameRoundEndComponent.KEY.get(world);
         RoleMethodDispatcher.onEndGame(world);
         SREGameWorldComponent gameComponent = SREGameWorldComponent.KEY.get(world);
+        gameComponent.setPlayerCount(0);
         boolean isLooseEnds = gameComponent.getGameMode() == SREGameModes.LOOSE_ENDS;
 
         // var areasWorldComponent = AreasWorldComponent.KEY.get(world);
@@ -1034,13 +1018,37 @@ public class GameUtils {
                 }
             }
         }
-
+        if (!role.allowDeath(victim, killer, deathReason, spawnBody)) {
+            if (!forceDeath) {
+                if (victim instanceof ServerPlayer serverVictim) {
+                    SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                            killer,
+                            serverVictim,
+                            deathReason);
+                }
+                return;
+            }
+        }
         if (!AllowPlayerDeath.EVENT.invoker().allowDeath(victim, deathReason))
-            if (!forceDeath)
+            if (!forceDeath) {
+                if (victim instanceof ServerPlayer serverVictim) {
+                    SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                            killer,
+                            serverVictim,
+                            deathReason);
+                }
                 return;
+            }
         if (!AllowPlayerDeathWithKiller.EVENT.invoker().allowDeath(victim, killer, deathReason))
-            if (!forceDeath)
+            if (!forceDeath) {
+                if (victim instanceof ServerPlayer serverVictim) {
+                    SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                            killer,
+                            serverVictim,
+                            deathReason);
+                }
                 return;
+            }
         if (killer != null) {
             if (killer instanceof ServerPlayer spkiller) {
                 SREArmorPlayerComponent bartenderPlayerComponent = SREArmorPlayerComponent.KEY.get(victim);
@@ -1056,6 +1064,10 @@ public class GameUtils {
                                     SoundSource.MASTER, 5.0F, 1.0F);
                             bartenderPlayerComponent.removeArmor();
                             SRE.REPLAY_MANAGER.breakArmor(victim.getUUID());
+                            SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                                    killer,
+                                    victim,
+                                    deathReason);
                             ServerPlayNetworking.send(spkiller,
                                     new BreakArmorPayload(victim.getX(), victim.getY(), victim.getZ()));
                             OnShieldBroken.EVENT.invoker().onShieldBroken(victim, killer);
@@ -1073,6 +1085,13 @@ public class GameUtils {
                 if (SRE.REPLAY_MANAGER != null) {
                     SRE.REPLAY_MANAGER.breakArmor(victim.getUUID());
                 }
+
+                victim.displayClientMessage(Component.translatable("message.bartender.armor_broke_self")
+                        .withStyle(ChatFormatting.YELLOW), true);
+                SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                        killer,
+                        victim,
+                        deathReason);
                 if (killer instanceof ServerPlayer serverPlayer) {
                     ServerPlayNetworking.send(serverPlayer,
                             new BreakArmorPayload(victim.getX(), victim.getY(), victim.getZ()));
@@ -1088,13 +1107,37 @@ public class GameUtils {
                 component.stopPsycho();
             }
         }
+        if (!role.afterShieldAllowDeath(victim, killer, deathReason, spawnBody)) {
+            if (!forceDeath) {
+                if (victim instanceof ServerPlayer serverVictim) {
+                    SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                            killer,
+                            serverVictim,
+                            deathReason);
+                }
+                return;
+            }
+        }
         if (!AfterShieldAllowPlayerDeath.EVENT.invoker().allowDeath(victim, deathReason))
-            if (!forceDeath)
+            if (!forceDeath) {
+                if (victim instanceof ServerPlayer serverVictim) {
+                    SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                            killer,
+                            serverVictim,
+                            deathReason);
+                }
                 return;
+            }
         if (!AfterShieldAllowPlayerDeathWithKiller.EVENT.invoker().allowDeath(victim, killer, deathReason))
-            if (!forceDeath)
+            if (!forceDeath) {
+                if (victim instanceof ServerPlayer serverVictim) {
+                    SRE.REPLAY_MANAGER.recordPlayerNotKilled(
+                            killer,
+                            serverVictim,
+                            deathReason);
+                }
                 return;
-        // --- 新增统计数据更新逻辑 (击杀者) ---
+            } // --- 新增统计数据更新逻辑 (击杀者) ---
         if (killer instanceof ServerPlayer serverKiller) {
             SREPlayerStatsComponent killerStats = SREPlayerStatsComponent.KEY.get(serverKiller);
             killerStats.incrementTotalKills();
@@ -1102,8 +1145,7 @@ public class GameUtils {
 
             SRERole killerRole = gameWorldComponent.getRole(serverKiller);
             if (killerRole != null) {
-                if (differentTeam(killerRole, role))
-                    canDeath = killerRole.onKill(victim, spawnBody, killer, deathReason);
+                killerRole.onKill(victim, spawnBody, killer, deathReason);
                 killerStats.getOrCreateRoleStats(killerRole.identifier()).incrementKillsAsRole();
                 // 更新阵营击杀数
                 if (killerRole.isVigilanteTeam()) {
@@ -1147,7 +1189,7 @@ public class GameUtils {
             // --- 新增统计数据更新逻辑 (受害者) ---
             if (victim instanceof ServerPlayer serverVictim) {
                 SRERole victimRole = gameWorldComponent.getRole(serverVictim);
-                canDeath = victimRole.onDeath(victim, spawnBody, killer, deathReason);
+                victimRole.onDeath(victim, spawnBody, killer, deathReason);
                 SREPlayerStatsComponent victimStats = SREPlayerStatsComponent.KEY.get(serverVictim);
                 victimStats.incrementTotalDeaths();
                 if (victimRole != null) {

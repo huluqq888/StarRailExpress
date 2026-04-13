@@ -24,6 +24,7 @@ import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.role.RedHouseRoles;
 import org.agmas.noellesroles.roles.candlebearer.CandleBearerPlayerComponent;
 import org.agmas.noellesroles.roles.executioner.ExecutionerPlayerComponent;
+import org.agmas.noellesroles.roles.fool.FoolPlayerComponent;
 import org.agmas.noellesroles.roles.manipulator.ManipulatorPlayerComponent;
 import org.agmas.noellesroles.utils.MCItemsUtils;
 import org.agmas.noellesroles.utils.RoleUtils;
@@ -39,6 +40,23 @@ import java.util.HashMap;
 
 public class InstinctRenderer {
     public static void registerInstinctEvents() {
+        OnGetInstinctHighlight.EVENT.register((target, hasInstinct) -> {
+            if (!(target instanceof Player targetPlayer))
+                return -1;
+            if (Minecraft.getInstance() == null || Minecraft.getInstance().player == null)
+                return -1;
+            var self = Minecraft.getInstance().player;
+            if (SREClient.gameComponent == null || !SREClient.gameComponent.isRole(self, ModRoles.THE_FOOL))
+                return -1;
+
+            FoolPlayerComponent component = FoolPlayerComponent.KEY.get(self);
+            if (component.hereticTarget == null)
+                return -1;
+            if (!component.hereticTarget.equals(targetPlayer.getUUID()))
+                return -1;
+            return 0xF2C56A;
+        });
+
         // 记者便签
         OnGetInstinctHighlight.EVENT.register((target, hasInstinct) -> {
             if (Minecraft.getInstance() == null)
@@ -437,6 +455,8 @@ public class InstinctRenderer {
                 if (SREClient.gameComponent.isRole(self, ModRoles.CHEF)) {
                     // LoggerFactory.getLogger("renderer").info("glowTick {}",
                     // bartenderPlayerComponent.glowTicks);
+                    if (self.hasEffect(ModEffects.NO_COLLIDE))
+                        return -1;
                     int t = FoodDrinkGlowComponent.KEY.get(self).glowTicks
                             .getOrDefault(target.getScoreboardName(), new HashMap<>())
                             .getOrDefault(1, 0);
@@ -447,7 +467,8 @@ public class InstinctRenderer {
                 if (SREClient.gameComponent.isRole(self, ModRoles.BARTENDER)) {
                     // LoggerFactory.getLogger("renderer").info("glowTick {}",
                     // bartenderPlayerComponent.glowTicks);
-
+                    if (self.hasEffect(ModEffects.NO_COLLIDE))
+                        return -1;
                     if (armorPlayerComponent.getArmor() > 0 && playerPoisonComponent.poisonTicks > 0) {
                         return (new Color(186, 255, 65).getRGB());
 
@@ -475,7 +496,8 @@ public class InstinctRenderer {
                     ExecutionerPlayerComponent executionerPlayerComponent = (ExecutionerPlayerComponent) ExecutionerPlayerComponent.KEY
                             .get(self);
                     if (executionerPlayerComponent != null && executionerPlayerComponent.target != null) {
-                        if (executionerPlayerComponent.target.equals(target.getUUID())) {
+                        if (executionerPlayerComponent.target.equals(target.getUUID())
+                                && !SREClient.gameComponent.isRole(target.getUUID(), ModRoles.GHOST)) {
                             return new java.awt.Color(0, 254, 254).getRGB();
                         }
                     }
@@ -516,7 +538,7 @@ public class InstinctRenderer {
                 // 直觉看不到旁观
                 if ((target_player).isSpectator())
                     return -2;
-                
+
                 // 小透明：杀手无法看到高亮（杀手，与大部分中立偏狼）
                 if (SREClient.gameComponent.isRole(target_player, ModRoles.GHOST) && isKillerTeam(self_role)
                         && SREClient.isPlayerAliveAndInSurvival()) {
@@ -663,7 +685,7 @@ public class InstinctRenderer {
                                 if (RoleUtils.compareRole(target_role, RedHouseRoles.PACHURI)) {
                                     return RedHouseRoles.PACHURI.color();
                                 } else if (RoleUtils.compareRole(target_role, RedHouseRoles.FURANDORU)) {
-                                    return RedHouseRoles.FURANDORU.color();
+                                    return new Color(253, 114, 255).getRGB();
                                 }
                             }
                         }

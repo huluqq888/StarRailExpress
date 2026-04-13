@@ -1,15 +1,18 @@
 package org.agmas.noellesroles.client.hud.roles;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.Component;
+import java.util.List;
+
 import org.agmas.noellesroles.client.NoellesrolesClient;
 import org.agmas.noellesroles.client.event.RoleHudRenderCallback;
 import org.agmas.noellesroles.role.ModRoles;
 
 import io.wifi.utils.client.betterrender.FakeGuiGraphics;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 
 public class BroadcasterHud {
 
@@ -29,33 +32,59 @@ public class BroadcasterHud {
             int screenWidth = context.guiWidth();
             int screenHeight = context.guiHeight();
             int count = NoellesrolesClient.currentBroadcastMessage.size();
-            Font textRenderer = client.font;
+            Font font = client.font;
             for (int i = 0; i < count; i++) {
                 if (i >= 1 && (y >= (screenHeight / 2 - 40) || i >= 4) && i < count - 1) {
                     Component message = Component.translatable("message.broadcast.more_message", (count - i - 1))
                             .withStyle(ChatFormatting.GRAY);
-                    int textWidth = textRenderer.width(message);
+                    List<FormattedCharSequence> texts = font.split(message, (int) ((double) screenWidth * 0.6));
+                    int textWidth = 0;
+                    for (var t : texts) {
+                        textWidth = Math.max(textWidth, font.width(t));
+                    }
                     int x = (screenWidth - textWidth) / 2;
                     int padding = 4;
+                    int lineHeight = font.lineHeight;
+                    int lineHeightPadding = 2;
+                    int lineCount = texts.size();
+                    int totalHeight = lineHeight * lineCount + lineHeightPadding * (lineCount - 1);
                     int bgColor = 0x80000000;
                     context.fill(x - padding, y - padding, x + textWidth + padding,
-                            y + textRenderer.lineHeight + padding,
+                            y + totalHeight + padding,
                             bgColor);
-                    context.drawString(textRenderer, message, x, y, 0xFFFFFF);
-                    y += 20;
+                    int c = 0;
+                    for (var t : texts) {
+                        context.drawCenteredString(font, t, screenWidth / 2,
+                                y + lineHeight * c + lineHeightPadding * c, 0xFFFFFFFF);
+                        c++;
+                    }
+                    y += totalHeight + padding * 2 + 4;
                     i = count - 1;
                 }
                 var info = NoellesrolesClient.currentBroadcastMessage.get(i);
                 Component message = info.message();
-                int textWidth = textRenderer.width(message);
+                List<FormattedCharSequence> texts = font.split(message, (int) ((double) screenWidth * 0.6));
+                int textWidth = 0;
+                for (var t : texts) {
+                    textWidth = Math.max(textWidth, font.width(t));
+                }
                 int x = (screenWidth - textWidth) / 2;
                 int padding = 4;
+                int lineHeight = font.lineHeight;
+                int lineHeightPadding = 2;
+                int lineCount = texts.size();
+                int totalHeight = lineHeight * lineCount + lineHeightPadding * (lineCount - 1);
                 int bgColor = 0x80000000;
                 context.fill(x - padding, y - padding, x + textWidth + padding,
-                        y + textRenderer.lineHeight + padding,
+                        y + totalHeight + padding,
                         bgColor);
-                context.drawString(textRenderer, message, x, y, 0xFFFFFF);
-                y += 20;
+                int c = 0;
+                for (var t : texts) {
+                    context.drawCenteredString(font, t, screenWidth / 2,
+                            y + lineHeight * c + lineHeightPadding * c, 0xFFFFFFFF);
+                    c++;
+                }
+                y += totalHeight + padding * 2 + 4;
             }
         }
     }

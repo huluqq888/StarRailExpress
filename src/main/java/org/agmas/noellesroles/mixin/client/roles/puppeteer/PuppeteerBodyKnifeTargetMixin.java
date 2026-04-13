@@ -19,9 +19,9 @@ public class PuppeteerBodyKnifeTargetMixin {
     @Inject(method = "getKnifeTarget", at = @At("HEAD"), cancellable = true)
     private static void allowPuppeteerBodyTarget(Player user, CallbackInfoReturnable<HitResult> cir) {
         // 扩展目标检测，包含 PuppeteerBodyEntity
-        HitResult result = ProjectileUtil.getHitResultOnViewVector(user, 
-            entity -> (entity instanceof Player player && player.isAlive() && !player.isSpectator()) 
-                    || entity instanceof PuppeteerBodyEntity, 
+        HitResult result = ProjectileUtil.getHitResultOnViewVector(user,
+            entity -> (entity instanceof Player player && player.isAlive() && !player.isSpectator())
+                    || entity instanceof PuppeteerBodyEntity,
             4f);
         cir.setReturnValue(result);
     }

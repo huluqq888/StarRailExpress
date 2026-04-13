@@ -35,7 +35,7 @@ public class GamblerHud {
             int y = screenHeight - 30; // 距离底部
 
             Font textRenderer = client.font;
-            int roleDrawLeft = GamblerPlayerComponent.DRAW_INTERVAL - gamblerComponent.roleDrawTimer;
+            int roleDrawLeft = gamblerComponent.drawInterval - gamblerComponent.roleDrawTimer;
             if (gamblerComponent.selectedRole != null) {
                 Component readyText = Component.translatable("hud.noellesroles.gambler.selected_tip",
                         RoleUtils.getRoleName(gamblerComponent.selectedRole));
@@ -50,7 +50,7 @@ public class GamblerHud {
                 context.drawString(textRenderer, readyText, x, y - 20, CommonColors.GREEN);
             }
             // 显示技能冷却
-            int cdSeconds = roleDrawLeft / 20;
+            int cdSeconds = (roleDrawLeft + 19) / 20;
             Component cdText = Component.translatable("hud.noellesroles.gambler.cooldown",
                     String.format("%d", cdSeconds));
 

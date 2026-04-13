@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import org.agmas.noellesroles.entity.PuppeteerBodyEntity;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,10 +50,14 @@ public class ServerPlayerEntityMixin {
         if(self.isSpectator()){
             return;
         }
-        if (self.getMainHandItem().is(TMMItems.BAT) && target instanceof ServerPlayer playerTarget
-                && self.getAttackStrengthScale(0.5F) >= 1f) {
-            if (playerTarget instanceof ServerPlayer) {
+        if (self.getMainHandItem().is(TMMItems.BAT)
+                && self.getAttackStrengthScale(0.75F) >= 1f) {
+            if (target instanceof ServerPlayer playerTarget) {
                 GameUtils.killPlayer(playerTarget, true, self, GameConstants.DeathReasons.BAT);
+            }
+            if (target instanceof PuppeteerBodyEntity puppeteerBodyEntity){
+                puppeteerBodyEntity.playerHurt(self, GameConstants.DeathReasons.BAT);
+
             }
             CrosshairaddonsCompat.onAttack(target);
             self.level().playSound(null, self.blockPosition(), TMMSounds.ITEM_BAT_HIT, SoundSource.PLAYERS, 3f, 1f);
