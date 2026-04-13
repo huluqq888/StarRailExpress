@@ -1161,7 +1161,7 @@ public class ModRoles {
       TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
       true // 隐藏计分板
   )).setComponentKey(PuppeteerPlayerComponent.KEY).setAutoReset(false).setNeutralForKiller(true)
-      .setCanUseInstinct(false);;
+      .setCanUseInstinct(true);
 
   /**
    * 监察员角色
