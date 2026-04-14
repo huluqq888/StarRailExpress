@@ -49,6 +49,7 @@ import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
@@ -61,6 +62,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.block_entity.VendingMachinesBlockEntity;
@@ -88,6 +91,8 @@ import org.agmas.noellesroles.packet.Loot.*;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.agmas.noellesroles.utils.lottery.LotteryManager;
+import org.joml.Vector3f;
+
 import pro.fazeclan.river.stupid_express.constants.SEModifiers;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.LoggerFactory;
@@ -281,6 +286,45 @@ public class NoellesrolesClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(CreateClientSmokeAreaPacket.ID, (payload, context) -> {
             ClientSmokeAreaManager.createSmokeArea(context.client().level, payload.position(), payload.radius(),
                     payload.durationTicks());
+        });
+        ClientPlayNetworking.registerGlobalReceiver(CreateCreeperBombAreaPacket.ID, (payload, context) -> {
+            final var p = context.player();
+            final var level = context.client().level;
+            Vec3 pos = payload.position();
+            double dist = p.distanceToSqr(pos);
+            if (dist > 4096)
+                return; // 64格距离限制
+
+            for (int i = 0; i < 100; i++) {
+                // 随机偏移位置
+                double offsetX = (level.random.nextDouble() - 0.5) * 6;
+                double offsetY = level.random.nextDouble() * 4;
+                double offsetZ = (level.random.nextDouble() - 0.5) * 6;
+                double x = pos.x + offsetX;
+                double y = pos.y + offsetY;
+                double z = pos.z + offsetZ;
+
+                // 随机速度
+                double speed = 0.3;
+                double vx = (level.random.nextDouble() - 0.5) * speed;
+                double vy = level.random.nextDouble() * speed;
+                double vz = (level.random.nextDouble() - 0.5) * speed;
+
+                // 动态计算彩虹色 (色调从0到360循环)
+                float hue = (i / 20.0f) * 360.0f; // 让每个粒子的颜色都不同
+                int rgb = java.awt.Color.HSBtoRGB(hue, 1.0f, 1.0f);
+                float r = ((rgb >> 16) & 0xFF) / 255.0f;
+                float g = ((rgb >> 8) & 0xFF) / 255.0f;
+                float b = (rgb & 0xFF) / 255.0f;
+
+                // 创建并添加粒子
+                level.addParticle(
+                        // 选择粒子类型
+                        new DustParticleOptions(new Vector3f(r, g, b), 1.0f), // 或 new DustColorTransitionOptions(...)
+                        true, // 设为 true，确保粒子在远距离也能被看到
+                        x, y, z,
+                        vx, vy, vz);
+            }
         });
         ClientPlayNetworking.registerGlobalReceiver(
                 org.agmas.noellesroles.roles.fool.FoolOpenTarotVoteS2CPacket.ID,

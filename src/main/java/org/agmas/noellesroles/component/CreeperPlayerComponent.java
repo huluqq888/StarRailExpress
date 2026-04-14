@@ -2,9 +2,9 @@ package org.agmas.noellesroles.component;
 
 import io.wifi.starrailexpress.api.RoleComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -13,6 +13,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import io.wifi.starrailexpress.game.GameUtils;
+
+import org.agmas.noellesroles.packet.CreateCreeperBombAreaPacket;
 import org.agmas.noellesroles.role.ModRoles;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.tick.ClientTickingComponent;
@@ -111,7 +113,7 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
 
         // 播放苦力怕引燃声音
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-            SoundEvents.CREEPER_PRIMED, SoundSource.MASTER, 2.0F, 1.0F);
+                SoundEvents.CREEPER_PRIMED, SoundSource.MASTER, 2.0F, 1.0F);
 
         // this.sync();
         return true;
@@ -145,14 +147,14 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
 
         // 播放苦力怕爆炸声音
         player.level().playSound(null, pos.x, pos.y, pos.z,
-            SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4.0F, 1.0F);
+                SoundEvents.GENERIC_EXPLODE, SoundSource.MASTER, 4.0F, 1.0F);
 
         // 生成彩虹粒子效果
         spawnRainbowParticles(pos);
 
         // 让引燃者自爆死亡，死因为自爆
         io.wifi.starrailexpress.game.GameUtils.killPlayer(player, true, player,
-            io.wifi.starrailexpress.game.GameConstants.DeathReasons.SELF_EXPLOSION);
+                io.wifi.starrailexpress.game.GameConstants.DeathReasons.SELF_EXPLOSION);
     }
 
     /**
@@ -163,34 +165,13 @@ public class CreeperPlayerComponent implements RoleComponent, ServerTickingCompo
             return;
 
         // 向所有玩家发送粒子效果
-        for (Player p : serverLevel.players()) {
+        for (ServerPlayer p : serverLevel.players()) {
+
             double dist = p.distanceToSqr(pos);
-            if (dist > 4096) continue; // 64格距离限制
 
-            for (int i = 0; i < 20; i++) {
-                // 随机偏移位置
-                double offsetX = (serverLevel.random.nextDouble() - 0.5) * 6;
-                double offsetY = serverLevel.random.nextDouble() * 4;
-                double offsetZ = (serverLevel.random.nextDouble() - 0.5) * 6;
-
-                // 随机速度
-                double speed = 0.3;
-                double vx = (serverLevel.random.nextDouble() - 0.5) * speed;
-                double vy = serverLevel.random.nextDouble() * speed;
-                double vz = (serverLevel.random.nextDouble() - 0.5) * speed;
-
-                // 交替使用不同粒子效果
-                switch (i % 8) {
-                    case 0 -> serverLevel.sendParticles(ParticleTypes.END_ROD, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 1 -> serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 2 -> serverLevel.sendParticles(ParticleTypes.FLAME, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 3 -> serverLevel.sendParticles(ParticleTypes.SOUL, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 4 -> serverLevel.sendParticles(ParticleTypes.WITCH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 5 -> serverLevel.sendParticles(ParticleTypes.SNOWFLAKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 6 -> serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                    case 7 -> serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, vx, vy, vz, 0.01);
-                }
-            }
+            if (dist > 4096)
+                continue; // 64格距离限制
+            ServerPlayNetworking.send(p, new CreateCreeperBombAreaPacket(pos));
         }
     }
 
