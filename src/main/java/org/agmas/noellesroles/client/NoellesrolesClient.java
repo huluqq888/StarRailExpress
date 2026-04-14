@@ -295,7 +295,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             if (dist > 4096)
                 return; // 64格距离限制
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 300; i++) {
                 // 随机偏移位置
                 double offsetX = (level.random.nextDouble() - 0.5) * 2;
                 double offsetY = level.random.nextDouble() * 2;
