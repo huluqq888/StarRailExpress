@@ -13,6 +13,7 @@ import io.wifi.starrailexpress.cca.SREPlayerPoisonComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.gui.RoleAnnouncementTexts;
 import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.index.TMMItems;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +22,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import org.agmas.noellesroles.Noellesroles;
@@ -714,7 +716,13 @@ public class ModRoles {
       .setComponentKey(ModComponents.SWAPPER);
   public static SRERole EXECUTIONER = TMMRoles
       .registerRole(new NormalRole(EXECUTIONER_ID, new Color(74, 27, 5).getRGB(),
-          false, true, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true)
+          false, true, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true) {
+        @Override
+
+        public Item getPsychoItem() {
+          return TMMItems.REVOLVER;
+        };
+      }
           .setComponentKey(ExecutionerPlayerComponent.KEY));
   public static SRERole GAMBLER = TMMRoles
       .registerRole(new GamblerRole(GAMBLER_ID, new Color(72, 61, 139).getRGB(), false,

@@ -4,6 +4,7 @@ import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.gui.screen.ingame.LimitedInventoryScreen;
+import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.util.ShopEntry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -18,6 +19,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
+
+import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 
@@ -574,5 +577,23 @@ public abstract class SRERole {
     public SRERole setEnableChance(int cahnce) {
         enableChance = cahnce;
         return this;
+    }
+
+    /**
+     * 给予疯魔物品
+     * 
+     * @return 是否成功给予。给予失败将不会启动疯魔
+     */
+    public boolean onPsychoGiveItem(Player player, SREPlayerPsychoComponent srePlayerPsychoComponent) {
+        return RoleUtils.insertStackInFreeSlot(player, new ItemStack(this.getPsychoItem()));
+    }
+
+    /**
+     * 获取疯魔物品
+     * 
+     * @return
+     */
+    public Item getPsychoItem() {
+        return TMMItems.BAT;
     };
 }

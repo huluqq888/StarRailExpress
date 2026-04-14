@@ -3,12 +3,14 @@ package io.wifi.starrailexpress.mixin.entity.player;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.index.TMMItems;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import org.agmas.noellesroles.role.ModRoles;
+import net.minecraft.world.item.Item;
+
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,13 +33,13 @@ public class PlayerInventoryMixin {
         SREPlayerPsychoComponent component = SREPlayerPsychoComponent.KEY.get(this.player);
         var gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
         if (component.getPsychoTicks() > 0) {
-            if (gameWorldComponent.isRole(this.player, ModRoles.EXECUTIONER)) {
-                if (((this.player.getInventory().getItem(oldSlot).is(TMMItems.REVOLVER)) &&
-                        (!this.player.getInventory().getItem(this.player.getInventory().selected)
-                                .is(TMMItems.REVOLVER))))
-                    this.player.getInventory().selected = oldSlot;
-            } else if (((this.player.getInventory().getItem(oldSlot).is(TMMItems.BAT)) &&
-                    (!this.player.getInventory().getItem(this.player.getInventory().selected).is(TMMItems.BAT))))
+            Item psychoItem = TMMItems.BAT;
+            SRERole role = gameWorldComponent.getRole(player);
+            if (role != null) {
+                psychoItem = role.getPsychoItem();
+            }
+            if (((this.player.getInventory().getItem(oldSlot).is(psychoItem)) &&
+                    (!this.player.getInventory().getItem(this.player.getInventory().selected).is(psychoItem))))
                 this.player.getInventory().selected = oldSlot;
         }
 

@@ -7,7 +7,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 
 import io.wifi.starrailexpress.SRE;
-import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.index.TMMItems;
@@ -18,7 +18,8 @@ import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
-import org.agmas.noellesroles.role.ModRoles;
+import net.minecraft.world.item.Item;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,15 +50,16 @@ public class MinecraftClientMixin {
     private void tmm$invalid(@NotNull Inventory instance, int value, Operation<Void> original) {
         int oldSlot = instance.selected;
         SREPlayerPsychoComponent component = SREPlayerPsychoComponent.KEY.get(instance.player);
-        SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(instance.player.level());
 
         if (component.getPsychoTicks() > 0) {
-            if (gameWorldComponent.isRole(instance.player, ModRoles.EXECUTIONER)) {
-                if ((instance.getItem(oldSlot).is(TMMItems.REVOLVER)) &&
-                        (!instance.getItem(value).is(TMMItems.REVOLVER)))
-                    return;
-            } else if ((instance.getItem(oldSlot).is(TMMItems.BAT)) &&
-                    (!instance.getItem(value).is(TMMItems.BAT)))
+
+            Item psychoItem = TMMItems.BAT;
+            SRERole role = SREClient.gameComponent.getRole(player);
+            if (role != null) {
+                psychoItem = role.getPsychoItem();
+            }
+            if ((instance.getItem(oldSlot).is(psychoItem)) &&
+                    (!instance.getItem(value).is(psychoItem)))
                 return;
         }
         original.call(instance, value);
