@@ -418,7 +418,7 @@ public class ModRoles {
       SRERole.MoodType.FAKE, // 假心情
       -1, // 无限冲刺时间
       false // 显示计分板
-  )).setComponentKey(ModComponents.CREEPER);
+  )).setComponentKey(ModComponents.CREEPER).setEnableChance(5);
 
   /**
    * 作家角色
@@ -1493,7 +1493,7 @@ public class ModRoles {
       Integer.MAX_VALUE, // 标准冲刺时间
       true // 不显示计分板
   )).setCanSeeTime(true).setCanSeeCoin(true)
-      .setEnableNeededPlayerCount(12).setEnableChance(30).setMax(1);
+      .setEnableNeededPlayerCount(12).setEnableChance(10).setMax(1);
 
   // ==================== 其他变量定义 ====================
   public static ArrayList<SRERole> SHOW_MONEY_ROLES = new ArrayList<>();
