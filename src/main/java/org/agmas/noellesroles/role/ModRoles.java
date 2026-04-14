@@ -1477,6 +1477,11 @@ public class ModRoles {
     public void onPsychoOver(Player player, SREPlayerPsychoComponent psychoComponent) {
       GameUtils.forceKillPlayer(player, true, null, SRE.wifiId("cat_killer"));
     }
+
+    @Override
+    public ResourceLocation getPsychoSkin(Player player, boolean isSlim) {
+      return SRE.id("textures/entity/custom_psycho/cat_killer.png");
+    }
   }).setCanSeeTime(true).setCanSeeCoin(true).setMax(0);
 
   public static SRERole CAT_NECROMANCER = TMMRoles.registerRole(new NormalRole(

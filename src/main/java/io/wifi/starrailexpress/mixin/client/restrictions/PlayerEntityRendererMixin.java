@@ -4,7 +4,9 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.client.SREClient;
+import io.wifi.starrailexpress.event.OnGettingPlayerSkin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -12,9 +14,6 @@ import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-
-import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.role.RedHouseRoles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,14 +33,25 @@ public class PlayerEntityRendererMixin {
     @Inject(method = "getTextureLocation(Lnet/minecraft/client/player/AbstractClientPlayer;)Lnet/minecraft/resources/ResourceLocation;", at = @At("HEAD"), cancellable = true)
     private void tmm$psychoSkinTexture(
             AbstractClientPlayer abstractClientPlayerEntity, CallbackInfoReturnable<ResourceLocation> cir) {
+        var result = OnGettingPlayerSkin.EVENT.invoker().onGetSkin(abstractClientPlayerEntity);
+        if (result == OnGettingPlayerSkin.PlayerSkinResult.DEFAULT) {
+            return;
+        } else if (result != null && result != OnGettingPlayerSkin.PlayerSkinResult.SKIP) {
+            cir.setReturnValue(result.texture);
+            cir.cancel();
+            return;
+        }
         if (SREClient.PLAYER_PSYCHO_CACHE.getOrDefault(abstractClientPlayerEntity.getUUID(), false)) {
             PlayerSkin.Model model = abstractClientPlayerEntity.getSkin().model();
-            String suffix = (model == PlayerSkin.Model.SLIM) ? "_thin" : "";
+            boolean isSLIM = (model == PlayerSkin.Model.SLIM);
+            String suffix = isSLIM ? "_thin" : "";
             ResourceLocation texture = SRE.watheId("textures/entity/psycho" + suffix + ".png");
-            if(SREClient.gameComponent.isRole(abstractClientPlayerEntity.getUUID(),ModRoles.CAT_KILLER)){
-                texture = SRE.id("textures/entity/custom_psycho/cat_killer" + ".png");
-            }else if(SREClient.gameComponent.isRole(abstractClientPlayerEntity.getUUID(),RedHouseRoles.REMILIA)){
-                texture = SRE.id("textures/entity/custom_psycho/remilia" + ".png");
+            SRERole role = SREClient.gameComponent.getRole(abstractClientPlayerEntity.getUUID());
+            if (role != null) {
+                var res = role.getPsychoSkin(abstractClientPlayerEntity, isSLIM);
+                if (res != null) {
+                    texture = res;
+                }
             }
             cir.setReturnValue(texture);
             cir.cancel();

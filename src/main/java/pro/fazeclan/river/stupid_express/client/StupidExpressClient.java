@@ -8,6 +8,7 @@ import io.wifi.starrailexpress.client.StatusInit;
 import io.wifi.starrailexpress.client.StatusInit.StatusBar;
 import io.wifi.starrailexpress.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.event.AllowOtherCameraType;
+import io.wifi.starrailexpress.event.OnGettingPlayerSkin;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -15,6 +16,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -70,6 +72,7 @@ public class StupidExpressClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+
         // p.playNotifySound(StupidExpress.SOUND_REGUGEE, SoundSource.AMBIENT, 0.5f,
         // 1.0f);
         AmbienceUtil.registerBackgroundAmbience(
@@ -114,14 +117,17 @@ public class StupidExpressClient implements ClientModInitializer {
 
                 // 如果是旁观者（非活跃人格），完全隐藏其渲染
                 if (component != null && component.getMainPersonality() != null && !component.isCurrentlyActive()) {
-                    AbstractClientPlayer mainPlayer = (AbstractClientPlayer) player.level().getPlayerByUUID(component.getMainPersonality());
+                    AbstractClientPlayer mainPlayer = (AbstractClientPlayer) player.level()
+                            .getPlayerByUUID(component.getMainPersonality());
 
                     // 只在主人格存在时隐藏旁观者
                     if (mainPlayer != null && mainPlayer != player) {
                         isSplitPerson = true;
 
-                    }else isSplitPerson = false;
-                }else isSplitPerson = false;
+                    } else
+                        isSplitPerson = false;
+                } else
+                    isSplitPerson = false;
                 boolean weavingActive = player.hasEffect(MobEffects.WEAVING);
                 if (weavingActive) {
                     isUsedRefugee = true;
@@ -183,6 +189,19 @@ public class StupidExpressClient implements ClientModInitializer {
     }
 
     private static void registerKeyEvents() {
+        // 难民时旁观看时全员皮肤改为默认的皮肤
+        OnGettingPlayerSkin.EVENT.register((player) -> {
+            if (SREClient.getLooseEndPenalty()) {
+                PlayerSkin.Model model = player.getSkin().model();
+                boolean isSLIM = (model == PlayerSkin.Model.SLIM);
+                if (isSLIM) {
+                    return OnGettingPlayerSkin.PlayerSkinResult.alexSlim();
+                } else {
+                    return OnGettingPlayerSkin.PlayerSkinResult.steveWide();
+                }
+            }
+            return null;
+        });
         // 使用 Fabric Events 来处理按键按下事件
         final ArrayList<StatusBar> LOOSE_END_BARs = new ArrayList<>();
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_WORLD_TICK.register(clientWorld -> {

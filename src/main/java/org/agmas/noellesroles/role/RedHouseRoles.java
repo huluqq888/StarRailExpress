@@ -6,6 +6,7 @@ import org.agmas.noellesroles.init.THEventHandler;
 import org.agmas.noellesroles.roles.coroner.BodyDeathReasonComponent;
 import org.agmas.noellesroles.roles.ghost.GhostPlayerComponent;
 
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.NormalRole;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
@@ -47,6 +48,11 @@ public class RedHouseRoles {
             be.setDeathReason(THEventHandler.getRandomDeathReason());
           }
           return InteractionResult.PASS;
+        }
+        @Override
+        public ResourceLocation getPsychoSkin(Player player, boolean isSlim) 
+        {
+          return SRE.id("textures/entity/custom_psycho/remilia.png");
         }
       })
       .setCanSeeCoin(true).setCanSeeBodyDeathReason(true).setCanSeeBodyRoleInfo(true);

@@ -95,8 +95,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
+import pro.fazeclan.river.stupid_express.modifier.refugee.cca.RefugeeComponent;
 
 import org.agmas.noellesroles.client.NoellesrolesClient;
+import org.agmas.noellesroles.component.DeathPenaltyComponent;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.include.com.google.gson.JsonSyntaxException;
@@ -127,6 +129,7 @@ public class SREClient implements ClientModInitializer {
     private static boolean cachedCanRenderChatHud = true;
     private static boolean cachedShowDebugHud;
     private static boolean cachedRenderVanillaHud;
+    private static boolean cachedLooseEndPenalty = false;
     private static SRERole cachedPlayerRole;
     public static boolean hideLocalMainHandItemInLayer = false;
     public static boolean hideLocalOffHandItemInLayer = false;
@@ -841,6 +844,10 @@ public class SREClient implements ClientModInitializer {
         return cachedRenderVanillaHud;
     }
 
+    public static boolean getLooseEndPenalty() {
+        return cachedLooseEndPenalty;
+    }
+
     public static int getCachedInstinctHighlight(Entity target) {
         if (!(target instanceof ItemEntity || target instanceof Player || target instanceof NoteEntity
                 || target instanceof FirecrackerEntity || target instanceof PlayerBodyEntity)) {
@@ -922,6 +929,8 @@ public class SREClient implements ClientModInitializer {
     private static void updateHudApiCache(Minecraft client) {
         if (gameComponent == null)
             return;
+        if(client.level == null) return;
+        cachedLooseEndPenalty = gameComponent.isRunning() && RefugeeComponent.KEY.get(client.level).isAnyRevivals && DeathPenaltyComponent.KEY.get(client.player).hasPenalty();
         LocalPlayer player = client.player;
         cachedPlayerAliveAndInSurvival = GameUtils.isPlayerAliveAndSurvival(player);
         cachedPlayerAliveAndInSurvivalIgnoreShitSplit = GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player);

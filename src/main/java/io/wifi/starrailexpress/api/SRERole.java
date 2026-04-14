@@ -1,5 +1,6 @@
 package io.wifi.starrailexpress.api;
 
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
@@ -595,5 +596,16 @@ public abstract class SRERole {
      */
     public Item getPsychoItem() {
         return TMMItems.BAT;
+    };
+
+    /**
+     * 获取疯魔皮肤
+     * 
+     * @return
+     */
+    public ResourceLocation getPsychoSkin(Player player, boolean isSlim) {
+        String suffix = isSlim ? "_thin" : "";
+        ResourceLocation texture = SRE.watheId("textures/entity/psycho" + suffix + ".png");
+        return texture;
     };
 }
