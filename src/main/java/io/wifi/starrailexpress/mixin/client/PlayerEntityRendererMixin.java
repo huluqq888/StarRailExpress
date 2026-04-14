@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.event.AllowItemShowInHand;
 import io.wifi.starrailexpress.index.TMMItems;
@@ -23,7 +24,8 @@ public class PlayerEntityRendererMixin {
     @Inject(method = "getArmPose", at = @At("TAIL"), cancellable = true)
     private static void tmm$customArmPose(AbstractClientPlayer player,
             InteractionHand hand, CallbackInfoReturnable<HumanoidModel.ArmPose> cir) {
-        if (player.getItemInHand(hand).is(TMMItems.BAT) || player.getItemInHand(hand).is(ModItems.FAKE_BAT))
+        if (player.getItemInHand(hand).is(TMMItems.BAT)
+                || player.getItemInHand(hand).is(ModItems.FAKE_BAT))
             cir.setReturnValue(HumanoidModel.ArmPose.CROSSBOW_CHARGE);
     }
 
@@ -48,6 +50,11 @@ public class PlayerEntityRendererMixin {
                 }
             }
         } else {
+            for (var i : TMMItems.INVISIBLE_ITEMS) {
+                if (original.is(i)) {
+                    return ItemStack.EMPTY;
+                }
+            }
             var eventRes = AllowItemShowInHand.EVENT.invoker().allowShowInHand(player, original, false);
             if (eventRes != null) {
                 return eventRes;

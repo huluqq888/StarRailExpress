@@ -2,21 +2,22 @@ package io.wifi.starrailexpress.cca;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
-import io.wifi.starrailexpress.client.SREClient;
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.network.RemoveStatusBarPayload;
 import io.wifi.starrailexpress.network.TriggerStatusBarPayload;
-import io.wifi.starrailexpress.util.ShopEntry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import org.agmas.noellesroles.role.ModRoles;
+
+import org.agmas.noellesroles.utils.MCItemsUtils;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -82,29 +83,22 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
             }
             this.psychoTicks--;
         }
-        if (SREClient.gameComponent.isRole(this.player, ModRoles.EXECUTIONER)) {
-            if (this.player.getMainHandItem().is(TMMItems.REVOLVER))
-                return;
-            if (GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player)) {
-                for (int i = 0; i < 9; i++) {
-                    if (!this.player.getInventory().getItem(i).is(TMMItems.REVOLVER))
-                        continue;
-                    this.player.getInventory().selected = i;
-                    break;
-                }
-            }
-        } else {
-            if (this.player.getMainHandItem().is(TMMItems.BAT))
-                return;
-            if (GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player)) {
-                for (int i = 0; i < 9; i++) {
-                    if (!this.player.getInventory().getItem(i).is(TMMItems.BAT))
-                        continue;
-                    this.player.getInventory().selected = i;
-                    break;
-                }
+        Item psychoItem = TMMItems.BAT;
+        SRERole role = SRERoleWorldComponent.KEY.get(this.player.level()).getRole(player);
+        if (role != null) {
+            psychoItem = role.getPsychoItem();
+        }
+        if (this.player.getMainHandItem().is(psychoItem))
+            return;
+        if (GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player)) {
+            for (int i = 0; i < 9; i++) {
+                if (!this.player.getInventory().getItem(i).is(psychoItem))
+                    continue;
+                this.player.getInventory().selected = i;
+                break;
             }
         }
+
     }
 
     @Override
@@ -137,13 +131,23 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
     public boolean startPsycho() {
         if (this.psychoTicks > 0)
             return false;
-        if (RoleUtils.insertStackInFreeSlot(this.player, new ItemStack(TMMItems.BAT))) {
+        SRERole role = SRERoleWorldComponent.KEY.get(this.player.level()).getRole(this.player);
+        boolean success = false;
+        if (role != null) {
+            success = role.onPsychoGiveItem(player, this);
+        } else {
+            success = RoleUtils.insertStackInFreeSlot(player, new ItemStack(TMMItems.BAT));
+        }
+        if (success) {
             this.setPsychoTicks(GameConstants.getPsychoTimer());
             this.setArmour(GameConstants.getPsychoModeArmour());
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
             gameWorldComponent.setPsychosActive(gameWorldComponent.getPsychosActive() + 1);
             if (player instanceof ServerPlayer serverPlayer) {
                 ServerPlayNetworking.send(serverPlayer, new TriggerStatusBarPayload("Psycho"));
+            }
+            if (role != null) {
+                role.onPsychoStart(player, this);
             }
             return true;
         }
@@ -163,8 +167,20 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         if (this.player instanceof ServerPlayer serverPlayer) {
             ServerPlayNetworking.send(serverPlayer, new RemoveStatusBarPayload("Psycho"));
         }
-        this.player.getInventory().clearOrCountMatchingItems(itemStack -> itemStack.is(TMMItems.BAT), Integer.MAX_VALUE,
-                this.player.inventoryMenu.getCraftSlots());
+
+        Item psychoItem = TMMItems.BAT;
+        SRERole role = SRERoleWorldComponent.KEY.get(this.player.level()).getRole(player);
+        if (role != null) {
+            psychoItem = role.getPsychoItem();
+        }
+        MCItemsUtils.clearItem(player, psychoItem);
+        if (checkIsGameRunning()) {
+            if (GameUtils.isPlayerAliveAndSurvival(player)) {
+                if (role != null) {
+                    role.onPsychoOver(player, this);
+                }
+            }
+        }
         return result;
     }
 

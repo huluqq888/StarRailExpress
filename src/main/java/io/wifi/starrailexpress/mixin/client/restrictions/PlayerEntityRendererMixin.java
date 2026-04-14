@@ -12,6 +12,9 @@ import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+
+import org.agmas.noellesroles.role.ModRoles;
+import org.agmas.noellesroles.role.RedHouseRoles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,6 +38,11 @@ public class PlayerEntityRendererMixin {
             PlayerSkin.Model model = abstractClientPlayerEntity.getSkin().model();
             String suffix = (model == PlayerSkin.Model.SLIM) ? "_thin" : "";
             ResourceLocation texture = SRE.watheId("textures/entity/psycho" + suffix + ".png");
+            if(SREClient.gameComponent.isRole(abstractClientPlayerEntity.getUUID(),ModRoles.CAT_KILLER)){
+                texture = SRE.id("textures/entity/custom_psycho/cat_killer" + ".png");
+            }else if(SREClient.gameComponent.isRole(abstractClientPlayerEntity.getUUID(),RedHouseRoles.REMILIA)){
+                texture = SRE.id("textures/entity/custom_psycho/remilia" + ".png");
+            }
             cir.setReturnValue(texture);
             cir.cancel();
         }

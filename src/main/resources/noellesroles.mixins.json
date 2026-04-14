@@ -95,7 +95,6 @@
     "client.roles.phantom.PhantomRattatoulieMixin",
     "client.roles.puppeteer.PuppeteerBodyGunTargetMixin",
     "client.roles.puppeteer.PuppeteerBodyKnifeTargetMixin",
-    "client.roles.stalker.AutoUseKnifeMixin",
     "client.roles.swapper.KeyBindingMixin",
     "client.roles.swapper.SwapperScreenMixin",
     "client.roles.voodoo.VoodooScreenMixin",

@@ -480,6 +480,18 @@ public class RoleShopHandler {
           ShopEntry.Type.TOOL));
       ShopContent.customEntries.put(SERoles.NECROMANCER.getIdentifier(), NECROMANCER_SHOP);
       ShopContent.customEntries.put(SERoles.ARSONIST.getIdentifier(), NECROMANCER_SHOP);
+      ShopContent.customEntries.put(ModRoles.CAT_NECROMANCER.getIdentifier(), NECROMANCER_SHOP);
+
+      {
+        var CAT_KILLER_SHOP = new ArrayList<>(NECROMANCER_SHOP);
+        CAT_KILLER_SHOP.add(new ShopEntry(TMMItems.PSYCHO_MODE.getDefaultInstance(), 0, ShopEntry.Type.WEAPON) {
+          @Override
+          public boolean onBuy(@NotNull Player player) {
+            return SREPlayerShopComponent.usePsychoMode(player);
+          }
+        });
+        ShopContent.customEntries.put(ModRoles.CAT_KILLER.getIdentifier(), CAT_KILLER_SHOP);
+      }
     }
     {
       // 忍者商店
@@ -1400,10 +1412,10 @@ public class RoleShopHandler {
         30,
         ShopEntry.Type.TOOL));
 
-    // 警报陷阱 - 75金币
+    // 警报陷阱 - 15金币
     ENGINEER_SHOP.add(new ShopEntry(
         ModItems.ALARM_TRAP.getDefaultInstance(),
-        75,
+        15,
         ShopEntry.Type.TOOL));
 
     ENGINEER_SHOP.add(new ShopEntry(

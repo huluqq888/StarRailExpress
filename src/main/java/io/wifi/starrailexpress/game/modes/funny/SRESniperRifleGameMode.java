@@ -17,7 +17,7 @@ import java.util.List;
  * 狙击模式
  * <p>
  *     模式特性：所有人获得一把狙击枪和上百发子弹
- *     地图锁定为：天空村庄
+ *     地图不锁定
  * </p>
  */
 public class SRESniperRifleGameMode extends WTLooseEndsGameMode {

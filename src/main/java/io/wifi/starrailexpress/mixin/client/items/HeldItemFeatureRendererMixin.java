@@ -2,7 +2,6 @@ package io.wifi.starrailexpress.mixin.client.items;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.event.AllowItemShowInHand;
 import io.wifi.starrailexpress.index.TMMItems;
@@ -11,8 +10,6 @@ import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import org.agmas.noellesroles.item.StalkerKnifeItem;
-import org.agmas.noellesroles.role.ModRoles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,29 +29,14 @@ public class HeldItemFeatureRendererMixin {
     @WrapOperation(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getOffhandItem()Lnet/minecraft/world/item/ItemStack;"))
     public ItemStack nrs$changeOffHandItemStack(LivingEntity instance, Operation<ItemStack> original) {
         ItemStack ret = original.call(instance);
-
-        if (ret.getItem() instanceof StalkerKnifeItem){
-            if (!(instance.getMainHandItem().getItem() instanceof StalkerKnifeItem)){
-                return ItemStack.EMPTY;
-            }
-        }
         for (var i : TMMItems.INVISIBLE_ITEMS) {
             if (ret.is(i)) {
                 return ItemStack.EMPTY;
             }
         }
-        
+
         if (instance instanceof Player player) {
-            if (SREClient.gameComponent != null&&SREClient.gameComponent.getRole( player)!=null&&SREClient.gameComponent.getRole( player).equals(ModRoles.STALKER)){
-                if (player.isCrouching()){
-                    return ItemStack.EMPTY;
-                }
-            }else
-            if (SREClient.gameComponent != null&&SREClient.gameComponent.getRole( player)!=null&&SREClient.gameComponent.getRole( player).equals(ModRoles.EXECUTIONER)){
-                if (SREPlayerPsychoComponent.KEY.get( player).type==1){
-                    return TMMItems.REVOLVER.getDefaultInstance();
-                }
-            }
+            
             if (sre$shouldHideLocalLayerItem(player, false)) {
                 return ItemStack.EMPTY;
             }
@@ -65,6 +47,7 @@ public class HeldItemFeatureRendererMixin {
         }
         return ret;
     }
+
     @WrapOperation(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getMainHandItem()Lnet/minecraft/world/item/ItemStack;"))
     public ItemStack nrs$changeMainHandItemStack(LivingEntity instance, Operation<ItemStack> original) {
         ItemStack ret = original.call(instance);
@@ -74,18 +57,13 @@ public class HeldItemFeatureRendererMixin {
                 return ItemStack.EMPTY;
             }
         }
-        
+
         if (instance instanceof Player player) {
-            if (SREClient.gameComponent != null&&SREClient.gameComponent.getRole( player)!=null&&SREClient.gameComponent.getRole( player).equals(ModRoles.STALKER)){
-                if (player.isCrouching()){
-                    return ItemStack.EMPTY;
-                }
-            }
             if (sre$shouldHideLocalLayerItem(player, true)) {
                 return ItemStack.EMPTY;
             }
 
-                var eventRes = AllowItemShowInHand.EVENT.invoker().allowShowInHand(player, ret, true);
+            var eventRes = AllowItemShowInHand.EVENT.invoker().allowShowInHand(player, ret, true);
             if (eventRes != null) {
                 return eventRes;
             }
