@@ -115,7 +115,7 @@
   "stupid_express.config.modifiersSection.loversSection.loversWinWithKillers.desc": "如果此选项为开启状态，其中一位恋人为杀手身份时，那么恋人与杀手会共同获胜",
   "stupid_express.config.modifiersSection.loversSection.loversWinWithCivilians": "恋人与平民共同获胜",
   "stupid_express.config.modifiersSection.loversSection.loversWinWithCivilians.desc": "如果此选项为开启状态，且两位恋人的身份都为平民时，那么恋人与平民会共同获胜，否则他们必须被淘汰游戏才会结束",
-  "hud.stupid_express.necromancer.revived_player": "\u00a74死灵法师复活了一名杀手",
+  "hud.stupid_express.necromancer.revived_player": "%s复活了一名杀手%s",
   "hud.stupid_express.refugee.revived": "\u00a74亡命徒已复活",
   "hud.stupid_express.refugee.countdown": "还有 %s 秒后复活",
   "gui.stupid_express.refugee.revival": "复活倒计时: %s 秒",
