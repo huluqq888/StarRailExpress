@@ -50,6 +50,11 @@ public class PlayerEntityRendererMixin {
                 }
             }
         } else {
+            for (var i : TMMItems.INVISIBLE_ITEMS) {
+                if (original.is(i)) {
+                    return ItemStack.EMPTY;
+                }
+            }
             var eventRes = AllowItemShowInHand.EVENT.invoker().allowShowInHand(player, original, false);
             if (eventRes != null) {
                 return eventRes;
