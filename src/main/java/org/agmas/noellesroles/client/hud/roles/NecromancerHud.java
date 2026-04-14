@@ -32,7 +32,7 @@ public class NecromancerHud {
             int screenWidth = client.getWindow().getGuiScaledWidth();
             int screenHeight = client.getWindow().getGuiScaledHeight();
             int x = screenWidth - 10; // 距离右边缘
-            int y = screenHeight - 10; // 距离底部
+            int y = screenHeight - 20; // 距离底部
 
             Font textRenderer = client.font;
             if (pc.cooldown > 0) {

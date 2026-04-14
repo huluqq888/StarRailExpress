@@ -18,8 +18,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.GameType;
-import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.noellesroles.role.ModRoles;
+import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.NotNull;
 import pro.fazeclan.river.stupid_express.constants.SERoles;
 import pro.fazeclan.river.stupid_express.role.necromancer.cca.NecromancerComponent;
@@ -62,7 +62,9 @@ public class RevivalSelectionHandler {
             if (!gameWorldComponent.isSkillAvailable) {
                 // 技能不可用
                 player.displayClientMessage(
-                        Component.translatable("message.stupid_express.generic.skill_not_available").withStyle(ChatFormatting.RED), true);
+                        Component.translatable("message.stupid_express.generic.skill_not_available")
+                                .withStyle(ChatFormatting.RED),
+                        true);
                 return InteractionResult.PASS;
             }
             var serverLevel = (ServerLevel) level;
@@ -98,8 +100,9 @@ public class RevivalSelectionHandler {
             serverLevel.players().forEach(
                     a -> {
                         a.playNotifySound(SoundEvents.TOTEM_USE, revived.getSoundSource(), 1.2f, 1.5f);
-                        a.displayClientMessage(Component.translatable("hud.stupid_express.necromancer.revived_player")
-                                .append(Harpymodloader.getRoleName(selectedRole)), true);
+                        a.displayClientMessage(Component.translatable("hud.stupid_express.necromancer.revived_player",
+                                RoleUtils.getRoleOrModifierNameWithColor(ModRoles.CAT_NECROMANCER),
+                                RoleUtils.getRoleOrModifierNameWithColor(selectedRole)), true);
                     });
             revived.getInventory().clearContent();
             revived.teleportTo(body.getX(), body.getY(), body.getZ());
@@ -116,7 +119,7 @@ public class RevivalSelectionHandler {
 
             return InteractionResult.CONSUME;
         }));
-   
+
         UseEntityCallback.EVENT.register(((player, level, interactionHand, entity, entityHitResult) -> {
 
             if (!(player instanceof ServerPlayer interacting)) {
@@ -135,7 +138,9 @@ public class RevivalSelectionHandler {
             if (!gameWorldComponent.isSkillAvailable) {
                 // 技能不可用
                 player.displayClientMessage(
-                        Component.translatable("message.stupid_express.generic.skill_not_available").withStyle(ChatFormatting.RED), true);
+                        Component.translatable("message.stupid_express.generic.skill_not_available")
+                                .withStyle(ChatFormatting.RED),
+                        true);
                 return InteractionResult.PASS;
             }
             var serverLevel = (ServerLevel) level;
@@ -170,8 +175,9 @@ public class RevivalSelectionHandler {
             serverLevel.players().forEach(
                     a -> {
                         a.playNotifySound(SoundEvents.TOTEM_USE, revived.getSoundSource(), 1.2f, 1.5f);
-                        a.displayClientMessage(Component.translatable("hud.stupid_express.necromancer.revived_player")
-                                .append(Harpymodloader.getRoleName(selectedRole)), true);
+                        a.displayClientMessage(Component.translatable("hud.stupid_express.necromancer.revived_player",
+                                RoleUtils.getRoleOrModifierNameWithColor(SERoles.NECROMANCER),
+                                RoleUtils.getRoleOrModifierNameWithColor(selectedRole)), true);
                     });
             revived.getInventory().clearContent();
             revived.teleportTo(body.getX(), body.getY(), body.getZ());
