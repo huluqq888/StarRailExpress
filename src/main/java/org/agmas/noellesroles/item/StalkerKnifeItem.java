@@ -7,6 +7,8 @@ import io.wifi.starrailexpress.index.SREDataComponentTypes;
 import io.wifi.starrailexpress.item.KnifeItem;
 import io.wifi.starrailexpress.network.original.KnifeStabPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
@@ -38,6 +40,23 @@ public class StalkerKnifeItem extends KnifeItem {
 
     public StalkerKnifeItem(Properties settings) {
         super(settings);
+    }
+
+    @Override
+    public void inventoryTick(ItemStack itemStack, Level level, Entity entity, int i, boolean b) {
+        if (Minecraft.getInstance().player==entity){
+            Integer i1 = itemStack.get(SREDataComponentTypes.WEAPON_USED_TIME);
+            if (!((LocalPlayer) entity).isCrouching() || (i1==null|| i1 !=3))return;
+            Entity crosshairPickEntity = Minecraft.getInstance().crosshairPickEntity;
+            //distance <=4
+            if (crosshairPickEntity != null && entity.distanceToSqr(crosshairPickEntity) > 16) {
+                return;
+            }
+            if ( crosshairPickEntity instanceof Player && ((LocalPlayer) entity).getTicksUsingItem() > 3 ){
+                ((LocalPlayer) entity).releaseUsingItem();
+            }
+        }
+        super.inventoryTick(itemStack, level, entity, i, b);
     }
 
     @Override
@@ -93,11 +112,6 @@ public class StalkerKnifeItem extends KnifeItem {
         return "knife";
     }
 
-    @Override
-    public void inventoryTick(ItemStack itemStack, Level level, Entity entity, int i, boolean bl) {
-        
-        super.inventoryTick(itemStack, level, entity, i, bl);
-    }
     
     /**
      * 生成炫酷的击中特效（客户端）
