@@ -2,13 +2,13 @@ package io.wifi.starrailexpress.cca;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
+import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.network.RemoveStatusBarPayload;
 import io.wifi.starrailexpress.network.TriggerStatusBarPayload;
-import io.wifi.starrailexpress.util.ShopEntry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderLookup.Provider;
@@ -138,6 +138,10 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         if (this.psychoTicks > 0)
             return false;
         if (RoleUtils.insertStackInFreeSlot(this.player, new ItemStack(TMMItems.BAT))) {
+            SRERole role = SRERoleWorldComponent.KEY.get(this.player.level()).getRole(this.player);
+            if (role != null) {
+                role.onPsychoStart(player, this);
+            }
             this.setPsychoTicks(GameConstants.getPsychoTimer());
             this.setArmour(GameConstants.getPsychoModeArmour());
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
@@ -165,6 +169,11 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         }
         this.player.getInventory().clearOrCountMatchingItems(itemStack -> itemStack.is(TMMItems.BAT), Integer.MAX_VALUE,
                 this.player.inventoryMenu.getCraftSlots());
+
+        SRERole role = SRERoleWorldComponent.KEY.get(this.player.level()).getRole(this.player);
+        if (role != null) {
+            role.onPsychoOver(player, this);
+        }
         return result;
     }
 

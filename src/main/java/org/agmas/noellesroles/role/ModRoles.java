@@ -1,6 +1,8 @@
 package org.agmas.noellesroles.role;
 
 import com.mojang.serialization.Codec;
+
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.ExtraEffectRole;
 import io.wifi.starrailexpress.api.NormalRole;
 import io.wifi.starrailexpress.api.SRERole;
@@ -8,7 +10,9 @@ import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREArmorPlayerComponent;
 import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPoisonComponent;
+import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.gui.RoleAnnouncementTexts;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.ResourceLocation;
@@ -1337,7 +1341,7 @@ public class ModRoles {
       SRERole.MoodType.REAL, // 真实心情
       TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
       true // 不显示计分板
-  )).setComponentKey(ClockmakerPlayerComponent.KEY).setCanSeeTime(true).setCanSeeCoin(true);;
+  )).setComponentKey(ClockmakerPlayerComponent.KEY).setCanSeeTime(true).setCanSeeCoin(true);
 
   /**
    * 强盗角色 - 杀手阵营
@@ -1412,22 +1416,21 @@ public class ModRoles {
   /**
    * 超级亡命徒-特殊中立
    * <p>
-   *     - 杀人获得增益：时停、叠盾、加速等
-   *     - 具有商店能买狙击枪等
+   * - 杀人获得增益：时停、叠盾、加速等
+   * - 具有商店能买狙击枪等
    * </p>
    */
   public static SRERole SUPER_LOOSE_END = TMMRoles.registerRole(new SuperLooseEnd(
-          SUPER_LOOSE_END_ID,
-          new Color(0xFF77AA).getRGB(),
-          false,
-          false,
-          SRERole.MoodType.NONE,
-          -1,
-          true
-  ))
-          .setCanSeeCoin(true)
-          .setCanUseInstinct(true)
-          .setCanAutoAddMoney(true);
+      SUPER_LOOSE_END_ID,
+      new Color(0xFF77AA).getRGB(),
+      false,
+      false,
+      SRERole.MoodType.NONE,
+      -1,
+      true))
+      .setCanSeeCoin(true)
+      .setCanUseInstinct(true)
+      .setCanAutoAddMoney(true);
 
   /**
    * 愚者角色 - 好人阵营
@@ -1447,8 +1450,37 @@ public class ModRoles {
       SRERole.MoodType.REAL, // 真实心情
       TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
       false // 不隐藏计分板
-  )).setComponentKey(org.agmas.noellesroles.roles.fool.FoolPlayerComponent.KEY)
-      .setCanSeeCoin(true).setCanPickUpRevolver(true).setMax(1).setEnableChance(30).setEnableNeededPlayerCount(12);
+  )).setComponentKey(org.agmas.noellesroles.roles.fool.FoolPlayerComponent.KEY).setCanSeeCoin(true)
+      .setCanPickUpRevolver(true)
+      .setMax(1)
+      .setEnableChance(30)
+      .setEnableNeededPlayerCount(12);
+
+  public static SRERole CAT_KILLER = TMMRoles.registerRole(new NormalRole(
+      SRE.wifiId("cat_killer"), // 角色 ID
+      new Color(255, 174, 201).getRGB(), // 粉色 - 猫娘~
+      false, // isInnocent = 好人阵营
+      true, // canUseKiller = 无杀手能力
+      SRERole.MoodType.REAL, // 真实心情
+      Integer.MAX_VALUE, // 标准冲刺时间
+      true // 不显示计分板
+  ) {
+    @Override
+    public void onPsychoOver(Player player, SREPlayerPsychoComponent psychoComponent) {
+      GameUtils.forceKillPlayer(player, true, null, SRE.wifiId("cat_killer"));
+    }
+  }).setCanSeeTime(true).setCanSeeCoin(true).setMax(0);
+
+  public static SRERole CAT_NECROMANCER = TMMRoles.registerRole(new NormalRole(
+      SRE.wifiId("cat_necromancer"), // 角色 ID
+      new Color(255, 174, 201).getRGB(), // 粉色 - 猫娘~
+      false, // isInnocent = 好人阵营
+      true, // canUseKiller = 无杀手能力
+      SRERole.MoodType.REAL, // 真实心情
+      Integer.MAX_VALUE, // 标准冲刺时间
+      true // 不显示计分板
+  )).setCanSeeTime(true).setCanSeeCoin(true)
+      .setEnableNeededPlayerCount(12).setEnableChance(30).setMax(1);
 
   // ==================== 其他变量定义 ====================
   public static ArrayList<SRERole> SHOW_MONEY_ROLES = new ArrayList<>();

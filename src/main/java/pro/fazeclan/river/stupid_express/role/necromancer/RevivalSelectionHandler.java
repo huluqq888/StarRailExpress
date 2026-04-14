@@ -8,6 +8,7 @@ import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -18,6 +19,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.GameType;
 import org.agmas.harpymodloader.Harpymodloader;
+import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 import pro.fazeclan.river.stupid_express.constants.SERoles;
 import pro.fazeclan.river.stupid_express.role.necromancer.cca.NecromancerComponent;
@@ -47,7 +49,80 @@ public class RevivalSelectionHandler {
             if (!(player instanceof ServerPlayer interacting)) {
                 return InteractionResult.PASS;
             }
-            if (!interacting.gameMode.isSurvival()) {
+            if (!GameUtils.isPlayerAliveAndSurvival(interacting)) {
+                return InteractionResult.PASS;
+            }
+            SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
+            if (!gameWorldComponent.isRole(player, ModRoles.CAT_NECROMANCER)) {
+                return InteractionResult.PASS;
+            }
+            if (!(entity instanceof PlayerBodyEntity body)) {
+                return InteractionResult.PASS;
+            }
+            if (!gameWorldComponent.isSkillAvailable) {
+                // 技能不可用
+                player.displayClientMessage(
+                        Component.translatable("message.stupid_express.generic.skill_not_available").withStyle(ChatFormatting.RED), true);
+                return InteractionResult.PASS;
+            }
+            var serverLevel = (ServerLevel) level;
+
+            // check if the selected body can be revived
+            var revived = (ServerPlayer) serverLevel.getPlayerByUUID(body.getPlayerUuid());
+            if (revived == null) {
+                return InteractionResult.PASS;
+            }
+
+            var nc = NecromancerComponent.KEY.get(serverLevel);
+            if (nc.getAvailableRevives() < 1) {
+                return InteractionResult.PASS;
+            }
+
+            // activate cooldown
+            SREAbilityPlayerComponent cooldown = SREAbilityPlayerComponent.KEY.get(player);
+            if (cooldown.hasCooldown()) {
+                return InteractionResult.PASS;
+            }
+            cooldown.setCooldown(3 * 60 * 20);
+            nc.decreaseAvailableRevives();
+            nc.sync();
+
+            // get random killer role
+            var roles = new ArrayList<SRERole>();
+            roles.add(ModRoles.CAT_KILLER);
+            Collections.shuffle(roles);
+
+            // revive player and give them the role
+            var selectedRole = roles.getFirst();
+
+            serverLevel.players().forEach(
+                    a -> {
+                        a.playNotifySound(SoundEvents.TOTEM_USE, revived.getSoundSource(), 1.2f, 1.5f);
+                        a.displayClientMessage(Component.translatable("hud.stupid_express.necromancer.revived_player")
+                                .append(Harpymodloader.getRoleName(selectedRole)), true);
+                    });
+            revived.getInventory().clearContent();
+            revived.teleportTo(body.getX(), body.getY(), body.getZ());
+            revived.setGameMode(GameType.ADVENTURE);
+            removeVoice(revived.getUUID());
+            body.remove(Entity.RemovalReason.DISCARDED); // like it never existed
+
+            StupidRoleUtils.changeRole(revived, selectedRole);
+            SRE.REPLAY_MANAGER.recordPlayerRevival(revived.getUUID(), selectedRole);
+            SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(revived);
+            playerShopComponent.setBalance(200);
+
+            StupidRoleUtils.sendWelcomeAnnouncement(revived);
+
+            return InteractionResult.CONSUME;
+        }));
+   
+        UseEntityCallback.EVENT.register(((player, level, interactionHand, entity, entityHitResult) -> {
+
+            if (!(player instanceof ServerPlayer interacting)) {
+                return InteractionResult.PASS;
+            }
+            if (!GameUtils.isPlayerAliveAndSurvival(interacting)) {
                 return InteractionResult.PASS;
             }
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());

@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.api;
 
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.client.gui.screen.ingame.LimitedInventoryScreen;
 import io.wifi.starrailexpress.util.ShopEntry;
 import net.minecraft.resources.ResourceLocation;
@@ -291,6 +292,14 @@ public abstract class SRERole {
         return;
     }
 
+    public void onPsychoStart(Player player, SREPlayerPsychoComponent psychoComponent) {
+        return;
+    }
+
+    public void onPsychoOver(Player player, SREPlayerPsychoComponent psychoComponent) {
+        return;
+    }
+
     public void onFinishQuest(Player player, String quest) {
 
     }
@@ -543,7 +552,7 @@ public abstract class SRERole {
                 return 0;
             }
         }
-        return maxCount;
+        return this.maxCount;
     }
 
     public SRERole setMax(int count) {
