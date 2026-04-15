@@ -315,7 +315,12 @@ public class ModRoles {
       .setComponentKey(ModComponents.WAYFARER).setCanUseInstinct(false).setCanSeeBodyDeathReason(true);
   public static SRERole JESTER = TMMRoles
       .registerRole(new NormalRole(JESTER_ID, new Color(186, 85, 211).getRGB(), false,
-          false, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true))
+          false, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true) {
+        @Override
+        public ResourceLocation getPsychoSkin(Player player, boolean isSlim) {
+          return SRE.id("textures/entity/custom_psycho/jester.png");
+        };
+      })
       .setNeutralForKiller(true).setCanSeeTeammateKiller(false).setCanUseInstinct(true).setPassiveIncome(true);
   public static SRERole CONDUCTOR = TMMRoles
       .registerRole(new NormalRole(CONDUCTOR_ID, new Color(184, 134, 11).getRGB(), true,
