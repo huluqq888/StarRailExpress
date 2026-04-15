@@ -29,6 +29,7 @@ import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.item.StalkerKnifeItem;
 import org.agmas.noellesroles.roles.chef.ChefRole;
+import org.agmas.noellesroles.roles.dirt.Dirt;
 import org.agmas.noellesroles.roles.executioner.ExecutionerPlayerComponent;
 import org.agmas.noellesroles.roles.gambler.GamblerPlayerComponent;
 import org.agmas.noellesroles.roles.gambler.GamblerRole;
@@ -187,11 +188,12 @@ public class ModRoles {
   public static final ResourceLocation DIO_ID = Noellesroles.id("dio");
   public static final ResourceLocation JOJO_ID = Noellesroles.id("jojo");
 
-  // 特殊角色
-  public static final ResourceLocation SUPER_LOOSE_END_ID = Noellesroles.id("super_loose_end");
-
   // 愚者 (好人阵营)
   public static final ResourceLocation THE_FOOL_ID = Noellesroles.id("the_fool");
+
+  // 特殊角色
+  public static final ResourceLocation SUPER_LOOSE_END_ID = Noellesroles.id("super_loose_end");
+  public static final ResourceLocation DIRT_ID = Noellesroles.id("dirt_id");
 
   public static SRERole GUEST_GHOST = TMMRoles.registerRole(new NormalRole(
       GUEST_GHOST_ID, // 角色 ID
@@ -1494,6 +1496,22 @@ public class ModRoles {
       true // 不显示计分板
   )).setCanSeeTime(true).setCanSeeCoin(true)
       .setEnableNeededPlayerCount(12).setEnableChance(10).setMax(1);
+
+  /**
+   * 职业：土块
+   * <p>
+   *     轮盘赌模式特殊职业
+   * </p>
+   */
+  public static SRERole DIRT = TMMRoles.registerRole(new Dirt(
+      DIRT_ID,
+      new Color(180, 0, 255).getRGB(),
+      false,
+      false,
+      SRERole.MoodType.FAKE,
+      Integer.MAX_VALUE,
+      true
+  )).setCanSeeCoin(true).setCanSeeTime(true).setMax(0);
 
   // ==================== 其他变量定义 ====================
   public static ArrayList<SRERole> SHOW_MONEY_ROLES = new ArrayList<>();
