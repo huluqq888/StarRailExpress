@@ -57,7 +57,7 @@ public class TarotAssemblyManager {
     /** 传送到的会议室Y坐标（使用高空虚空区域） */
     public static final double MEETING_Y = 200;
     public static final double MEETING_X = 0.0;
-    public static final double MEETING_Z = 19000.0;
+    public static final double MEETING_Z = 20000.0;
 
     private static final int BLINDNESS_DURATION_TICKS = MEETING_DURATION_TICKS + VOTE_DURATION_TICKS + 60;
     private static final int MANUAL_ADVANCE_LOCK_TICKS = 20;
