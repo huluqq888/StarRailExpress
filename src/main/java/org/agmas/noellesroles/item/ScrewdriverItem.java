@@ -1,7 +1,6 @@
 package org.agmas.noellesroles.item;
 
 import io.wifi.starrailexpress.block.SmallDoorBlock;
-import io.wifi.starrailexpress.block_entity.DoorBlockEntity;
 import io.wifi.starrailexpress.block_entity.SmallDoorBlockEntity;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.index.TMMSounds;
@@ -62,7 +61,7 @@ public class ScrewdriverItem extends Item implements AdventureUsable {
                     if (doorEntity.isJammed()) {
                         // 解除卡住
                         doorEntity.setJammed(0);
-
+                        ReinforcementItem.unJamNearBy(context);
                         if (!world.isClientSide) {
                             world.playSound(null, lowerPos.getX() + 0.5, lowerPos.getY() + 1, lowerPos.getZ() + 0.5,
                                     SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 1.0f, 1.2f);
@@ -77,8 +76,8 @@ public class ScrewdriverItem extends Item implements AdventureUsable {
                     // 工程师专属：取下门上的道具
                     {
                         // 检查是否有加固
-                        if ((isLockSmith || isEngineer) && isDoorReinforced(doorEntity)) {
-                            setDoorReinforced(doorEntity, false);
+                        if ((isLockSmith || isEngineer) && ReinforcementItem.isDoorReinforced(doorEntity)) {
+                            ReinforcementItem.setDoorReinforced(doorEntity, false);
 
                             if (!world.isClientSide) {
                                 world.playSound(null, lowerPos.getX() + 0.5, lowerPos.getY() + 1, lowerPos.getZ() + 0.5,
@@ -177,45 +176,4 @@ public class ScrewdriverItem extends Item implements AdventureUsable {
         return InteractionResult.PASS;
     }
 
-    /**
-     * 检查门是否已被加固
-     * 我们使用 keyName 字段来存储加固状态（如果以 "reinforced:" 开头则表示已加固）
-     */
-    public static boolean isDoorReinforced(DoorBlockEntity doorEntity) {
-        String keyName = doorEntity.getKeyName();
-        return keyName != null && keyName.contains("reinforced:");
-    }
-
-    /**
-     * 设置门的加固状态
-     */
-    public static void setDoorReinforced(DoorBlockEntity doorEntity, boolean reinforced) {
-        String currentKeyName = doorEntity.getKeyName();
-        if (reinforced) {
-            if (!isDoorReinforced(doorEntity)) {
-                doorEntity.setKeyName("reinforced:" + (currentKeyName != null ? currentKeyName : ""));
-            }
-        } else {
-            if (isDoorReinforced(doorEntity) && currentKeyName != null) {
-                // 只移除 "reinforced:" 前缀，而不是前11个字符
-                int index = currentKeyName.indexOf("reinforced:");
-                if (index != -1) {
-                    doorEntity.setKeyName(currentKeyName.substring(0, index) + currentKeyName.substring(index + 11));
-                }
-            }
-        }
-    }
-
-    /**
-     * 消耗一次加固（被撬棍使用时调用）
-     * 
-     * @return true 如果成功消耗了加固（门不会被破坏），false 如果没有加固
-     */
-    public static boolean consumeReinforcement(DoorBlockEntity doorEntity) {
-        if (isDoorReinforced(doorEntity)) {
-            setDoorReinforced(doorEntity, false);
-            return true;
-        }
-        return false;
-    }
 }
