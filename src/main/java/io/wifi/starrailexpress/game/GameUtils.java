@@ -116,7 +116,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemCooldowns.CooldownInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemLore;
@@ -408,7 +407,6 @@ public class GameUtils {
         for (ServerPlayer player : world.players()) {
             var cooldowns = player.getCooldowns();
             var items = new ArrayList<>(MCItemsUtils.getItemsByTag(player.serverLevel(), TMMItemTags.GUNS));
-            CooldownInstance defaultCooldownInstance = new CooldownInstance(cooldowns.tickCount, cooldowns.tickCount + time);
             // Noellesroles.LOGGER.info("itemSize:" + items.size());
             items.forEach((item) -> {
                 cooldowns.addCooldown(item,
