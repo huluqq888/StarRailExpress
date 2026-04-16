@@ -15,7 +15,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import org.agmas.noellesroles.Noellesroles;
+import org.agmas.noellesroles.block.DevilRouletteTable;
 import org.agmas.noellesroles.block.VendingMachinesBlock;
+import org.agmas.noellesroles.block_entity.DevilRouletteTableEntity;
 import org.agmas.noellesroles.block_entity.VendingMachinesBlockEntity;
 
 import static io.wifi.starrailexpress.index.TMMBlocks.DARK_STEEL;
@@ -28,17 +30,29 @@ public interface ModBlocks {
 
     Block VENDING_MACHINES_BLOCK = registerBlock("vending_machines",
             new VendingMachinesBlock(BlockBehaviour.Properties.ofFullCopy(DARK_STEEL).noOcclusion()));
+    // 创建轮盘赌桌方块
+    Block DEVIL_ROULETTE_TABLE = registerBlock("devil_roulette_table",
+            new DevilRouletteTable());
 
     BlockEntityType<VendingMachinesBlockEntity> VENDING_MACHINES_BLOCK_ENTITY = blockEntityRegistrar.create(
             "vending_machines",
             BlockEntityType.Builder.of(VendingMachinesBlockEntity::new,
                     new Block[] { ModBlocks.VENDING_MACHINES_BLOCK }));
+    // 创建轮盘赌桌方块实体类型
+    BlockEntityType<DevilRouletteTableEntity> DEVIL_ROULETTE_TABLE_ENTITY = blockEntityRegistrar.create(
+            "devil_roulette_table",
+            BlockEntityType.Builder.of(DevilRouletteTableEntity::new,
+                    new Block[] { ModBlocks.DEVIL_ROULETTE_TABLE}));
 
     static void initialize() {
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, BLOCK_CREATIVE_GROUP, FabricItemGroup.builder()
                 .title(Component.translatable("item_group.noellesroles.block")).icon(() -> {
                     return new ItemStack(VENDING_MACHINES_BLOCK.asItem());
-                }).build());
+                })
+                .icon(()->{
+                    return new ItemStack(DEVIL_ROULETTE_TABLE.asItem());
+                })
+                .build());
         blockRegistrar.registerEntries();
         blockEntityRegistrar.registerEntries();
     }

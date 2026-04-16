@@ -1,0 +1,9 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "noellesroles:block/devil_roulette_table"
+      }
+    }
+  ]
+}
