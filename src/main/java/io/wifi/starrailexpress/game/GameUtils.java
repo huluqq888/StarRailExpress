@@ -423,6 +423,7 @@ public class GameUtils {
             cooldowns.addCooldown(ModItems.STALKER_KNIFE, time);
             cooldowns.addCooldown(ModItems.STALKER_KNIFE_OFFHAND, time);
             cooldowns.addCooldown(TMMItems.NUNCHUCK, time);
+            cooldowns.addCooldown(TMMItems.BAT, time);
             cooldowns.addCooldown(TMMItems.KNIFE, time);
             cooldowns.addCooldown(ModItems.FAKE_REVOLVER, time);
             cooldowns.addCooldown(Items.CLOCK, time);
