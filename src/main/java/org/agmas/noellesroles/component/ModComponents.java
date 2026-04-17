@@ -250,6 +250,15 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
       ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "imitator"),
       ImitatorPlayerComponent.class);
 
+  public static final ComponentKey<org.agmas.noellesroles.roles.party.PartyPlayerComponent> PARTY = ComponentRegistry.getOrCreate(
+      ResourceLocation.fromNamespaceAndPath(Noellesroles.MOD_ID, "party_killer"),
+      org.agmas.noellesroles.roles.party.PartyPlayerComponent.class);
+
+  static {
+    // 将 ModComponents.PARTY 赋值给 PartyPlayerComponent.KEY，确保组件能正确同步
+    org.agmas.noellesroles.roles.party.PartyPlayerComponent.KEY = PARTY;
+  }
+
 
   public static final ComponentKey<org.agmas.noellesroles.roles.fool.FoolPlayerComponent> FOOL = org.agmas.noellesroles.roles.fool.FoolPlayerComponent.KEY;
 
@@ -502,6 +511,10 @@ public class ModComponents implements EntityComponentInitializer, WorldComponent
     registry.beginRegistration(Player.class, IMITATOR)
         .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
         .end(ImitatorPlayerComponent::new);
+
+    registry.beginRegistration(Player.class, PARTY)
+        .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
+        .end(org.agmas.noellesroles.roles.party.PartyPlayerComponent::new);
 
     // 注册会计组件 - 存储模式、被动收入计时器
     registry.beginRegistration(Player.class, ACCOUNTANT)

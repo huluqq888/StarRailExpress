@@ -45,6 +45,7 @@
     ],
     "voicechat": [
       "org.agmas.noellesroles.voice.NoellesrolesVoiceChatPlugin",
+      "org.agmas.noellesroles.voice.HeliumBuzzVoicechatPlugin",
       "pro.fazeclan.river.stupid_express.StupidExpressVoiceChatPlugin",
       "io.wifi.starrailexpress.compat.TrainVoicePlugin"
     ],
@@ -113,6 +114,7 @@
       "noellesroles:nianshou",
       "noellesroles:magician",
       "noellesroles:mercenary",
+      "noellesroles:party_killer",
       "noellesroles:blood_feudist",
       "noellesroles:clockmaker",
       "noellesroles:best_vigilante",

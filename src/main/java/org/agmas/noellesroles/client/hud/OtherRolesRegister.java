@@ -38,5 +38,6 @@ public class OtherRolesRegister {
         ImitatorHud.register();
         FoolHud.register();
         SuperLooseEndHud.register();
+        PartyKillerHud.register();
     }
 }

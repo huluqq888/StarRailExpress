@@ -144,6 +144,7 @@ public class ModRoles {
 
   // 杀手阵营角色 ID
   public static ResourceLocation MORPHLING_ID = Noellesroles.id("morphling");
+    public static ResourceLocation PARTY_KILLER_ID = Noellesroles.id("party_killer");
   public static ResourceLocation PHANTOM_ID = Noellesroles.id("phantom");
   public static ResourceLocation SWAPPER_ID = Noellesroles.id("swapper");
   public static ResourceLocation EXECUTIONER_ID = Noellesroles.id("executioner");
@@ -706,6 +707,14 @@ public class ModRoles {
       .registerRole(new NormalRole(MORPHLING_ID, new Color(220, 20, 60).getRGB(), false,
           true, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true)
           .setComponentKey(MorphlingPlayerComponent.KEY));
+
+    public static SRERole PARTY_KILLER = TMMRoles.registerRole(new NormalRole(PARTY_KILLER_ID,
+            new Color(255, 105, 180).getRGB(), // 派对色
+            false, // 非乘客（杀手）
+            true, // 有杀手功能
+            SRERole.MoodType.FAKE,
+            Integer.MAX_VALUE,
+            true)).setComponentKey(ModComponents.PARTY).setCanSeeCoin(true).setOccupiedRoleCount(1);
   public static SRERole MANIPULATOR = TMMRoles
       .registerRole(new ManipulatorRole(MANIPULATOR_ID, new Color(90, 20, 61).getRGB(), false,
           true, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true)

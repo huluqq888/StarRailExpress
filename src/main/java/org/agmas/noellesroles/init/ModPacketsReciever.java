@@ -54,6 +54,7 @@ import org.agmas.noellesroles.roles.coroner.BodyDeathReasonComponent;
 import org.agmas.noellesroles.roles.executioner.ExecutionerPlayerComponent;
 import org.agmas.noellesroles.roles.manipulator.ManipulatorPlayerComponent;
 import org.agmas.noellesroles.roles.morphling.MorphlingPlayerComponent;
+import org.agmas.noellesroles.roles.party.PartyPlayerComponent;
 import org.agmas.noellesroles.roles.voodoo.VoodooPlayerComponent;
 import org.agmas.noellesroles.roles.vulture.VulturePlayerComponent;
 import org.agmas.noellesroles.utils.RoleUtils;
@@ -726,6 +727,68 @@ public class ModPacketsReciever {
           if (gameWorldComponent.isRole(player, ModRoles.CREEPER)) {
             CreeperPlayerComponent creeperComponent = CreeperPlayerComponent.KEY.get(player);
             creeperComponent.ignite();
+          }
+        });
+
+    // 派对狂技能包处理
+    ServerPlayNetworking.registerGlobalReceiver(PartyKillerC2SPacket.TYPE,
+        (payload, context) -> {
+          if (context.player().hasEffect(ModEffects.NO_COLLIDE))
+            return;
+          ServerPlayer player = context.player();
+          SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
+
+          if (!gameWorldComponent.isSkillAvailable) {
+            player.displayClientMessage(
+                Component.translatable("message.tip.skill_disabled").withStyle(ChatFormatting.RED), true);
+            return;
+          }
+
+          if (gameWorldComponent.isRole(player, ModRoles.PARTY_KILLER)) {
+            if (payload.targetPlayer() == null) {
+              player.displayClientMessage(
+                  Component.translatable("message.noellesroles.party.no_target"), true);
+              return;
+            }
+            Player target = player.level().getPlayerByUUID(payload.targetPlayer());
+            if (target == null || !GameUtils.isPlayerAliveAndSurvival(target)) {
+              player.displayClientMessage(
+                  Component.translatable("message.noellesroles.party.target_not_found"), true);
+              return;
+            }
+
+            // 检查冷却
+            SREAbilityPlayerComponent ability = SREAbilityPlayerComponent.KEY.get(player);
+            if (!ability.canUseAbility()) {
+              player.displayClientMessage(Component.literal("技能冷却中"), true);
+              return;
+            }
+
+            // 设置冷却 35秒
+            ability.setCooldown(35 * 20);
+            ability.sync();
+
+            // 计算阈值
+            long aliveCount = player.server.getPlayerList().getPlayers().stream()
+                .filter(GameUtils::isPlayerAliveAndSurvival).count();
+            int threshold = Math.max(1, (int) (aliveCount / 5));
+
+            // 为目标设置氦气变声（4分钟）
+            TemporaryEffectPlayerComponent temp = TemporaryEffectPlayerComponent.KEY.get(target);
+            temp.setHeliumEffect(4 * 60);
+
+            // 记录到组件
+            PartyPlayerComponent pc = PartyPlayerComponent.KEY.get(player);
+            pc.setThreshold(threshold);
+            pc.addAffectedTarget(target.getUUID());
+            pc.pendingPartySoundTicks = 6 * 20; // 6秒后播放
+            pc.sync();
+
+            // 检查是否达到触发阈值
+            if (pc.getCount() >= threshold) {
+              PartyPlayerComponent.triggerPartyTime((ServerLevel) player.level(), player);
+              pc.clearCount(); // 只清零自己的计数
+            }
           }
         });
 

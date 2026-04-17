@@ -92,6 +92,7 @@
     "client.roles.morphling.MorphlingRoleNameRendererMixin",
     "client.roles.morphling.MorphlingScreenMixin",
     "client.roles.morphling.SPClientTick",
+    "client.roles.party.PartyKillerScreenMixin",
     "client.roles.phantom.PhantomRattatoulieMixin",
     "client.roles.puppeteer.PuppeteerBodyGunTargetMixin",
     "client.roles.puppeteer.PuppeteerBodyKnifeTargetMixin",
