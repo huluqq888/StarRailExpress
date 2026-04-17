@@ -117,7 +117,8 @@ public class MagicianPlayerComponent implements RoleComponent, ServerTickingComp
                     && !r.identifier().getPath().equals("necromancer")
                     && !r.identifier().getPath().equals("exampler")
                     && !r.identifier().getPath().equals("dio")
-                    && !r.identifier().getPath().equals("cat_killer")) {
+                    && !r.identifier().getPath().equals("cat_killer")
+                    && !r.identifier().getPath().equals("cat_necromancer")) {
                 killerRoles.add(r.identifier());
             }
         }
