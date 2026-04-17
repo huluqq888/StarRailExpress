@@ -326,7 +326,14 @@ public abstract class SRERole {
         return InteractionResult.PASS;
     }
 
-    public void leftClickEntity(Player player, Entity victim) {
+    /**
+     * 左键时发生
+     * @param player
+     * @param victim
+     * @return 返回InteractionResult.CONSUME取消原有逻辑。返回其余将继续。
+     */
+    public InteractionResult leftClickEntity(Player player, Entity victim) {
+        return InteractionResult.PASS;
     }
 
     public List<ShopEntry> getShopEntries() {

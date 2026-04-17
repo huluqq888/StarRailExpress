@@ -26,6 +26,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -156,8 +157,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerSt
                 || IsPlayerPunchable.EVENT.invoker().gotPunchable(target)
                 || AllowPlayerPunching.EVENT.invoker().allowPunching(self)) {
             // 在攻击实体之前调用角色的左键点击实体方法
-            io.wifi.starrailexpress.api.RoleMethodDispatcher.callLeftClickEntity(self, target);
-            original.call(target);
+            var result = io.wifi.starrailexpress.api.RoleMethodDispatcher.callLeftClickEntity(self, target);
+            if (result != InteractionResult.CONSUME)
+                original.call(target);
         }
     }
 
