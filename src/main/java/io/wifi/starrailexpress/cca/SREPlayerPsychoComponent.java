@@ -158,6 +158,12 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
         init();
     }
 
+    public int stopPsychoAndSync() {
+        int result = stopPsycho();
+        sync();
+        return result;
+    }
+
     public int stopPsycho() {
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
         int result = gameWorldComponent.getPsychosActive();
