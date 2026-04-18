@@ -32,40 +32,40 @@ public abstract class PandaClientMixin extends Animal {
     @Inject(method = "tick", at = @At("TAIL"))
     public void tick(CallbackInfo ci) {
         PandaClientHandle.pandaMap.forEach(
-                (uuid,panda) -> {
-                    if (panda.getUUID().equals((getUUID()))){
+                (uuid, panda) -> {
+                    if (panda.getUUID().equals((getUUID()))) {
                         Minecraft instance = Minecraft.getInstance();
                         ClientPacketListener connection = instance.getConnection();
-                        if (connection!=null){
-                            Optional<PlayerInfo> first = connection.getOnlinePlayers().stream().filter(player -> player.getProfile().getId().equals(uuid)).findFirst();
-                            if (first.isEmpty()){
+                        if (connection != null) {
+                            Optional<PlayerInfo> first = connection.getOnlinePlayers().stream()
+                                    .filter(player -> player.getProfile().getId().equals(uuid)).findFirst();
+                            if (first.isEmpty()) {
                                 this.discard();
-                            }else {
+                            } else {
                                 PlayerInfo playerInfo = first.get();
-                                if (playerInfo.getGameMode()== GameType.SPECTATOR){
+                                if (playerInfo.getGameMode() == GameType.SPECTATOR) {
                                     this.discard();
-                                }else {
+                                } else {
                                     ClientLevel level = instance.level;
                                     Player playerByUUID = level.getPlayerByUUID(uuid);
-                                    if (playerByUUID!=null){
-
-
+                                    if (playerByUUID != null) {
+                                        this.walkAnimation.position = playerByUUID.walkAnimation.position;
+                                        this.walkAnimation.speedOld = playerByUUID.walkAnimation.speedOld;
+                                        this.walkAnimation.speed = playerByUUID.walkAnimation.speed;
                                         this.xo = playerByUUID.xo;
                                         this.yo = playerByUUID.yo;
                                         this.zo = playerByUUID.zo;
-                                        this.setPos(playerByUUID.getX(),playerByUUID.getY(),playerByUUID.getZ());
-                                        calculateEntityAnimation(false);
-                                        this.setRot(playerByUUID.getYRot(),playerByUUID.getXRot());
+                                        this.setPos(playerByUUID.getX(), playerByUUID.getY(), playerByUUID.getZ());
+                                        // 使用玩家的 WalkAnimation
+                                        // calculateEntityAnimation(false);
+                                        this.setRot(playerByUUID.getYRot(), playerByUUID.getXRot());
                                         this.setYHeadRot(playerByUUID.getYHeadRot());
                                         this.setYBodyRot(playerByUUID.yBodyRot);
-
                                     }
                                 }
                             }
                         }
-
                     }
-                }
-        );
+                });
     }
 }
