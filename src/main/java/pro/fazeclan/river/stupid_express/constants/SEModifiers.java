@@ -2,6 +2,7 @@ package pro.fazeclan.river.stupid_express.constants;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
+import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.event.OnGameEnd;
 import io.wifi.starrailexpress.game.GameUtils;
@@ -157,7 +158,7 @@ public class SEModifiers {
     public static SREModifier UNYIELDING = HMLModifiers.registerModifier(new SREModifier(
             StupidExpress.id("unyielding"),
             new Color(200, 80, 80).getRGB(),
-            new ArrayList<>(List.of(ModRoles.PUPPETEER)),
+            new HashSet<>(List.of(ModRoles.PUPPETEER)),
             null,
             false,
             false));
@@ -166,9 +167,9 @@ public class SEModifiers {
             StupidExpress.id("black_white"),
             Color.BLACK.getRGB(),
             null,
-            new ArrayList<>(List.of(ModRoles.MONOKUMA)),
+            new HashSet<>(Set.of(TMMRoles.VIGILANTE)),
             false,
-            false)).setMax(0);
+            false)).setMax(1).setEnableChance(30).setEnableNeededPlayerCount(10);
 
     // 标记不屈的一次性免疫是否已被消耗（基于 UUID 的运行时集合）
     public static Set<UUID> UNYIELDING_IMMUNITY_USED = ConcurrentHashMap.newKeySet();

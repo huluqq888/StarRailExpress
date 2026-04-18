@@ -15,7 +15,7 @@ import org.agmas.noellesroles.game.modifier.taxed.TaxedModifier;
 import org.agmas.noellesroles.role.ModRoles;
 
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -55,7 +55,7 @@ public class NRModifiers {
      */
     public static void init() {
         EXPEDITION.civilianOnly = true;
-        EXPEDITION.cannotBeAppliedTo = new ArrayList<>(List.of(ModRoles.GHOST));
+        EXPEDITION.cannotBeAppliedTo = new HashSet<>(List.of(ModRoles.GHOST));
         INTROVERTED.civilianOnly = true;
         assignModifierComponents();
         TaxedModifier.init();

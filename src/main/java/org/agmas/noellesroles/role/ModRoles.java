@@ -1559,9 +1559,7 @@ public class ModRoles {
       .setCanUseInstinct(true) // 不能使用杀手直觉
       .setComponentKey(org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaPlayerComponent.KEY)
       .setCanSeeCoin(true)
-      .setMax(1)
-      .setEnableChance(15)
-      .setEnableNeededPlayerCount(10);
+      .setMax(0);
 
   public static SRERole CAT_KILLER = TMMRoles.registerRole(new NormalRole(
       SRE.wifiId("cat_killer"), // 角色 ID

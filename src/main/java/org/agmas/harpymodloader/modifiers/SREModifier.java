@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
@@ -19,8 +19,8 @@ public class SREModifier {
     private final Random random = new Random();
     public ResourceLocation identifier;
     public int color;
-    public ArrayList<SRERole> cannotBeAppliedTo;
-    public ArrayList<SRERole> canOnlyBeAppliedTo;
+    public HashSet<SRERole> cannotBeAppliedTo;
+    public HashSet<SRERole> canOnlyBeAppliedTo;
     public boolean killerOnly;
     public boolean civilianOnly;
     public Consumer<ServerPlayer> serverTickEvent = null;
@@ -77,8 +77,8 @@ public class SREModifier {
         return this;
     };
 
-    public SREModifier(ResourceLocation identifier, int color, ArrayList<SRERole> cannotBeAppliedTo,
-            ArrayList<SRERole> canOnlyBeAppliedTo, boolean killerOnly, boolean civilianOnly) {
+    public SREModifier(ResourceLocation identifier, int color, HashSet<SRERole> cannotBeAppliedTo,
+            HashSet<SRERole> canOnlyBeAppliedTo, boolean killerOnly, boolean civilianOnly) {
         this.identifier = identifier;
         this.color = color;
         this.cannotBeAppliedTo = cannotBeAppliedTo;
@@ -115,19 +115,19 @@ public class SREModifier {
         return this.color;
     }
 
-    public ArrayList<SRERole> canOnlyBeAppliedTo() {
+    public HashSet<SRERole> canOnlyBeAppliedTo() {
         return canOnlyBeAppliedTo;
     }
 
-    public ArrayList<SRERole> cannotBeAppliedTo() {
+    public HashSet<SRERole> cannotBeAppliedTo() {
         return cannotBeAppliedTo;
     }
 
-    public void setCannotBeAppliedTo(ArrayList<SRERole> cannotBeAppliedTo) {
+    public void setCannotBeAppliedTo(HashSet<SRERole> cannotBeAppliedTo) {
         this.cannotBeAppliedTo = cannotBeAppliedTo;
     }
 
-    public void setCanOnlyBeAppliedTo(ArrayList<SRERole> canOnlyBeAppliedTo) {
+    public void setCanOnlyBeAppliedTo(HashSet<SRERole> canOnlyBeAppliedTo) {
         this.canOnlyBeAppliedTo = canOnlyBeAppliedTo;
     }
 

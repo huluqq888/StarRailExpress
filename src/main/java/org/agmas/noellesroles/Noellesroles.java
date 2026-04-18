@@ -137,6 +137,7 @@ public class Noellesroles implements ModInitializer {
         );
         HSRConstants.init();
         Harpymodloader.HIDDEN_MODIFIERS.add(SEModifiers.REFUGEE.identifier().getPath());
+        Harpymodloader.HIDDEN_MODIFIERS.add(SEModifiers.BLACK_WHITE.identifier().getPath());
         // 初始化模组角色列表
         ModRoles.init();
         // 初始化修饰符
