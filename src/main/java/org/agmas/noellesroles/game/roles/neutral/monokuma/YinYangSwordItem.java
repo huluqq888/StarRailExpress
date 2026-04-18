@@ -47,24 +47,26 @@ public class YinYangSwordItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player user, InteractionHand hand) {
         ItemStack stack = user.getItemInHand(hand);
-        if (!(user instanceof ServerPlayer sp)) return InteractionResultHolder.pass(stack);
-        if (sp.isSpectator()) return InteractionResultHolder.pass(stack);
-        if (sp.getCooldowns().isOnCooldown(this)) return InteractionResultHolder.pass(stack);
+        if (!(user instanceof ServerPlayer sp))
+            return InteractionResultHolder.pass(stack);
+        if (sp.isSpectator())
+            return InteractionResultHolder.pass(stack);
+        if (sp.getCooldowns().isOnCooldown(this))
+            return InteractionResultHolder.pass(stack);
 
         // 启动蓄力计时器（在 MonokumaPlayerComponent 中管理）
         var comp = MonokumaPlayerComponent.KEY.maybeGet(sp).orElse(null);
         if (comp != null && comp.phase == 2 && comp.aoeChargeTimer <= 0) {
             comp.aoeChargeTimer = CHARGE_TIME;
-                        comp.sync();
-            
+            comp.sync();
+
             // 蓄力开始时给予缓慢效果(255级,1秒)
             user.addEffect(new MobEffectInstance(
                     MobEffects.MOVEMENT_SLOWDOWN,
                     20, // 1秒
                     254, // 等级255 (实际等级=显示等级-1)
-                    true, false, true
-            ));
-            
+                    true, false, true));
+
             // 蓄力开始音效
             world.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                     SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.5f);
@@ -73,60 +75,60 @@ public class YinYangSwordItem extends Item {
         return InteractionResultHolder.consume(stack);
     }
 
-        /**
-         * 蓄力过程的持续黑白粒子与音效。
-         */
-        public static void spawnChargeParticles(ServerPlayer sp, int chargeTimer) {
-                ServerLevel serverLevel = sp.serverLevel();
-                float progress = 1.0f - ((float) chargeTimer / CHARGE_TIME);
-                double radius = 0.65 + progress * 1.35;
-                int particleCount = 6 + (int) (progress * 18.0f);
-                double baseY = sp.getY() + 1.0 + progress * 0.35;
+    /**
+     * 蓄力过程的持续黑白粒子与音效。
+     */
+    public static void spawnChargeParticles(ServerPlayer sp, int chargeTimer) {
+        ServerLevel serverLevel = sp.serverLevel();
+        float progress = 1.0f - ((float) chargeTimer / CHARGE_TIME);
+        double radius = 0.65 + progress * 1.35;
+        int particleCount = 6 + (int) (progress * 18.0f);
+        double baseY = sp.getY() + 1.0 + progress * 0.35;
 
-                for (int i = 0; i < particleCount; i++) {
-                        double angle = (serverLevel.random.nextDouble() * Math.PI * 2.0) + serverLevel.getGameTime() * 0.12;
-                        double spiral = radius * (0.55 + serverLevel.random.nextDouble() * 0.45);
-                        double px = sp.getX() + Math.cos(angle) * spiral;
-                        double py = baseY + (serverLevel.random.nextDouble() - 0.5) * 1.4;
-                        double pz = sp.getZ() + Math.sin(angle) * spiral;
+        for (int i = 0; i < particleCount; i++) {
+            double angle = (serverLevel.random.nextDouble() * Math.PI * 2.0) + serverLevel.getGameTime() * 0.12;
+            double spiral = radius * (0.55 + serverLevel.random.nextDouble() * 0.45);
+            double px = sp.getX() + Math.cos(angle) * spiral;
+            double py = baseY + (serverLevel.random.nextDouble() - 0.5) * 1.4;
+            double pz = sp.getZ() + Math.sin(angle) * spiral;
 
-                        serverLevel.sendParticles(
-                                        new DustParticleOptions(new Vector3f(0.02f, 0.02f, 0.02f), 1.0f + progress * 1.2f),
-                                        px, py, pz,
-                                        1,
-                                        -Math.cos(angle) * 0.04,
-                                        0.02 + progress * 0.04,
-                                        -Math.sin(angle) * 0.04,
-                                        0.0);
+            serverLevel.sendParticles(
+                    new DustParticleOptions(new Vector3f(0.02f, 0.02f, 0.02f), 1.0f + progress * 1.2f),
+                    px, py, pz,
+                    1,
+                    -Math.cos(angle) * 0.04,
+                    0.02 + progress * 0.04,
+                    -Math.sin(angle) * 0.04,
+                    0.0);
 
-                        serverLevel.sendParticles(
-                                        new DustParticleOptions(new Vector3f(1.0f, 1.0f, 1.0f), 0.9f + progress),
-                                        px * 0.35 + sp.getX() * 0.65,
-                                        py,
-                                        pz * 0.35 + sp.getZ() * 0.65,
-                                        1,
-                                        0.0,
-                                        0.01 + progress * 0.03,
-                                        0.0,
-                                        0.0);
-                }
-
-                // 中心聚能火花
-                int flashCount = 1 + (int) (progress * 4.0f);
-                serverLevel.sendParticles(ParticleTypes.END_ROD,
-                                sp.getX(), sp.getY() + 1.15, sp.getZ(),
-                                flashCount,
-                                0.18 + progress * 0.3,
-                                0.28 + progress * 0.2,
-                                0.18 + progress * 0.3,
-                                0.01);
-
-                if (chargeTimer == CHARGE_TIME / 2 || chargeTimer == 4) {
-                        serverLevel.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
-                                        SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS,
-                                        0.55f + progress * 0.25f, 0.7f + progress * 0.45f);
-                }
+            serverLevel.sendParticles(
+                    new DustParticleOptions(new Vector3f(1.0f, 1.0f, 1.0f), 0.9f + progress),
+                    px * 0.35 + sp.getX() * 0.65,
+                    py,
+                    pz * 0.35 + sp.getZ() * 0.65,
+                    1,
+                    0.0,
+                    0.01 + progress * 0.03,
+                    0.0,
+                    0.0);
         }
+
+        // 中心聚能火花
+        int flashCount = 1 + (int) (progress * 4.0f);
+        serverLevel.sendParticles(ParticleTypes.END_ROD,
+                sp.getX(), sp.getY() + 1.15, sp.getZ(),
+                flashCount,
+                0.18 + progress * 0.3,
+                0.28 + progress * 0.2,
+                0.18 + progress * 0.3,
+                0.01);
+
+        if (chargeTimer == CHARGE_TIME / 2 || chargeTimer == 4) {
+            serverLevel.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                    SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS,
+                    0.55f + progress * 0.25f, 0.7f + progress * 0.45f);
+        }
+    }
 
     // ==================== AOE 释放（由 component tick 调用） ====================
 
@@ -137,9 +139,12 @@ public class YinYangSwordItem extends Item {
         ServerLevel serverLevel = sp.serverLevel();
         AABB aoe = sp.getBoundingBox().inflate(AOE_RANGE);
         List<Player> targets = serverLevel.getEntitiesOfClass(Player.class, aoe,
-                p -> p != sp && GameUtils.isPlayerAliveAndSurvival(p));
-
+                p -> p != sp && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p));
+        int count = 0;
         for (Player target : targets) {
+            count++;
+            if (count >= 2) // 最多杀2人，避免超模
+                break;
             GameUtils.killPlayer(target, true, sp, Noellesroles.id("yinyang_sword_aoe"));
         }
 
@@ -163,33 +168,33 @@ public class YinYangSwordItem extends Item {
      * 参考 StalkerKnifeItem 的冲刺逻辑
      */
     private static void performDashAfterCharge(ServerLevel serverLevel, ServerPlayer sp) {
-                var comp = MonokumaPlayerComponent.KEY.maybeGet(sp).orElse(null);
-                if (comp != null) {
-                        comp.dashAnimTimer = 8;
-                        comp.sync();
-                }
+        var comp = MonokumaPlayerComponent.KEY.maybeGet(sp).orElse(null);
+        if (comp != null) {
+            comp.dashAnimTimer = 8;
+            comp.sync();
+        }
 
         // 计算冲刺方向（基于玩家朝向）
         Vec3 lookVec = sp.getViewVector(1.0f);
-        
+
         // 基础冲刺速度
         double dashSpeed = 1.75;
-        
+
         // 计算冲刺向量（只考虑水平方向）
         Vec3 horizontalLook = new Vec3(lookVec.x, 0, lookVec.z).normalize();
         Vec3 dashVector = horizontalLook.scale(dashSpeed);
-        
+
         // 应用位移
         sp.setDeltaMovement(dashVector.x, sp.getDeltaMovement().y, dashVector.z);
-        
+
         // 同步给客户端
         sp.connection.send(new ClientboundSetEntityMotionPacket(sp.getId(), dashVector.scale(0.75f)));
-        
+
         // 清除坠落距离，避免摔落伤害
         sp.fallDistance = 0;
-        
+
         spawnDashTrail(serverLevel, sp, dashVector, true);
-        
+
         // 播放冲刺音效
         serverLevel.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                 SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 1.2f);
@@ -201,38 +206,40 @@ public class YinYangSwordItem extends Item {
      * 由技能键(Q键)触发的突进攻击（仅冲刺，不击杀）
      */
     public static void performDashAttack(Player user) {
-        if (!(user instanceof ServerPlayer sp)) return;
-        if (sp.getCooldowns().isOnCooldown(user.getMainHandItem().getItem())) return;
+        if (!(user instanceof ServerPlayer sp))
+            return;
+        if (sp.getCooldowns().isOnCooldown(user.getMainHandItem().getItem()))
+            return;
 
-                var comp = MonokumaPlayerComponent.KEY.maybeGet(sp).orElse(null);
-                if (comp != null) {
-                        comp.dashAnimTimer = 8;
-                        comp.sync();
-                }
+        var comp = MonokumaPlayerComponent.KEY.maybeGet(sp).orElse(null);
+        if (comp != null) {
+            comp.dashAnimTimer = 8;
+            comp.sync();
+        }
 
         // 计算冲刺方向（基于玩家朝向）
         Vec3 lookVec = sp.getViewVector(1.0f);
-        
+
         // 基础冲刺速度
         double dashSpeed = 2.5;
-        
+
         // 计算冲刺向量（只考虑水平方向）
         Vec3 horizontalLook = new Vec3(lookVec.x, 0, lookVec.z).normalize();
         Vec3 dashVector = horizontalLook.scale(dashSpeed);
-        
+
         // 应用位移
         sp.setDeltaMovement(dashVector.x, sp.getDeltaMovement().y, dashVector.z);
-        
+
         // 同步给客户端
         sp.connection.send(new ClientboundSetEntityMotionPacket(sp.getId(), dashVector.scale(0.75f)));
-        
+
         // 清除坠落距离，避免摔落伤害
         sp.fallDistance = 0;
-        
+
         ServerLevel serverLevel = sp.serverLevel();
-        
+
         spawnDashTrail(serverLevel, sp, dashVector, false);
-        
+
         // 播放冲刺音效
         serverLevel.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                 SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 1.2f);
@@ -283,7 +290,7 @@ public class YinYangSwordItem extends Item {
         serverLevel.sendParticles(ParticleTypes.END_ROD,
                 centerX, centerY, centerZ,
                 10, 0.75, 0.5, 0.75, 0.08);
-        
+
         // 添加额外的爆炸冲击波效果
         for (int wave = 0; wave < 3; wave++) {
             double waveRadius = 2.0 + wave * 1.5;
@@ -295,7 +302,7 @@ public class YinYangSwordItem extends Item {
                 double px = centerX + cos * waveRadius;
                 double py = centerY + (wave - 1) * 0.3;
                 double pz = centerZ + sin * waveRadius;
-                
+
                 serverLevel.sendParticles(
                         new DustParticleOptions(new Vector3f(0.5f, 0.5f, 0.5f), 0.8f),
                         px, py, pz,
