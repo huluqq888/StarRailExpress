@@ -33,6 +33,12 @@ public class MonokumaRole extends CustomWinnerRole {
   }
 
   @Override
+  public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
+    MonokumaPlayerComponent.KEY.get(killer).onKillPlayer();
+    return;
+  }
+
+  @Override
   public boolean onPsychoGiveItem(Player player, SREPlayerPsychoComponent comp) {
     // 黑白已经在 onHitTriggered 中给了阴阳剑，不需要再给球棒
     return true;

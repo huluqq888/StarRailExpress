@@ -4,6 +4,7 @@ import io.wifi.starrailexpress.api.RoleComponent;
 import io.wifi.starrailexpress.cca.SREArmorPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
+import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.util.SkinManager;
@@ -133,8 +134,10 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
      * 如果处于伪装义警阶段(1)，进入狂暴前奏
      */
     public void onHitTriggered() {
-        if (phase != 1) return;
-        if (!(player instanceof ServerPlayer sp)) return;
+        if (phase != 1)
+            return;
+        if (!(player instanceof ServerPlayer sp))
+            return;
 
         phase = 2;
         frenzyTimer = FRENZY_DURATION;
@@ -143,8 +146,8 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
         SREArmorPlayerComponent armor = SREArmorPlayerComponent.KEY.get(player);
         armor.giveArmor();
 
-        sp.addEffect(new MobEffectInstance(ModEffects.NO_COLLIDE, FRENZY_DURATION, 0, false, false,false));
-        sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, FRENZY_DURATION, 0, false, false,false));
+        sp.addEffect(new MobEffectInstance(ModEffects.NO_COLLIDE, FRENZY_DURATION, 0, false, false, false));
+        sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, FRENZY_DURATION, 0, false, false, false));
 
         // 给予阴阳剑
         RoleUtils.insertStackInFreeSlot(player, new net.minecraft.world.item.ItemStack(ModItems.YINYANG_SWORD));
@@ -164,8 +167,7 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                         ModEffects.MONOKUMA_FRENZY,
                         FRENZY_DURATION + 20,
                         0,
-                        true, false, true
-                ));
+                        true, false, false));
             }
         }
         MutableComponent append = Component.translatable("message.noellesroles.monokuma.frenzy_start")
@@ -189,12 +191,19 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
 
     // ==================== 变身黑白熊 ====================
 
+    public void onKillPlayer() {
+        if (phase == 2) {
+            transformToMonokuma();
+        }
+    }
+
     /**
      * 狂暴前奏结束，变身黑白熊
      */
     private void transformToMonokuma() {
-        if (!(player instanceof ServerPlayer sp)) return;
-
+        if (!(player instanceof ServerPlayer sp))
+            return;
+        SREPlayerPsychoComponent.KEY.get(this.player).stopPsychoAndRefreshPsychoCount(true);
         phase = 3;
         frenzyTimer = 0;
         auraCoinTimer = 0;
@@ -210,14 +219,12 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                 ModEffects.INVINCIBLE,
                 Integer.MAX_VALUE,
                 0,
-                true, false, false
-        ));
+                true, false, false));
         player.addEffect(new MobEffectInstance(
                 MobEffects.INVISIBILITY,
                 Integer.MAX_VALUE,
                 0,
-                true, false, false
-        ));
+                true, false, false));
 
         // 清除背包中所有武器/道具
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
@@ -259,13 +266,16 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
             auraCoinTimer = 0;
             // 给范围内所有存活玩家金币
             for (ServerPlayer target : serverLevel.players()) {
-                if (target == sp) continue;
-                if (!GameUtils.isPlayerAliveAndSurvival(target)) continue;
+                if (target == sp)
+                    continue;
+                if (!GameUtils.isPlayerAliveAndSurvival(target))
+                    continue;
                 if (sp.distanceTo(target) <= AURA_RANGE) {
                     SkinManager.addCoinNum(target, AURA_COIN_AMOUNT);
                     target.sendSystemMessage(
                             Component.translatable("message.noellesroles.monokuma.aura_coin", AURA_COIN_AMOUNT)
-                                    .withStyle(ChatFormatting.GOLD), true);
+                                    .withStyle(ChatFormatting.GOLD),
+                            true);
                 }
             }
         }
@@ -273,15 +283,16 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
         // 体力光环：给范围内玩家无限奔跑效果
         if (sp.level().getGameTime() % 20 == 0) {
             for (ServerPlayer target : serverLevel.players()) {
-                if (target == sp) continue;
-                if (!GameUtils.isPlayerAliveAndSurvival(target)) continue;
+                if (target == sp)
+                    continue;
+                if (!GameUtils.isPlayerAliveAndSurvival(target))
+                    continue;
                 if (sp.distanceTo(target) <= AURA_RANGE) {
                     target.addEffect(new MobEffectInstance(
                             ModEffects.INFINITE_STAMINA,
                             40, // 2秒，持续刷新
                             0,
-                            true, false, false
-                    ));
+                            true, false, false));
                 }
             }
         }
@@ -291,12 +302,16 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
 
     @Override
     public void serverTick() {
-        if (phase == 0) return;
-        if (!(player instanceof ServerPlayer sp)) return;
-        if (!GameUtils.isPlayerAliveAndSurvival(player)) return;
+        if (phase == 0)
+            return;
+        if (!(player instanceof ServerPlayer sp))
+            return;
+        if (!GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player))
+            return;
 
         var gameComponent = SREGameWorldComponent.KEY.get(player.level());
-        if (!gameComponent.isRunning()) return;
+        if (!gameComponent.isRunning())
+            return;
 
         // 狂暴前奏阶段
         if (phase == 2) {
@@ -305,7 +320,10 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                 dashAnimTimer--;
             }
             if (frenzyTimer <= 0) {
-                transformToMonokuma();
+                GameUtils.forceKillPlayer(player, true, player, GameConstants.DeathReasons.BLACK_WHITE_TIMEOUT);
+                clear();
+                // 试炼失败
+                return;
             }
 
             // AOE 蓄力计时 → 自动释放
@@ -342,8 +360,7 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                         ModEffects.INVINCIBLE,
                         Integer.MAX_VALUE,
                         0,
-                        true, false, false
-                ));
+                        true, false, false));
             }
         }
     }

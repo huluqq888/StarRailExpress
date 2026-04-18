@@ -161,7 +161,9 @@ public class SREPlayerPsychoComponent implements RoleComponent, ServerTickingCom
     public int stopPsycho() {
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
         int result = gameWorldComponent.getPsychosActive();
-        gameWorldComponent.setPsychosActive(result - 1);
+        if (result >= 1) {
+            gameWorldComponent.setPsychosActive(result - 1);
+        }
         this.psychoTicks = -1;
         if (this.player instanceof ServerPlayer serverPlayer) {
             ServerPlayNetworking.send(serverPlayer, new RemoveStatusBarPayload("Psycho"));

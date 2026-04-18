@@ -94,7 +94,7 @@ public class GameUtils {
     public static ArrayList<ServerTaskInfoClasses.ServerTaskInfo> serverAsynTaskLists = new ArrayList<>();
     private static Set<UUID> forcedReadyPlayers;
     public static boolean isStartingGame = false;
-    public static boolean isGameStarted = false; 
+    public static boolean isGameStarted = false;
 
     public static void limitPlayerToBox(ServerPlayer player, AABB box) {
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.serverLevel());
@@ -1136,6 +1136,7 @@ public class GameUtils {
                     return;
             } else {
                 component.stopPsycho();
+                component.sync();
             }
         }
         if (!role.afterShieldAllowDeath(victim, killer, deathReason, spawnBody)) {

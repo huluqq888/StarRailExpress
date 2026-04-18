@@ -169,7 +169,7 @@ public class SEModifiers {
             null,
             null,
             false,
-            true)).setMax(1).setEnableChance(30).setEnableNeededPlayerCount(10).setCannotAppliedToVigilante(true);
+            true)).setMax(1).setEnableChance(10).setEnableNeededPlayerCount(10).setCannotAppliedToVigilante(true);
 
     // 标记不屈的一次性免疫是否已被消耗（基于 UUID 的运行时集合）
     public static Set<UUID> UNYIELDING_IMMUNITY_USED = ConcurrentHashMap.newKeySet();
