@@ -2,7 +2,7 @@ package io.wifi.starrailexpress.client.model;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.index.TMMItems;
-import io.wifi.starrailexpress.item.SkinableItem;
+import io.wifi.starrailexpress.contents.item.SkinableItem;
 import io.wifi.starrailexpress.util.SkinManager;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.minecraft.client.resources.model.ModelResourceLocation;

@@ -1,7 +1,7 @@
 package org.agmas.noellesroles.mixin.roles.framing;
 
-import io.wifi.starrailexpress.block.FoodPlatterBlock;
-import io.wifi.starrailexpress.block_entity.BeveragePlateBlockEntity;
+import io.wifi.starrailexpress.contents.block.FoodPlatterBlock;
+import io.wifi.starrailexpress.contents.block_entity.BeveragePlateBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;

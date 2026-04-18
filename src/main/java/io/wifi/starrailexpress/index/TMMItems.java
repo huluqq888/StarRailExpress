@@ -7,7 +7,7 @@ import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.api.impl.GrenadeChargeableItem;
 import io.wifi.starrailexpress.api.impl.KnifeChargeableItem;
 import io.wifi.starrailexpress.index.wathe_bridge.WatheBridgerItems;
-import io.wifi.starrailexpress.item.*;
+import io.wifi.starrailexpress.contents.item.*;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;

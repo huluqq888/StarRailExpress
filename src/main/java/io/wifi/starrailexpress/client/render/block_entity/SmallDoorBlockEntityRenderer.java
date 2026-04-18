@@ -1,7 +1,7 @@
 package io.wifi.starrailexpress.client.render.block_entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import io.wifi.starrailexpress.block_entity.SmallDoorBlockEntity;
+import io.wifi.starrailexpress.contents.block_entity.SmallDoorBlockEntity;
 import io.wifi.starrailexpress.client.animation.SmallDoorAnimations;
 import io.wifi.starrailexpress.client.model.TMMModelLayers;
 import net.minecraft.client.model.geom.ModelPart;

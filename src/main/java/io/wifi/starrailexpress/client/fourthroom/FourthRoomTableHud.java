@@ -1,7 +1,7 @@
 package io.wifi.starrailexpress.client.fourthroom;
 
-import io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlock;
-import io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlockEntity;
+import org.agmas.noellesroles.game.modes.fourthroom.block.FourthRoomTableBlock;
+import org.agmas.noellesroles.game.modes.fourthroom.block.FourthRoomTableBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

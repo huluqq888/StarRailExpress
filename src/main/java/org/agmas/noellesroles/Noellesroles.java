@@ -10,15 +10,13 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
-import org.agmas.noellesroles.blood.BloodMain;
+import org.agmas.noellesroles.client.blood.BloodMain;
 import org.agmas.noellesroles.commands.*;
 import org.agmas.noellesroles.config.NoellesRolesConfig;
 import org.agmas.noellesroles.init.*;
-import org.agmas.noellesroles.modifier.NRModifiers;
-import org.agmas.noellesroles.presets.Preset;
-import org.agmas.noellesroles.repack.HSRConstants;
-import org.agmas.noellesroles.repack.HSRItems;
-import org.agmas.noellesroles.repack.HSRSounds;
+import org.agmas.noellesroles.game.modifier.NRModifiers;
+import org.agmas.noellesroles.game.presets.Preset;
+import org.agmas.noellesroles.init.HSRConstants;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.utils.RightClickBlockManager;
 import org.agmas.noellesroles.utils.RoleUtils;
@@ -159,7 +157,7 @@ public class Noellesroles implements ModInitializer {
 
         // 注册事件处理器
         ModEventsRegister.registerEvents();
-        org.agmas.noellesroles.roles.monokuma.MonokumaEventHandler.register();
+        org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaEventHandler.register();
 
         // 注册命令
         BroadcastCommand.register();
@@ -189,8 +187,7 @@ public class Noellesroles implements ModInitializer {
         // 注册网络处理器
         ModPacketsReciever.registerPackets();
         // 初始化HSR组件
-        HSRItems.init();
-        HSRSounds.init();
+
 
         // 注册商店
         RoleShopHandler.shopRegister();

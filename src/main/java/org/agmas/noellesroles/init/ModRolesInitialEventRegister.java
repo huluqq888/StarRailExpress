@@ -15,14 +15,27 @@ import org.agmas.harpymodloader.events.ModdedRoleAssigned;
 import org.agmas.noellesroles.RicesRoleRhapsody;
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.config.NoellesRolesConfig;
+import org.agmas.noellesroles.game.roles.Innocent.accountant.AccountantPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.alchemist.AlchemistPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.hoan_meirin.HoanMeirinPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.monitor.MonitorPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.blood_feudist.BloodFeudistPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.dio.DIOPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.stalker.StalkerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.watcher.WatcherPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.mercenary.MercenaryPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.nian_shou.NianShouPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.puppeteer.PuppeteerPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.recorder.RecorderPlayerComponent;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.role.RedHouseRoles;
-import org.agmas.noellesroles.roles.candlebearer.CandleBearerPlayerComponent;
-import org.agmas.noellesroles.roles.executioner.ExecutionerPlayerComponent;
-import org.agmas.noellesroles.roles.ghost.GhostPlayerComponent;
-import org.agmas.noellesroles.roles.manipulator.ManipulatorPlayerComponent;
-import org.agmas.noellesroles.roles.thief.ThiefPlayerComponent;
-import org.agmas.noellesroles.roles.vulture.VulturePlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.candlebearer.CandleBearerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.executioner.ExecutionerPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.ghost.GhostPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.manipulator.ManipulatorPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.thief.ThiefPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.vulture.VulturePlayerComponent;
 import org.agmas.noellesroles.utils.RoleUtils;
 import pro.fazeclan.river.stupid_express.constants.SEItems;
 import pro.fazeclan.river.stupid_express.constants.SERoles;
@@ -126,20 +139,20 @@ public class ModRolesInitialEventRegister {
             }
             if (role.identifier().equals(ModRoles.ACCOUNTANT.identifier())) {
                 // 会计角色初始化
-                var accountantComponent = org.agmas.noellesroles.component.AccountantPlayerComponent.KEY.get(player);
+                var accountantComponent = AccountantPlayerComponent.KEY.get(player);
                 accountantComponent.init();
                 return;
             }
             if (role.identifier().equals(ModRoles.ALCHEMIST.identifier())) {
                 // 药剂师角色初始化
-                var alchemistComponent = org.agmas.noellesroles.component.AlchemistPlayerComponent.KEY.get(player);
+                var alchemistComponent = AlchemistPlayerComponent.KEY.get(player);
                 alchemistComponent.init();
                 return;
             }
             // 派对狂角色初始化 - 基于开局玩家数设置threshold
             if (role.identifier().equals(ModRoles.PARTY_KILLER.identifier())) {
                 int totalPlayers = SREGameWorldComponent.KEY.get(player.level()).getPlayerCount();
-                var partyComponent = org.agmas.noellesroles.roles.party.PartyPlayerComponent.KEY.get(player);
+                var partyComponent = org.agmas.noellesroles.game.roles.killer.party.PartyPlayerComponent.KEY.get(player);
                 partyComponent.initThreshold(totalPlayers);
                 return;
             }
@@ -216,20 +229,20 @@ public class ModRolesInitialEventRegister {
             RoleInitialItems.addInitialItemsForRole(player, role);
 
             if (role.equals(ModRoles.GAMBLER)) {
-                org.agmas.noellesroles.roles.gambler.GamblerPlayerComponent gamblerPlayerComponent = org.agmas.noellesroles.roles.gambler.GamblerPlayerComponent.KEY
+                org.agmas.noellesroles.game.roles.neutral.gambler.GamblerPlayerComponent gamblerPlayerComponent = org.agmas.noellesroles.game.roles.neutral.gambler.GamblerPlayerComponent.KEY
                         .get(player);
                 gamblerPlayerComponent.init();
                 gamblerPlayerComponent.sync();
             }
 
             if (role.equals(ModRoles.NOISEMAKER)) {
-                org.agmas.noellesroles.roles.noise_maker.NoiseMakerPlayerComponent noiseMakerPlayerComponent = org.agmas.noellesroles.roles.noise_maker.NoiseMakerPlayerComponent.KEY
+                org.agmas.noellesroles.game.roles.Innocent.noise_maker.NoiseMakerPlayerComponent noiseMakerPlayerComponent = org.agmas.noellesroles.game.roles.Innocent.noise_maker.NoiseMakerPlayerComponent.KEY
                         .get(player);
                 noiseMakerPlayerComponent.init();
                 noiseMakerPlayerComponent.sync();
             }
             if (role.equals(ModRoles.GHOST)) {
-                org.agmas.noellesroles.roles.ghost.GhostPlayerComponent ghostPlayerComponent = org.agmas.noellesroles.roles.ghost.GhostPlayerComponent.KEY
+                org.agmas.noellesroles.game.roles.Innocent.ghost.GhostPlayerComponent ghostPlayerComponent = org.agmas.noellesroles.game.roles.Innocent.ghost.GhostPlayerComponent.KEY
                         .get(player);
                 ghostPlayerComponent.init();
                 ghostPlayerComponent.sync();
@@ -257,9 +270,9 @@ public class ModRolesInitialEventRegister {
             }
             // if (role.equals(SHERIFF)) {
             // player.giveItemStack(TMMItems.REVOLVER.getDefaultStack());
-            // org.agmas.noellesroles.roles.sheriff.SheriffPlayerComponent
+            // org.agmas.noellesroles.game.roles.sheriff.SheriffPlayerComponent
             // sheriffPlayerComponent =
-            // org.agmas.noellesroles.roles.sheriff.SheriffPlayerComponent.KEY.get(player);
+            // org.agmas.noellesroles.game.roles.sheriff.SheriffPlayerComponent.KEY.get(player);
             // sheriffPlayerComponent.reset();
             // sheriffPlayerComponent.sync();
             // }

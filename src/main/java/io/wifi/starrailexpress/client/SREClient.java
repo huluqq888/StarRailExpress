@@ -9,7 +9,7 @@ import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
-import io.wifi.starrailexpress.block.SecurityMonitorBlock;
+import io.wifi.starrailexpress.contents.block.SecurityMonitorBlock;
 import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
@@ -25,9 +25,11 @@ import io.wifi.starrailexpress.client.fourthroom.FourthRoomCameraDirector;
 import io.wifi.starrailexpress.client.fourthroom.FourthRoomClientState;
 import io.wifi.starrailexpress.client.fourthroom.FourthRoomTableHud;
 import io.wifi.starrailexpress.client.render.block_entity.FourthRoomTableBlockEntityRenderer;
-import io.wifi.starrailexpress.fourthroom.network.OpenFourthRoomPeekDeckPayload;
-import io.wifi.starrailexpress.fourthroom.network.FourthRoomTableEffectsPayload;
-import io.wifi.starrailexpress.fourthroom.network.FourthRoomStatePayload;
+import io.wifi.starrailexpress.event.client.OnGameFinishedClient;
+import io.wifi.starrailexpress.event.client.OnGameStartedClient;
+import org.agmas.noellesroles.game.modes.fourthroom.network.OpenFourthRoomPeekDeckPayload;
+import org.agmas.noellesroles.game.modes.fourthroom.network.FourthRoomTableEffectsPayload;
+import org.agmas.noellesroles.game.modes.fourthroom.network.FourthRoomStatePayload;
 import io.wifi.starrailexpress.client.model.GeneralModelLoadingPlugin;
 import io.wifi.starrailexpress.client.model.TMMModelLayers;
 import io.wifi.starrailexpress.client.render.block_entity.PlateBlockEntityRenderer;
@@ -40,10 +42,10 @@ import io.wifi.starrailexpress.client.util.ClientScheduler;
 import io.wifi.starrailexpress.client.util.MyBackgroundAmbience;
 import io.wifi.starrailexpress.client.util.TMMItemTooltips;
 import io.wifi.starrailexpress.compat.TrainVoicePlugin;
-import io.wifi.starrailexpress.data.MapConfig;
-import io.wifi.starrailexpress.entity.FirecrackerEntity;
-import io.wifi.starrailexpress.entity.NoteEntity;
-import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.game.data.MapConfig;
+import io.wifi.starrailexpress.contents.entity.FirecrackerEntity;
+import io.wifi.starrailexpress.contents.entity.NoteEntity;
+import io.wifi.starrailexpress.contents.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.event.AllowOtherCameraType;
 import io.wifi.starrailexpress.event.AllowItemShowInHand;
 import io.wifi.starrailexpress.event.ClientHeldItemSwitchEvent;
@@ -51,11 +53,11 @@ import io.wifi.starrailexpress.event.OnGetInstinctHighlight;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.*;
-import io.wifi.starrailexpress.item.GrenadeItem;
-import io.wifi.starrailexpress.item.KnifeItem;
-import io.wifi.starrailexpress.mod_whitelist.client.ModWhitelistClient;
-import io.wifi.starrailexpress.mod_whitelist.client.network.ModWhitelistClientNetworkHandler;
-import io.wifi.starrailexpress.mod_whitelist.common.network.ModWhitelistConfigPayload;
+import io.wifi.starrailexpress.contents.item.GrenadeItem;
+import io.wifi.starrailexpress.contents.item.KnifeItem;
+import net.exmo.sre.mod_whitelist.client.ModWhitelistClient;
+import net.exmo.sre.mod_whitelist.client.network.ModWhitelistClientNetworkHandler;
+import net.exmo.sre.mod_whitelist.common.network.ModWhitelistConfigPayload;
 import io.wifi.starrailexpress.network.*;
 import io.wifi.starrailexpress.network.original.*;
 import io.wifi.starrailexpress.network.packet.*;
@@ -96,7 +98,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
-import org.agmas.noellesroles.roles.monokuma.YinYangSwordItem;
+import org.agmas.noellesroles.game.roles.neutral.monokuma.YinYangSwordItem;
 import pro.fazeclan.river.stupid_express.modifier.refugee.cca.RefugeeComponent;
 
 import org.agmas.noellesroles.client.NoellesrolesClient;
@@ -548,6 +550,12 @@ public class SREClient implements ClientModInitializer {
                 }
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(OnGameFinishedPayload.TYPE, (payload, context) -> {
+            OnGameFinishedClient.EVENT.invoker().gameFinished();
+        });
+        ClientPlayNetworking.registerGlobalReceiver(OnGameStartedPayload.TYPE, (payload, context) -> {
+            OnGameStartedClient.EVENT.invoker().gameStarted();
+        });
         ClientPlayNetworking.registerGlobalReceiver(SyncRoomToPlayerPayload.ID, (payload, context) -> {
             Map<UUID, Integer> data = payload.data();
             if (Minecraft.getInstance().isSingleplayer()) {
@@ -593,9 +601,9 @@ public class SREClient implements ClientModInitializer {
             context.client().execute(() -> context.client().setScreen(new ProgressionPassScreen()));
         });
         ClientPlayNetworking.registerGlobalReceiver(
-                io.wifi.starrailexpress.mail.OpenMailboxScreenPayload.ID, (payload, context) -> {
+                io.wifi.starrailexpress.contents.mail.OpenMailboxScreenPayload.ID, (payload, context) -> {
                     context.client().execute(() -> context.client().setScreen(
-                            new io.wifi.starrailexpress.mail.MailboxScreen()));
+                            new io.wifi.starrailexpress.contents.mail.MailboxScreen()));
                 });
         // ClientPlayNetworking.registerGlobalReceiver(
         // io.wifi.starrailexpress.network.OpenRoleUnlockScreenPayload.ID, (payload,

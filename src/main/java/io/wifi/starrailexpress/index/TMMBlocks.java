@@ -2,7 +2,7 @@ package io.wifi.starrailexpress.index;
 
 import dev.doctor4t.ratatouille.util.registrar.BlockRegistrar;
 import io.wifi.starrailexpress.SRE;
-import io.wifi.starrailexpress.block.*;
+import io.wifi.starrailexpress.contents.block.*;
 import io.wifi.starrailexpress.index.wathe_bridge.WatheBridgerBlocks;
 import io.wifi.starrailexpress.util.BlockSettingsAdditions;
 import net.fabricmc.fabric.api.object.builder.v1.block.type.BlockSetTypeBuilder;
@@ -635,7 +635,7 @@ public interface TMMBlocks {
 
     // 邮箱方块
     Block MAILBOX = registrar.createWithItem("mailbox",
-            new io.wifi.starrailexpress.mail.MailboxBlock(
+            new io.wifi.starrailexpress.contents.mail.MailboxBlock(
                     BlockBehaviour.Properties.of()
                             .strength(2.0f, 6.0f)
                             .sound(SoundType.METAL)
@@ -644,7 +644,7 @@ public interface TMMBlocks {
 
     // 第四房间牌桌
     Block FOURTH_ROOM_TABLE = registrar.createWithItem("fourth_room_table",
-            new io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlock(),
+            new org.agmas.noellesroles.game.modes.fourthroom.block.FourthRoomTableBlock(),
             TMMItems.EQUIPMENT_GROUP);
 
     private static Block createBranch(String name, Block wood, BlockRegistrar registrar) {

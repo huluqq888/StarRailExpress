@@ -2,7 +2,7 @@ package org.agmas.noellesroles.mixin.roles.noisemaker;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
-import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.contents.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;

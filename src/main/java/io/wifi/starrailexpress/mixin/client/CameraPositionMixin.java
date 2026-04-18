@@ -1,6 +1,6 @@
 package io.wifi.starrailexpress.mixin.client;
 
-import io.wifi.starrailexpress.block.SecurityMonitorBlock;
+import io.wifi.starrailexpress.contents.block.SecurityMonitorBlock;
 import net.minecraft.client.Camera;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;

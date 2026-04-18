@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
 import io.wifi.starrailexpress.SREConfig;
-import io.wifi.starrailexpress.block_entity.BeveragePlateBlockEntity;
+import io.wifi.starrailexpress.contents.block_entity.BeveragePlateBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;

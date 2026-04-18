@@ -8,7 +8,7 @@ import java.util.Random;
 import org.agmas.noellesroles.commands.GameUtilsCommand;
 
 import io.wifi.starrailexpress.api.SREGameModes;
-import io.wifi.starrailexpress.command.MapVoteCommand;
+import io.wifi.starrailexpress.contents.command.MapVoteCommand;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

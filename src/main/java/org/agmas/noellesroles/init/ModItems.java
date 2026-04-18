@@ -11,16 +11,18 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemLore;
 import org.agmas.noellesroles.Noellesroles;
-import org.agmas.noellesroles.item.*;
-import org.agmas.noellesroles.item.charge_item.*;
-import org.agmas.noellesroles.repack.HSRItems;
+import org.agmas.noellesroles.content.item.*;
+import org.agmas.noellesroles.content.item.charge_item.*;
 import org.agmas.noellesroles.utils.LocalDateData;
 
 import java.util.ArrayList;
@@ -28,6 +30,13 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 public class ModItems {
+    public static final Item ANTIDOTE = register(new AntidoteItem((new Item.Properties()).stacksTo(1)), "antidote");
+    public static final Item PILL = register(new PillItem((new Item.Properties()).stacksTo(16).food((new FoodProperties.Builder()).nutrition(1).saturationModifier(0.1F).alwaysEdible().build())), "pill");
+    public static final Item TOXIN = register(new ToxinItem((new Item.Properties()).stacksTo(1)), "toxin");
+    public static final Item CATALYST = register(new CatalystItem((new Item.Properties()).stacksTo(1)), "catalyst");
+    public static final Item BANDIT_REVOLVER = register(new BanditRevolverItem((new Item.Properties()).stacksTo(1)),
+            "bandit_revolver");
+    public static final String PILL_POISONOUS_KEY = "poisonous";
     public static ResourceKey<CreativeModeTab> MISC_CREATIVE_GROUP = ResourceKey.create(
             Registries.CREATIVE_MODE_TAB,
             Noellesroles.id("misc"));
@@ -106,7 +115,7 @@ public class ModItems {
      * - 右键：前摇1秒范围伤害
      */
     public static final Item YINYANG_SWORD = register(
-            new org.agmas.noellesroles.roles.monokuma.YinYangSwordItem(
+            new org.agmas.noellesroles.game.roles.neutral.monokuma.YinYangSwordItem(
                     new Item.Properties().stacksTo(1)),
             "yinyang_sword");
 
@@ -156,7 +165,7 @@ public class ModItems {
      * - 中毒时间：40-70秒
      */
     public static final Item TOILET_POISON = register(
-            new io.wifi.starrailexpress.item.ToiletPoisonItem(new Item.Properties().stacksTo(1)),
+            new io.wifi.starrailexpress.contents.item.ToiletPoisonItem(new Item.Properties().stacksTo(1)),
             "toilet_poison");
 
     /**
@@ -509,7 +518,7 @@ public class ModItems {
      * - 初始子弹数1，只能通过塔罗会补充
      */
     public static final Item EXECUTIONER_GUN = register(
-            new org.agmas.noellesroles.roles.fool.ExecutionerGunItem(
+            new org.agmas.noellesroles.game.roles.Innocent.fool.ExecutionerGunItem(
                     new Item.Properties().stacksTo(1)),
             "executioner_gun");
 
@@ -520,7 +529,7 @@ public class ModItems {
      * - 玩家对着纸条按V键祷告，获得"塔罗会成员"标签
      */
     public static final Item HONORED_NOTE = register(
-            new org.agmas.noellesroles.roles.fool.HonoredNoteItem(
+            new org.agmas.noellesroles.game.roles.Innocent.fool.HonoredNoteItem(
                     new Item.Properties().stacksTo(16)),
             "honored_note");
 
@@ -531,7 +540,7 @@ public class ModItems {
      * - 冷却90秒
      */
     public static final Item SPIRIT_CLOAK = register(
-            new org.agmas.noellesroles.roles.fool.SpiritCloakItem(
+            new org.agmas.noellesroles.game.roles.Innocent.fool.SpiritCloakItem(
                     new Item.Properties().stacksTo(1)),
             "spirit_cloak");
 
@@ -553,9 +562,9 @@ public class ModItems {
         ChargeableItemRegistry.register(FunnyItems.BOWEN_BADGE, new BowenBadgeChargeItem());
         ChargeableItemRegistry.register(ModItems.STALKER_KNIFE, new StalkerKnifeChargeItem());
         ChargeableItemRegistry.register(ModItems.STALKER_KNIFE_OFFHAND, new StalkerKnifeChargeItem());
-        ChargeableItemRegistry.register(HSRItems.TOXIN, new ToxinChargeItem());
+        ChargeableItemRegistry.register(TOXIN, new ToxinChargeItem());
         ChargeableItemRegistry.register(ModItems.THROWING_KNIFE, new KnifeChargeableItem());
-        ChargeableItemRegistry.register(HSRItems.ANTIDOTE, new AntidoteChargeItem());
+        ChargeableItemRegistry.register(ANTIDOTE, new AntidoteChargeItem());
     }
     // public static final Item SHERIFF_GUN_MAINTENANCE = register(
     // new SheriffGunMaintenanceItem(new Item.Settings().maxCount(1)),
@@ -641,4 +650,11 @@ public class ModItems {
         };
     }
 
+    public static ItemStack createPillStack(boolean poisonous) {
+        ItemStack stack = PILL.getDefaultInstance();
+        CompoundTag tag = new CompoundTag();
+        tag.putBoolean(PILL_POISONOUS_KEY, poisonous);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        return stack;
+    }
 }

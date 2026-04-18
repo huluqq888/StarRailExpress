@@ -37,7 +37,7 @@ import org.agmas.harpymodloader.modifiers.HMLModifiers;
 import org.agmas.harpymodloader.modifiers.SREModifier;
 import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.roles.monokuma.MonokumaPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaPlayerComponent;
 import pro.fazeclan.river.stupid_express.constants.SEModifiers;
 
 import java.util.*;

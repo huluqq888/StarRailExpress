@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Unbreakable;
-import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.role.RedHouseRoles;
 
@@ -177,7 +176,7 @@ public class RoleInitialItems {
 
         // 强盗初始物品
         List<Supplier<ItemStack>> banditItems = new ArrayList<>();
-        banditItems.add(() -> org.agmas.noellesroles.repack.HSRItems.BANDIT_REVOLVER.getDefaultInstance());
+        banditItems.add(() -> ModItems.BANDIT_REVOLVER.getDefaultInstance());
         banditItems.add(() -> TMMItems.CROWBAR.getDefaultInstance());
         INITIAL_ITEMS_MAP.put(ModRoles.BANDIT, banditItems);
 

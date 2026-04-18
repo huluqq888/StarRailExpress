@@ -14,9 +14,9 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.flag.FeatureFlagSet;
 import org.agmas.noellesroles.Noellesroles;
-import org.agmas.noellesroles.effects.NoCollideEffect;
-import org.agmas.noellesroles.effects.SimpleMobEffect;
-import org.agmas.noellesroles.effects.TimeStopEffect;
+import org.agmas.noellesroles.content.effects.NoCollideEffect;
+import org.agmas.noellesroles.content.effects.SimpleMobEffect;
+import org.agmas.noellesroles.content.effects.TimeStopEffect;
 
 public class ModEffects {
     public static final Holder<MobEffect> SKILL_BANED = register("skill_baned",
@@ -175,7 +175,7 @@ public class ModEffects {
      * - 持续60秒
      */
     public static final Holder<MobEffect> MONOKUMA_FRENZY = register("monokuma_frenzy",
-            new org.agmas.noellesroles.roles.monokuma.MonokumaFrenzyEffect());
+            new org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaFrenzyEffect());
 
     /**
      * 注册药水效果到注册表
@@ -248,9 +248,12 @@ public class ModEffects {
                 pierceDeath = false;
                 return true;
             }
+            if (player.hasEffect(ModEffects.INVINCIBLE) ){
+                return false ;
+            }
             if (deathReason.equals(Noellesroles.id("bomb_death")))
                 return true;
-            if (player.hasEffect(ModEffects.INVINCIBLE) || player.hasEffect(ModEffects.TAROT_ASSEMBLY)) {
+            if ( player.hasEffect(ModEffects.TAROT_ASSEMBLY)) {
                 if (player.position().z >= 19000)
                     return false;
             }

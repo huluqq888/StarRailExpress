@@ -16,17 +16,17 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+import io.wifi.StarRailExpressID;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.harpymodloader.events.GameInitializeEvent;
 import org.agmas.harpymodloader.events.ResetPlayerEvent;
-import org.agmas.noellesroles.component.MercenaryPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.mercenary.MercenaryPlayerComponent;
 import org.agmas.noellesroles.init.ModEffects;
-import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.packet.NameTagSyncPayload;
-import org.agmas.noellesroles.repack.HSRItems;
 import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.roles.coroner.BodyDeathReasonComponent;
-import org.agmas.noellesroles.roles.hoan_meirin.HoanMeirinFistPunchHandler;
+import org.agmas.noellesroles.game.roles.Innocent.coroner.BodyDeathReasonComponent;
+import org.agmas.noellesroles.game.roles.Innocent.hoan_meirin.HoanMeirinFistPunchHandler;
 import org.agmas.noellesroles.utils.EntityClearUtils;
 import org.agmas.noellesroles.utils.MCItemsUtils;
 import org.jetbrains.annotations.NotNull;
@@ -58,11 +58,11 @@ import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
 import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.cca.SREWorldBlackoutComponent;
-import io.wifi.starrailexpress.command.AutoShutdownWhenNotRunningCommand;
+import io.wifi.starrailexpress.contents.command.AutoShutdownWhenNotRunningCommand;
 import io.wifi.starrailexpress.compat.TrainVoicePlugin;
-import io.wifi.starrailexpress.entity.FirecrackerEntity;
-import io.wifi.starrailexpress.entity.NoteEntity;
-import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.contents.entity.FirecrackerEntity;
+import io.wifi.starrailexpress.contents.entity.NoteEntity;
+import io.wifi.starrailexpress.contents.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.event.AfterShieldAllowPlayerDeath;
 import io.wifi.starrailexpress.event.AfterShieldAllowPlayerDeathWithKiller;
 import io.wifi.starrailexpress.event.AllowPlayerDeath;
@@ -401,9 +401,19 @@ public class GameUtils {
         executeFunction(serverWorld.getServer().createCommandSourceStack(),
                 "harpymodloader:start_game_" + AreasWorldComponent.KEY.get(serverWorld).mapName);
         OnTrainAreaHaveReseted.EVENT.invoker().onWorldHaveInited(serverWorld);
+
     }
 
+    public static List<Item> cooldownItems = new ArrayList<>();
     public static void addItemCooldowns(ServerLevel world, int time) {
+        if (cooldownItems.isEmpty()){
+            BuiltInRegistries.ITEM.forEach(item -> {
+                String namespace = BuiltInRegistries.ITEM.getKey(item).getNamespace();
+                if (namespace.equals(StarRailExpressID.MOD_ID)||namespace.equals(StarRailExpressID.STUPIDEXPRESS)||namespace.equals(StarRailExpressID.NOELLESROLES_ROLE)){
+                    cooldownItems.add(item);
+                }
+            });
+        }
         for (ServerPlayer player : world.players()) {
             var cooldowns = player.getCooldowns();
             var items = new ArrayList<>(MCItemsUtils.getItemsByTag(player.serverLevel(), TMMItemTags.GUNS));
@@ -413,24 +423,33 @@ public class GameUtils {
                         (Integer) time);
             });
             cooldowns.addCooldown(Items.BOW, time);
-            cooldowns.addCooldown(ModItems.THROWING_KNIFE, time);
-            cooldowns.addCooldown(ModItems.NINJA_KNIFE, time);
-            cooldowns.addCooldown(ModItems.NINJA_SHURIKEN, time);
+            cooldowns.addCooldown(Items.CLOCK, time);
             cooldowns.addCooldown(Items.TRIDENT, time);
+
+
+
             cooldowns.addCooldown(TMMItems.GRENADE, time);
             cooldowns.addCooldown(TMMItems.PSYCHO_MODE, time);
-            cooldowns.addCooldown(ModItems.SP_KNIFE, time);
-            cooldowns.addCooldown(ModItems.STALKER_KNIFE, time);
-            cooldowns.addCooldown(ModItems.STALKER_KNIFE_OFFHAND, time);
             cooldowns.addCooldown(TMMItems.NUNCHUCK, time);
             cooldowns.addCooldown(TMMItems.BAT, time);
             cooldowns.addCooldown(TMMItems.KNIFE, time);
-            cooldowns.addCooldown(ModItems.FAKE_REVOLVER, time);
-            cooldowns.addCooldown(Items.CLOCK, time);
-            cooldowns.addCooldown(HSRItems.TOXIN, time);
-            cooldowns.addCooldown(HSRItems.ANTIDOTE, time);
             cooldowns.addCooldown(TMMItems.SNIPER_RIFLE, time);
             cooldowns.addCooldown(TMMItems.BLACKOUT, time);
+
+            cooldownItems.forEach(
+                    item -> cooldowns.addCooldown(item, time)
+            );
+
+//            cooldowns.addCooldown(ModItems.SP_KNIFE, time);
+//            cooldowns.addCooldown(ModItems.STALKER_KNIFE, time);
+//            cooldowns.addCooldown(ModItems.STALKER_KNIFE_OFFHAND, time);
+//            cooldowns.addCooldown(ModItems.FAKE_REVOLVER, time);
+//            cooldowns.addCooldown(ModItems.THROWING_KNIFE, time);
+//            cooldowns.addCooldown(ModItems.NINJA_KNIFE, time);
+//            cooldowns.addCooldown(ModItems.NINJA_SHURIKEN, time);
+//            cooldowns.addCooldown(HSRItems.TOXIN, time);
+//            cooldowns.addCooldown(HSRItems.ANTIDOTE, time);
+
             if (!player.hasEffect(ModEffects.NO_COLLIDE))
                 player.addEffect(new MobEffectInstance(
                         ModEffects.NO_COLLIDE,

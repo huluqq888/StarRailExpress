@@ -1,7 +1,7 @@
 package org.agmas.noellesroles.client.hud.roles;
 
 import org.agmas.noellesroles.client.event.RoleHudRenderCallback;
-import org.agmas.noellesroles.component.AvengerPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.avenger.AvengerPlayerComponent;
 import org.agmas.noellesroles.role.ModRoles;
 
 import net.minecraft.ChatFormatting;

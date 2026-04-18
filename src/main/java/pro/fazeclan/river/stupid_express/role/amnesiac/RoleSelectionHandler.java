@@ -1,13 +1,13 @@
 package pro.fazeclan.river.stupid_express.role.amnesiac;
 
 import org.agmas.noellesroles.role.ModRoles;
-import org.agmas.noellesroles.roles.coroner.BodyDeathReasonComponent;
+import org.agmas.noellesroles.game.roles.Innocent.coroner.BodyDeathReasonComponent;
 
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
-import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.contents.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.index.TMMItems;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.ChatFormatting;

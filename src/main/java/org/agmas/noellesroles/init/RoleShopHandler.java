@@ -11,7 +11,7 @@ import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.ShopContent;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.index.TMMSounds;
-import io.wifi.starrailexpress.item.KnifeItem;
+import io.wifi.starrailexpress.contents.item.KnifeItem;
 import io.wifi.starrailexpress.util.ShopEntry;
 import io.wifi.starrailexpress.util.SREItemUtils;
 import net.minecraft.ChatFormatting;
@@ -38,18 +38,17 @@ import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.Unbreakable;
 import net.minecraft.world.item.component.WrittenBookContent;
 import org.agmas.noellesroles.commands.BroadcastCommand;
-import org.agmas.noellesroles.component.MaChenXuPlayerComponent;
-import org.agmas.noellesroles.component.MercenaryPlayerComponent;
-import org.agmas.noellesroles.component.SingerPlayerComponent;
-import org.agmas.noellesroles.component.StalkerPlayerComponent;
-import org.agmas.noellesroles.component.WatcherPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.ma_chen_xu.MaChenXuPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.mercenary.MercenaryPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.singer.SingerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.stalker.StalkerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.watcher.WatcherPlayerComponent;
 
-import org.agmas.noellesroles.repack.HSRConstants;
-import org.agmas.noellesroles.repack.HSRItems;
+import org.agmas.noellesroles.game.roles.killer.water_ghost.WaterGhostPlayerComponent;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.role.RedHouseRoles;
-import org.agmas.noellesroles.roles.executioner.ShootingFrenzyPlayerComponent;
-import org.agmas.noellesroles.roles.framing.FramingShopEntry;
+import org.agmas.noellesroles.game.roles.killer.executioner.ShootingFrenzyPlayerComponent;
+
 import org.agmas.noellesroles.utils.MCItemsUtils;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.NotNull;
@@ -172,15 +171,15 @@ public class RoleShopHandler {
    */
   public static void initializeFramingShop() {
     FRAMING_ROLES_SHOP
-        .add(new FramingShopEntry(ModItems.MASTER_KEY_P.getDefaultInstance(), 50,
+        .add(new ShopEntry(ModItems.MASTER_KEY_P.getDefaultInstance(), 50,
             ShopEntry.Type.TOOL));
     FRAMING_ROLES_SHOP
-        .add(new FramingShopEntry(ModItems.DELUSION_VIAL.getDefaultInstance(), 30,
+        .add(new ShopEntry(ModItems.DELUSION_VIAL.getDefaultInstance(), 30,
             ShopEntry.Type.POISON));
-    FRAMING_ROLES_SHOP.add(new FramingShopEntry(TMMItems.FIRECRACKER.getDefaultInstance(), 5,
+    FRAMING_ROLES_SHOP.add(new ShopEntry(TMMItems.FIRECRACKER.getDefaultInstance(), 5,
         ShopEntry.Type.TOOL));
     FRAMING_ROLES_SHOP
-        .add(new FramingShopEntry(TMMItems.NOTE.getDefaultInstance(), 5, ShopEntry.Type.TOOL));
+        .add(new ShopEntry(TMMItems.NOTE.getDefaultInstance(), 5, ShopEntry.Type.TOOL));
   }
 
   /**
@@ -215,7 +214,7 @@ public class RoleShopHandler {
     WATER_GHOST_SHOP.add(new ShopEntry(rainItem, 150, ShopEntry.Type.TOOL) {
       @Override
       public boolean onBuy(@NotNull Player player) {
-        var component = org.agmas.noellesroles.component.WaterGhostPlayerComponent.KEY.get(player);
+        var component = WaterGhostPlayerComponent.KEY.get(player);
         if (component != null) {
           return component.buyRain();
         }
@@ -1318,7 +1317,7 @@ public class RoleShopHandler {
     CANDLE_BEARER_SHOP.clear();
 
     柜子区的商店.add(new ShopEntry(
-        HSRItems.BANDIT_REVOLVER.getDefaultInstance(),
+        ModItems.BANDIT_REVOLVER.getDefaultInstance(),
         130,
         ShopEntry.Type.TOOL));
     柜子区的商店.add(new ShopEntry(TMMItems.FIRECRACKER.getDefaultInstance(), SREConfig.instance().firecrackerPrice,
@@ -1523,12 +1522,12 @@ public class RoleShopHandler {
         ShopEntry.Type.TOOL));
     // 针管 - 75金币
     DOCTOR_SHOP.add(new ShopEntry(
-        HSRItems.ANTIDOTE.getDefaultInstance(),
+        ModItems.ANTIDOTE.getDefaultInstance(),
         75,
         ShopEntry.Type.TOOL));
     // 药丸 - 75金币
     DOCTOR_SHOP.add(new ShopEntry(
-        HSRItems.createPillStack(false),
+        ModItems.createPillStack(false),
         75,
         ShopEntry.Type.TOOL));
     // 净化弹 - 300金币
@@ -1634,7 +1633,7 @@ public class RoleShopHandler {
 
     // 匪徒手枪 - 175金币
     BANDIT_SHOP.add(new ShopEntry(
-        HSRItems.BANDIT_REVOLVER.getDefaultInstance(),
+        ModItems.BANDIT_REVOLVER.getDefaultInstance(),
         175,
         ShopEntry.Type.WEAPON));
 

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.wifi.starrailexpress.SRE;
-import io.wifi.starrailexpress.block.*;
+import io.wifi.starrailexpress.contents.block.*;
 import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

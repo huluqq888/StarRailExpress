@@ -10,7 +10,7 @@ import com.google.gson.reflect.TypeToken;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.SRERole;
-import io.wifi.starrailexpress.sync.MysqlPlayerDataStore;
+import net.exmo.sre.sync.MysqlPlayerDataStore;
 import io.wifi.starrailexpress.util.SkinManager;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.HolderLookup;

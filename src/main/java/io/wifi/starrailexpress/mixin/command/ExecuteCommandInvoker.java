@@ -22,7 +22,7 @@ import com.mojang.brigadier.tree.CommandNode;
 
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SRERoleWorldComponent;
-import io.wifi.starrailexpress.command.misc.CommandPredicate;
+import io.wifi.starrailexpress.contents.command.misc.CommandPredicate;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

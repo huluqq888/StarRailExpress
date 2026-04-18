@@ -1,7 +1,7 @@
 package org.agmas.noellesroles.mixin.roles.engineer;
 
-import io.wifi.starrailexpress.block.SmallDoorBlock;
-import io.wifi.starrailexpress.block_entity.SmallDoorBlockEntity;
+import io.wifi.starrailexpress.contents.block.SmallDoorBlock;
+import io.wifi.starrailexpress.contents.block_entity.SmallDoorBlockEntity;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -15,14 +15,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.BlockHitResult;
-import org.agmas.noellesroles.entity.LockEntityManager;
+import org.agmas.noellesroles.content.entity.LockEntityManager;
 import org.agmas.noellesroles.packet.OpenLockGuiS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static io.wifi.starrailexpress.block.SmallDoorBlock.HALF;
+import static io.wifi.starrailexpress.contents.block.SmallDoorBlock.HALF;
 
 /**
  * 撬锁器小游戏启动逻辑：

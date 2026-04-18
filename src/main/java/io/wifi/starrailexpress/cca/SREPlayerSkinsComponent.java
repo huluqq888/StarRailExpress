@@ -5,8 +5,8 @@ import com.google.gson.GsonBuilder;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
-import io.wifi.starrailexpress.item.SkinableItem;
-import io.wifi.starrailexpress.sync.MysqlPlayerDataStore;
+import io.wifi.starrailexpress.contents.item.SkinableItem;
+import net.exmo.sre.sync.MysqlPlayerDataStore;
 import io.wifi.starrailexpress.util.SkinManager;
 import net.fabricmc.api.EnvType;
 import net.minecraft.core.HolderLookup;

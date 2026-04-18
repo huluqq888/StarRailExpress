@@ -15,7 +15,7 @@ import io.wifi.starrailexpress.client.StatusInit;
 import io.wifi.starrailexpress.client.gui.RoleNameRenderer;
 import io.wifi.starrailexpress.client.gui.screen.ingame.LimitedInventoryScreen;
 import io.wifi.starrailexpress.client.util.TMMItemTooltips;
-import io.wifi.starrailexpress.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.contents.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.event.AllowNameRender;
 import io.wifi.starrailexpress.event.OnKillerCohortDisplay;
 import io.wifi.starrailexpress.event.OnRoundStartWelcomeTimmer;
@@ -62,8 +62,8 @@ import net.minecraft.world.phys.Vec3;
 
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.noellesroles.Noellesroles;
-import org.agmas.noellesroles.block_entity.VendingMachinesBlockEntity;
-import org.agmas.noellesroles.blood.BloodMain;
+import org.agmas.noellesroles.content.block_entity.VendingMachinesBlockEntity;
+import org.agmas.noellesroles.client.blood.BloodMain;
 import org.agmas.noellesroles.client.commands.GameManagePanelCommand;
 import org.agmas.noellesroles.client.event.MutableComponentResult;
 import org.agmas.noellesroles.client.event.OnMessageBelowMoneyRenderer;
@@ -71,17 +71,17 @@ import org.agmas.noellesroles.client.hud.CommonClientHudRenderer;
 import org.agmas.noellesroles.client.renderer.VendingMachinesBlockEntityRenderer;
 import org.agmas.noellesroles.client.screen.*;
 import org.agmas.noellesroles.component.DeathPenaltyComponent;
-import org.agmas.noellesroles.component.InsaneKillerPlayerComponent;
-import org.agmas.noellesroles.component.MagicianPlayerComponent;
-import org.agmas.noellesroles.effects.TimeStopEffect;
-import org.agmas.noellesroles.entity.LockEntity;
-import org.agmas.noellesroles.entity.WheelchairEntityModel;
-import org.agmas.noellesroles.entity.WheelchairEntityRenderer;
-import org.agmas.noellesroles.entity.WheelchairFieldItemRenderer;
+import org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.magician.MagicianPlayerComponent;
+import org.agmas.noellesroles.content.effects.TimeStopEffect;
+import org.agmas.noellesroles.content.entity.LockEntity;
+import org.agmas.noellesroles.content.entity.WheelchairEntityModel;
+import org.agmas.noellesroles.content.entity.WheelchairEntityRenderer;
+import org.agmas.noellesroles.content.entity.WheelchairFieldItemRenderer;
 import org.agmas.noellesroles.init.*;
-import org.agmas.noellesroles.item.MercenaryContractItem;
-import org.agmas.noellesroles.item.PanItem;
-import org.agmas.noellesroles.item.ProblemSetItem;
+import org.agmas.noellesroles.content.item.MercenaryContractItem;
+import org.agmas.noellesroles.content.item.PanItem;
+import org.agmas.noellesroles.content.item.ProblemSetItem;
 import org.agmas.noellesroles.packet.*;
 import org.agmas.noellesroles.packet.Loot.*;
 import org.agmas.noellesroles.role.ModRoles;
@@ -98,9 +98,9 @@ import java.util.*;
 import java.util.List;
 
 import static org.agmas.noellesroles.client.RicesRoleRhapsodyClient.*;
-import static org.agmas.noellesroles.component.InsaneKillerPlayerComponent.isPlayerBodyEntity;
-import static org.agmas.noellesroles.component.InsaneKillerPlayerComponent.playerBodyEntities;
-import static org.agmas.noellesroles.effects.TimeStopEffect.clientPositions;
+import static org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent.isPlayerBodyEntity;
+import static org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent.playerBodyEntities;
+import static org.agmas.noellesroles.content.effects.TimeStopEffect.clientPositions;
 
 public class NoellesrolesClient implements ClientModInitializer {
     public static boolean hasInitStatusBar = false;
@@ -292,7 +292,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             }
         });
         ClientPlayNetworking.registerGlobalReceiver(
-                org.agmas.noellesroles.roles.fool.FoolOpenTarotVoteS2CPacket.ID,
+                org.agmas.noellesroles.game.roles.Innocent.fool.FoolOpenTarotVoteS2CPacket.ID,
                 (payload, context) -> {
                     final var client = context.client();
                     client.execute(() -> {
@@ -825,7 +825,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             boolean abilityPressed = abilityBind.consumeClick();
             if (client.player.isCreative()) {
                 if (foolPrayerBind.consumeClick()) {
-                    ClientPlayNetworking.send(new org.agmas.noellesroles.roles.fool.FoolPrayerC2SPacket());
+                    ClientPlayNetworking.send(new org.agmas.noellesroles.game.roles.Innocent.fool.FoolPrayerC2SPacket());
                 }
                 if (abilityPressed) {
                     if (SREClient.gameComponent.isRole(client.player, ModRoles.ATTENDANT)) {
@@ -843,7 +843,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             // }
 
             if (foolPrayerBind.consumeClick()) {
-                ClientPlayNetworking.send(new org.agmas.noellesroles.roles.fool.FoolPrayerC2SPacket());
+                ClientPlayNetworking.send(new org.agmas.noellesroles.game.roles.Innocent.fool.FoolPrayerC2SPacket());
             }
 
             if (abilityPressed) {
@@ -852,7 +852,7 @@ public class NoellesrolesClient implements ClientModInitializer {
 
             if (inTarotAssembly) {
                 if (client.options.keyUse.consumeClick()) {
-                    ClientPlayNetworking.send(new org.agmas.noellesroles.roles.fool.FoolLeaveMeetingC2SPacket());
+                    ClientPlayNetworking.send(new org.agmas.noellesroles.game.roles.Innocent.fool.FoolLeaveMeetingC2SPacket());
                 }
 
                 boolean pauseOpen = client.screen instanceof net.minecraft.client.gui.screens.PauseScreen;
@@ -860,7 +860,7 @@ public class NoellesrolesClient implements ClientModInitializer {
                     if (SREClient.gameComponent.isRole(client.player, ModRoles.THE_FOOL)) {
                         foolMeetingPauseHandled = true;
                     } else {
-                        ClientPlayNetworking.send(new org.agmas.noellesroles.roles.fool.FoolLeaveMeetingC2SPacket());
+                        ClientPlayNetworking.send(new org.agmas.noellesroles.game.roles.Innocent.fool.FoolLeaveMeetingC2SPacket());
                         client.setScreen(null);
                     }
                 }
@@ -993,7 +993,7 @@ public class NoellesrolesClient implements ClientModInitializer {
                     if (!(entity instanceof Player player)) {
                         return 0.0F;
                     }
-                    var component = org.agmas.noellesroles.roles.monokuma.MonokumaPlayerComponent.KEY.maybeGet(player)
+                    var component = org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaPlayerComponent.KEY.maybeGet(player)
                             .orElse(null);
                     if (component == null) {
                         return 0.0F;
@@ -1005,20 +1005,20 @@ public class NoellesrolesClient implements ClientModInitializer {
                     if (!(entity instanceof Player player)) {
                         return 0.0F;
                     }
-                    var component = org.agmas.noellesroles.roles.monokuma.MonokumaPlayerComponent.KEY.maybeGet(player)
+                    var component = org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaPlayerComponent.KEY.maybeGet(player)
                             .orElse(null);
                     if (component == null || component.aoeChargeTimer <= 0) {
                         return 0.0F;
                     }
                     return 1.0F - ((float) component.aoeChargeTimer
-                            / org.agmas.noellesroles.roles.monokuma.YinYangSwordItem.CHARGE_TIME);
+                            / org.agmas.noellesroles.game.roles.neutral.monokuma.YinYangSwordItem.CHARGE_TIME);
                 });
         net.minecraft.client.renderer.item.ItemProperties.register(ModItems.YINYANG_SWORD, Noellesroles.id("dash"),
                 (stack, world, entity, seed) -> {
                     if (!(entity instanceof Player player)) {
                         return 0.0F;
                     }
-                    var component = org.agmas.noellesroles.roles.monokuma.MonokumaPlayerComponent.KEY.maybeGet(player)
+                    var component = org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaPlayerComponent.KEY.maybeGet(player)
                             .orElse(null);
                     if (component == null || component.dashAnimTimer <= 0) {
                         return 0.0F;

@@ -10,7 +10,7 @@ import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
 import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
 import io.wifi.starrailexpress.client.SREClient;
-import io.wifi.starrailexpress.entity.NoteEntity;
+import io.wifi.starrailexpress.contents.entity.NoteEntity;
 import io.wifi.starrailexpress.event.*;
 import io.wifi.starrailexpress.event.AllowShootRevolverDrop.ShouldDropResult;
 import io.wifi.starrailexpress.game.GameConstants;
@@ -59,31 +59,46 @@ import org.agmas.noellesroles.*;
 import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.component.*;
 import org.agmas.noellesroles.config.NoellesRolesConfig;
-import org.agmas.noellesroles.effects.TimeStopEffect;
-import org.agmas.noellesroles.entity.HallucinationAreaManager;
-import org.agmas.noellesroles.entity.PuppeteerBodyEntity;
-import org.agmas.noellesroles.entity.ServerSmokeAreaManager;
-import org.agmas.noellesroles.entity.WheelchairEntity;
+import org.agmas.noellesroles.content.effects.TimeStopEffect;
+import org.agmas.noellesroles.content.entity.HallucinationAreaManager;
+import org.agmas.noellesroles.content.entity.PuppeteerBodyEntity;
+import org.agmas.noellesroles.content.entity.ServerSmokeAreaManager;
+import org.agmas.noellesroles.content.entity.WheelchairEntity;
 import org.agmas.noellesroles.events.OnVendingMachinesBuyItems;
-import org.agmas.noellesroles.game.ChairWheelRaceGame;
-import org.agmas.noellesroles.item.HandCuffsItem;
-import org.agmas.noellesroles.modifier.NRModifiers;
-import org.agmas.noellesroles.modifier.expedition.ExpeditionComponent;
+import org.agmas.noellesroles.game.modes.ChairWheelRaceGame;
+import org.agmas.noellesroles.content.item.HandCuffsItem;
+import org.agmas.noellesroles.game.modifier.NRModifiers;
+import org.agmas.noellesroles.game.modifier.expedition.ExpeditionComponent;
+import org.agmas.noellesroles.game.roles.Innocent.avenger.AvengerPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.awesome_binglus.AwesomePlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.boxer.BoxerPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.broadcaster.BroadcasterPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.glitch_robot.GlitchRobotPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.locksmith_inspiration.LocksmithInspirationComponent;
+import org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.ninja.NinjaPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.stalker.StalkerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.watcher.WatcherPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.mercenary.MercenaryPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.puppeteer.PuppeteerPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.wayfarer.WayfarerPlayerComponent;
+import org.agmas.noellesroles.game.roles.special.better_vigilante.BetterVigilantePlayerComponent;
+import org.agmas.noellesroles.game.roles.vigilante.patroller.PatrollerPlayerComponent;
 import org.agmas.noellesroles.packet.BloodConfigS2CPacket;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.role.RedHouseRoles;
-import org.agmas.noellesroles.roles.commander.CommanderHandler;
-import org.agmas.noellesroles.roles.conspirator.ConspiratorKilledPlayer;
-import org.agmas.noellesroles.roles.executioner.ExecutionerPlayerComponent;
-import org.agmas.noellesroles.roles.executioner.ShootingFrenzyPlayerComponent;
-import org.agmas.noellesroles.roles.fool.TarotAssemblyManager;
-import org.agmas.noellesroles.roles.fortuneteller.FortunetellerPlayerComponent;
-import org.agmas.noellesroles.roles.gambler.GamblerHandler;
-import org.agmas.noellesroles.roles.hoan_meirin.HoanMeirinFistPunchHandler;
-import org.agmas.noellesroles.roles.ma_chen_xu.MaChenXuEventHandler;
-import org.agmas.noellesroles.roles.thief.ThiefPlayerComponent;
-import org.agmas.noellesroles.roles.veteran.VeteranKnifeHandler;
-import org.agmas.noellesroles.roles.voodoo.VoodooDeathHandler;
+import org.agmas.noellesroles.game.roles.neutral.commander.CommanderHandler;
+import org.agmas.noellesroles.game.roles.killer.conspirator.ConspiratorKilledPlayer;
+import org.agmas.noellesroles.game.roles.killer.executioner.ExecutionerPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.executioner.ShootingFrenzyPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager;
+import org.agmas.noellesroles.game.roles.Innocent.fortuneteller.FortunetellerPlayerComponent;
+import org.agmas.noellesroles.game.roles.neutral.gambler.GamblerHandler;
+import org.agmas.noellesroles.game.roles.Innocent.hoan_meirin.HoanMeirinFistPunchHandler;
+import org.agmas.noellesroles.game.roles.killer.ma_chen_xu.MaChenXuEventHandler;
+import org.agmas.noellesroles.game.roles.neutral.thief.ThiefPlayerComponent;
+import org.agmas.noellesroles.game.roles.Innocent.veteran.VeteranKnifeHandler;
+import org.agmas.noellesroles.game.roles.Innocent.voodoo.VoodooDeathHandler;
 import org.agmas.noellesroles.utils.*;
 import org.agmas.noellesroles.voice.HeliumBuzzPlayerComponent;
 import pro.fazeclan.river.stupid_express.constants.SEModifiers;
@@ -125,7 +140,7 @@ public class ModEventsRegister {
 
         // 模仿者拳击手无敌检测
         if (gameWorld.isRole(victim, ModRoles.IMITATOR)) {
-            org.agmas.noellesroles.roles.imitator.ImitatorPlayerComponent imitComp = ModComponents.IMITATOR.get(victim);
+            org.agmas.noellesroles.game.roles.killer.imitator.ImitatorPlayerComponent imitComp = ModComponents.IMITATOR.get(victim);
             if (imitComp.isImitatorInvulnerable()) {
                 // 播放反弹音效
                 victim.level().playSound(null, victim.blockPosition(),
@@ -381,7 +396,7 @@ public class ModEventsRegister {
         ArrayList<ItemStack> itemsToTransfer = new ArrayList<>();
         for (int i = 0; i < victim.getInventory().getContainerSize(); i++) {
             ItemStack stack = victim.getInventory().getItem(i);
-            if (stack.getItem() == org.agmas.noellesroles.repack.HSRItems.ANTIDOTE) {
+            if (stack.getItem() == ModItems.ANTIDOTE) {
                 itemsToTransfer.add(stack.copy());
                 victim.getInventory().setItem(i, ItemStack.EMPTY);
             } else if (stack.getItem() == org.agmas.noellesroles.init.ModItems.PURIFY_BOMB) {
@@ -701,14 +716,14 @@ public class ModEventsRegister {
         });
         AfterShieldAllowPlayerDeath.EVENT.register((victim, deathReason) -> {
             if (victim.level() instanceof ServerLevel serverLevel) {
-                org.agmas.noellesroles.roles.fool.TarotAssemblyManager.clearTrackedTarget(serverLevel,
+                org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager.clearTrackedTarget(serverLevel,
                         victim.getUUID());
             }
             return true;
         });
         AfterShieldAllowPlayerDeathWithKiller.EVENT.register((victim, killer, deathReason) -> {
             if (victim.level() instanceof ServerLevel serverLevel) {
-                org.agmas.noellesroles.roles.fool.TarotAssemblyManager.clearTrackedTarget(serverLevel,
+                org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager.clearTrackedTarget(serverLevel,
                         victim.getUUID());
             }
             return true;
@@ -1041,7 +1056,7 @@ public class ModEventsRegister {
 
             // 小偷的击杀奖励逻辑
             if (gameWorldComponent.isRole(killer, ModRoles.THIEF)) {
-                var thiefComponent = org.agmas.noellesroles.roles.thief.ThiefPlayerComponent.KEY.get(killer);
+                var thiefComponent = org.agmas.noellesroles.game.roles.neutral.thief.ThiefPlayerComponent.KEY.get(killer);
                 if (thiefComponent != null) {
                     thiefComponent.handleKilledVictim(victim);
                 }
@@ -1280,7 +1295,7 @@ public class ModEventsRegister {
             HallucinationAreaManager.tick();
             ServerLevel level = server.overworld();
             {
-                org.agmas.noellesroles.roles.fool.TarotAssemblyManager.serverLevelTick(level);
+                org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager.serverLevelTick(level);
             }
         }));
         ServerTickEvents.START_SERVER_TICK.register(((server) -> {

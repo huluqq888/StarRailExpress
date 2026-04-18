@@ -29,7 +29,6 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.agmas.noellesroles.init.ModItems;
-import org.agmas.noellesroles.repack.HSRItems;
 import org.jetbrains.annotations.NotNull;
 
 public record GunShootPayload(int target) implements CustomPacketPayload {
@@ -109,7 +108,7 @@ public record GunShootPayload(int target) implements CustomPacketPayload {
                                     flag = true;
                                 } else if (SREItemUtils.clearItem(player, TMMItems.REVOLVER, 1) >= 1) {
                                     flag = true;
-                                } else if (SREItemUtils.clearItem(player, HSRItems.BANDIT_REVOLVER, 1) >= 1) {
+                                } else if (SREItemUtils.clearItem(player, ModItems.BANDIT_REVOLVER, 1) >= 1) {
                                     flag = true;
                                 }
 

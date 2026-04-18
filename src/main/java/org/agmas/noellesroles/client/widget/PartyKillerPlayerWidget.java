@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.GameType;
 import org.agmas.noellesroles.packet.PartyKillerC2SPacket;
-import org.agmas.noellesroles.roles.party.PartyPlayerComponent;
+import org.agmas.noellesroles.game.roles.killer.party.PartyPlayerComponent;
 import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import org.jetbrains.annotations.NotNull;
 
