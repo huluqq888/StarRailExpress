@@ -28,7 +28,7 @@ public abstract class CustomWinnerRole extends NormalRole {
 
     /**
      * 调用RoleUtils.customWinnerWin。若
-     * {@code checkWin} 返回为Custom，将会自动调用此方法
+     * {@code checkWin} 返回为 {@code WinStatus.CUSTOM}，将会自动调用此方法
      */
     public void win(ServerPlayer player) {
         RoleUtils.customWinnerWin(player.serverLevel(), this.identifier().getPath(), this.color());
