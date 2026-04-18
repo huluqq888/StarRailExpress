@@ -432,6 +432,8 @@
   "effect.noellesroles.time_stop": "时间停止",
   "mob_effect.noellesroles.no_collide": "无碰撞",
   "effect.noellesroles.no_collide": "无碰撞",
+  "mob_effect.noellesroles.safe_time": "安全时间",
+  "effect.noellesroles.safe_time": "安全时间",
   "effect.noellesroles.trapper": "陷阱受困",
   "mob_effect.noellesroles.mood_drain_reduction": "san值消耗减缓",
   "effect.noellesroles.mood_drain_reduction": "san值消耗减缓",
