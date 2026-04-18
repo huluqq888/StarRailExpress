@@ -207,7 +207,7 @@ public class ModRolesInitialEventRegister {
                     vulturePlayerComponent.sync();
                 }
             }
-            if (role.equals(ModRoles.THE_INSANE_DAMNED_PARANOID_KILLER_OF_DOOM_DEATH_DESTRUCTION_AND_WAFFLES)) {
+            if (role.equals(ModRoles.INSANE_KILLER)) {
                 final var insaneKillerPlayerComponent = InsaneKillerPlayerComponent.KEY.get(player);
                 insaneKillerPlayerComponent.init();
                 insaneKillerPlayerComponent.sync();

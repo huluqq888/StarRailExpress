@@ -1,7 +1,6 @@
 package org.agmas.noellesroles.game.roles.neutral.monokuma;
 
 import io.wifi.starrailexpress.api.RoleComponent;
-import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREArmorPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
@@ -24,7 +23,6 @@ import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.game.roles.neutral.panda.PandaComponent;
 import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.init.ModItems;
-import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -287,59 +285,6 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                 }
             }
         }
-    }
-
-    // ==================== 获胜判定 ====================
-
-    /**
-     * 游戏结束时检查黑白熊获胜条件
-     * @return 黑白熊依附的阵营胜利 WinStatus，如果失败返回 null
-     */
-    public static GameUtils.WinStatus checkMonokumaVictory(ServerLevel serverLevel, GameUtils.WinStatus currentWin) {
-        SREGameWorldComponent gameComponent = SREGameWorldComponent.KEY.get(serverLevel);
-
-        for (ServerPlayer sp : serverLevel.players()) {
-            if (!GameUtils.isPlayerAliveAndSurvival(sp)) continue;
-            if (!gameComponent.isRole(sp, ModRoles.MONOKUMA)) continue;
-
-            MonokumaPlayerComponent comp = KEY.get(sp);
-            if (comp.phase != 3) {
-                // 未变身 → 失败
-                continue;
-            }
-
-            // 寻找6格内最近的存活玩家
-            ServerPlayer nearestPlayer = null;
-            double nearestDist = Double.MAX_VALUE;
-            for (ServerPlayer candidate : serverLevel.players()) {
-                if (candidate == sp) continue;
-                if (!GameUtils.isPlayerAliveAndSurvival(candidate)) continue;
-                double dist = sp.distanceTo(candidate);
-                if (dist <= AURA_RANGE && dist < nearestDist) {
-                    nearestDist = dist;
-                    nearestPlayer = candidate;
-                }
-            }
-
-            if (nearestPlayer == null) {
-                // 6格内无存活玩家 → 失败
-                continue;
-            }
-
-            SRERole nearestRole = gameComponent.getRole(nearestPlayer);
-            if (nearestRole == null) continue;
-
-            if (nearestRole.isInnocent()) {
-                // 最近的是好人 → 黑白熊与好人一起获胜
-                // 不修改当前 winStatus，但黑白熊算作获胜
-                return currentWin;
-            } else if (nearestRole.canUseKiller()) {
-                // 最近的是杀手 → 黑白熊与坏人一起获胜
-                return currentWin;
-            }
-            // 最近的是中立 → 黑白熊失败
-        }
-        return null;
     }
 
     // ==================== Tick ====================
