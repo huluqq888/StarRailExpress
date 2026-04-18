@@ -212,7 +212,9 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
         if (!(player instanceof ServerPlayer sp))
             return;
         kill_count = 0;
-        SREPlayerPsychoComponent.KEY.get(this.player).stopPsychoAndRefreshPsychoCount(true);
+        var psychocca = SREPlayerPsychoComponent.KEY.get(this.player);
+        psychocca.sync();
+        psychocca.stopPsychoAndRefreshPsychoCount(true);
         phase = 3;
         frenzyTimer = 0;
         auraCoinTimer = 0;
