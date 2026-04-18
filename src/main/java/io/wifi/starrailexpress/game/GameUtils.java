@@ -811,7 +811,7 @@ public class GameUtils {
                         isWinner = true;
                     }
                     if (playerRole instanceof CustomWinnerRole cwr) {
-                        isWinner = cwr.didPlayerWin(player, isWinner,winStatus);
+                        isWinner = cwr.didPlayerWin(player, isWinner, winStatus);
                     }
                 }
 
@@ -1234,7 +1234,6 @@ public class GameUtils {
                 }
                 if (spawnBody) {
                     PlayerBodyEntity body = TMMEntities.PLAYER_BODY.create(victim.level());
-                    victimRole.onDeathWithBody(victim, spawnBody, killer, deathReason, body);
                     double scale = victim.getAttributeValue(Attributes.SCALE);
                     body.getAttribute(Attributes.SCALE).setBaseValue(scale);
                     if (body != null) {
@@ -1248,7 +1247,6 @@ public class GameUtils {
                         body.setYRot(victim.getYHeadRot());
                         body.setYHeadRot(victim.getYHeadRot());
                         victim.level().addFreshEntity(body);
-
                         {
                             if (role != null) {
                                 final var bodyDeathReasonComponent = BodyDeathReasonComponent.KEY.get(body);
@@ -1256,6 +1254,7 @@ public class GameUtils {
                                 bodyDeathReasonComponent.sync();
                             }
                         }
+                        victimRole.onDeathWithBody(victim, spawnBody, killer, deathReason, body);
                     }
                 }
             }
@@ -1471,12 +1470,14 @@ public class GameUtils {
     public enum WinStatus {
         NOT_MODIFY, NONE, KILLERS, PASSENGERS, TIME, LOOSE_END, GAMBLER, RECORDER, NO_PLAYER, NIAN_SHOU, LOVERS,
         CUSTOM_COMPONENT, CUSTOM;
+
         // 自定义获胜请使用RoleUtils.customWinnerWin(); 将id改为对应角色的id的path即可正常使用。请不要在这里添加枚举项目。
         // 如果有自定义获胜玩家，请添加 roundEnd.CustomWinnerID 或 使用谓词判断：CustomWinnersPredicates
-        public boolean isKillerWin(){
+        public boolean isKillerWin() {
             return this.equals(WinStatus.KILLERS);
         }
-        public boolean isInnocentWin(){
+
+        public boolean isInnocentWin() {
             return this.equals(WinStatus.TIME) || this.equals(WinStatus.PASSENGERS);
         }
     }

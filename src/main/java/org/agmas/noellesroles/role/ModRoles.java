@@ -366,12 +366,13 @@ public class ModRoles {
       .setComponentKey(FoodDrinkGlowComponent.KEY);
   public static SRERole NOISEMAKER = TMMRoles
       .registerRole(new NormalRole(NOISEMAKER_ID, new Color(200, 255, 0).getRGB(), true,
-          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false){
+          false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
-        public void onDeathWithBody(Player victim, boolean spawnBody, @Nullable Player killer, ResourceLocation deathReason, PlayerBodyEntity playerBodyEntity) {
+        public void onDeathWithBody(Player victim, boolean spawnBody, @Nullable Player killer,
+            ResourceLocation deathReason, PlayerBodyEntity playerBodyEntity) {
           super.onDeathWithBody(victim, spawnBody, killer, deathReason, playerBodyEntity);
           SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
-                  .get(victim.level());
+              .get(victim.level());
           if (gameWorldComponent.isRole(victim, ModRoles.NOISEMAKER)) {
             playerBodyEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 60, 0));
             var serverLevel = victim.level();
@@ -383,20 +384,17 @@ public class ModRoles {
                 continue;
               }
               serverLevel.playSound(
-                      p,
-                      victim.getX(),
-                      victim.getY(),
-                      victim.getZ(),
-                      SoundEvents.WITHER_DEATH,
-                      SoundSource.MASTER,
-                      3.0F,
-                      1.0F);
+                  p,
+                  victim.getX(),
+                  victim.getY(),
+                  victim.getZ(),
+                  SoundEvents.WITHER_DEATH,
+                  SoundSource.MASTER,
+                  3.0F,
+                  1.0F);
             }
           }
-
         }
-
-
       });
   public static SRERole AWESOME_BINGLUS = TMMRoles
       .registerRole(new NormalRole(AWESOME_BINGLUS_ID, new Color(155, 255, 168).getRGB(), true, false,
@@ -1611,6 +1609,5 @@ public class ModRoles {
     SREArmorPlayerComponent.canSyncedRolePaths.add(ModRoles.BARTENDER_ID.getPath());
     SREPlayerMoodComponent.canSyncedRolePaths.add(ModRoles.MA_CHEN_XU_ID.getPath());
   }
-
 
 }
