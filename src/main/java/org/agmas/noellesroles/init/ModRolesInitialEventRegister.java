@@ -16,6 +16,7 @@ import net.minecraft.world.item.Items;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.harpymodloader.events.ModdedRoleAssigned;
+import org.agmas.harpymodloader.events.ModifierAssigned;
 import org.agmas.noellesroles.RicesRoleRhapsody;
 import org.agmas.noellesroles.component.FoodDrinkGlowComponent;
 import org.agmas.noellesroles.component.ModComponents;
@@ -63,6 +64,7 @@ public class ModRolesInitialEventRegister {
                 MonokumaPlayerComponent.KEY.get(player).init();
                 if (GameUtils.isGameStarted) {
                     wmcca.addModifier(player.getUUID(), SEModifiers.BLACK_WHITE, true);
+                    ModifierAssigned.EVENT.invoker().assignModifier(player, SEModifiers.BLACK_WHITE);
                 } else {
                     Harpymodloader.addToForcedModifiers(SEModifiers.BLACK_WHITE, player);
                 }

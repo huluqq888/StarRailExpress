@@ -1239,6 +1239,8 @@ public class GameUtils {
                 if (spawnBody) {
                     PlayerBodyEntity body = TMMEntities.PLAYER_BODY.create(victim.level());
                     double scale = victim.getAttributeValue(Attributes.SCALE);
+                    victim.stopRiding();
+                    victim.stopSleeping();
                     body.getAttribute(Attributes.SCALE).setBaseValue(scale);
                     if (body != null) {
                         if (killer != null) {
