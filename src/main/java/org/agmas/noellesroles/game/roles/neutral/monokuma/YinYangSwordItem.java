@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.game.roles.neutral.monokuma;
 
 import io.wifi.starrailexpress.game.GameUtils;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -136,10 +137,13 @@ public class YinYangSwordItem extends Item {
 
     @Override
     public void inventoryTick(ItemStack itemStack, Level level, Entity entity, int i, boolean bl) {
-        if (entity instanceof ServerPlayer sp){
-            if (sp.getMainHandItem().is(itemStack.getItem())) {
-                if (!sp.getCooldowns().isOnCooldown(itemStack.getItem())) {
-                    sp.sendSystemMessage(Component.translatable("message.noellesroles.yinyang_dash_tip"), true);
+        if (level.isClientSide && entity instanceof Player player) {
+            if (player.getMainHandItem().is(itemStack.getItem())) {
+                if (!player.getCooldowns().isOnCooldown(itemStack.getItem())) {
+                    player.displayClientMessage(Component
+                            .translatable("message.noellesroles.yinyang_dash_tip",
+                                    Component.keybind("key.drop").withStyle(ChatFormatting.GREEN))
+                            .withStyle(ChatFormatting.GOLD), true);
                 }
             }
         }

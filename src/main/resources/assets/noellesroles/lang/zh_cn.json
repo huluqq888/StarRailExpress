@@ -1,7 +1,6 @@
 {
   "unknown": "未知",
   "commands.loot.error.execute_fail": "执行失败, 原因:\n %s",
-  "message.noellesroles.yinyang_dash_tip": "\u00a76按下 \u00a7aQ \u00a76进行冲刺",
   "commands.loot.success.add_or_degree_chance": "成功为玩家 %s 添加 %s 次抽奖次数. 当前总次数: %s",
   "info.screen.role.see_more": "... (更多信息请右键信纸查看)",
   "info.screen.roleid.custom_pending": "请按下G选择你的职业",
@@ -1916,5 +1915,6 @@
   "message.noellesroles.monokuma.frenzy_triggered": "触发了黑白领域！",
   "message.noellesroles.monokuma.transform_title": "【黑白】",
   "message.noellesroles.monokuma.transform_message": "完成了最后的审判仪式，化身黑白熊！",
-  "message.noellesroles.monokuma.aura_coin": "🐼 黑白熊光环：+%s 金币"
+  "message.noellesroles.monokuma.aura_coin": "🐼 黑白熊光环：+%s 金币",
+  "message.noellesroles.yinyang_dash_tip": "按下 %s 进行冲刺"
 }
