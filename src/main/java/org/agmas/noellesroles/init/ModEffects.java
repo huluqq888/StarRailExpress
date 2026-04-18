@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.init;
 
 import io.wifi.starrailexpress.event.AllowPlayerDeath;
+import io.wifi.starrailexpress.game.GameConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -61,7 +62,7 @@ public class ModEffects {
      * - 绿色粒子
      */
     public static final Holder<MobEffect> NO_COLLIDE = register("no_collide", new NoCollideEffect());
-    
+
     /**
      * 安全时间效果
      * - 中性效果
@@ -257,12 +258,15 @@ public class ModEffects {
                 pierceDeath = false;
                 return true;
             }
-            if (player.hasEffect(ModEffects.INVINCIBLE) ){
-                return false ;
+            if (deathReason.equals(GameConstants.DeathReasons.FELL_OUT_OF_TRAIN)) {
+                return true;
+            }
+            if (player.hasEffect(ModEffects.INVINCIBLE)) {
+                return false;
             }
             if (deathReason.equals(Noellesroles.id("bomb_death")))
                 return true;
-            if ( player.hasEffect(ModEffects.TAROT_ASSEMBLY)) {
+            if (player.hasEffect(ModEffects.TAROT_ASSEMBLY)) {
                 if (player.position().z >= 19000)
                     return false;
             }
