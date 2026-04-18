@@ -41,8 +41,8 @@ public class PartyPlayerComponent implements RoleComponent, ServerTickingCompone
     // 延迟播放的音效位置（记录释放技能时的位置）
     private BlockPos pendingPartySoundPos;
 
-    // 触发派对的阈值
-    private int threshold = 1;
+    // 触发派对的阈值（最小值为3）
+    private int threshold = 3;
 
     // 开局玩家数（固定值，游戏过程中不变化）
     private int initialPlayerCount = 0;
@@ -67,8 +67,8 @@ public class PartyPlayerComponent implements RoleComponent, ServerTickingCompone
             return; // 防止重复初始化
         }
         this.initialPlayerCount = initialPlayerCount;
-        // 根据开局玩家数计算阈值：开局玩家数 / 5，最小为1
-        this.threshold = Math.max(1, initialPlayerCount / 5);
+        // 根据开局玩家数计算阈值：开局玩家数 / 5，最小为3
+        this.threshold = Math.max(3, initialPlayerCount / 5);
         this.thresholdInitialized = true;
         sync();
     }
