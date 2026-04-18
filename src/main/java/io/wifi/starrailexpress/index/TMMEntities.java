@@ -23,7 +23,6 @@ public interface TMMEntities {
     EntityType<PlayerBodyEntity> PLAYER_BODY = registrar.create("player_body", EntityType.Builder.of(PlayerBodyEntity::new, MobCategory.MISC)
             .sized(1f, 0.25f)
             .clientTrackingRange(128)
-            .noSummon()
     );
     EntityType<FirecrackerEntity> FIRECRACKER = registrar.create("firecracker", EntityType.Builder.of(FirecrackerEntity::new, MobCategory.MISC)
             .sized(.2f, .2f)
