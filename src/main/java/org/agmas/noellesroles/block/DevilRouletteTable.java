@@ -1,9 +1,12 @@
 package org.agmas.noellesroles.block;
 
+import io.wifi.starrailexpress.block.entity.SeatEntity;
 import io.wifi.starrailexpress.block_entity.ToiletBlockEntity;
 import io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlock;
+import io.wifi.starrailexpress.fourthroom.block.FourthRoomTableBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -33,6 +36,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.agmas.noellesroles.block_entity.DevilRouletteTableEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DevilRouletteTable extends Block implements EntityBlock {
     public enum TablePart implements StringRepresentable {
@@ -176,70 +182,81 @@ public class DevilRouletteTable extends Block implements EntityBlock {
     }
 
     // 交互逻辑
+
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        BlockPos corePos = getCore(state, pos);
-        BlockEntity be = level.getBlockEntity(corePos);
-        if (be instanceof DevilRouletteTableEntity table) {
-            if (level.isClientSide) {
-                return InteractionResult.SUCCESS;
-            }
-            // 在服务端点击时
-//            if (table.linkedRoomId() >= 0 && FourthRoomGameManager.of((net.minecraft.server.level.ServerLevel) level).data().active) {
-//                if (player instanceof ServerPlayer serverPlayer) {
-//                    table.handleBattleInteraction(serverPlayer, resolveInteractionZone(state, pos, hitResult));
-//                }
-//                return InteractionResult.CONSUME;
-//            }
-//            if (player instanceof ServerPlayer serverPlayer) {
-//                table.onPlayerInteract(serverPlayer);
-//            }
-            return InteractionResult.CONSUME;
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
     }
 
+    /**
+     * 点击方块时
+     * <p>
+     *     如果游戏未开始：
+     *     - 检查状态：仅坐在正确位置的椅子上才可请求
+     *          如果点击位置是中心，则检查座位上的玩家是否正确，如果正确检查游戏开始条件
+     *          如果是其他位置或游戏开始条件不满足，向方块实体请求占位：结果成功/失败
+     * </p>
+     */
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
                                               InteractionHand hand, BlockHitResult hit) {
+        if (level.isClientSide) {
+            return ItemInteractionResult.SUCCESS;
+        }
         BlockPos corePos = getCore(state, pos);
-//        BlockEntity be = level.getBlockEntity(corePos);
-//        if (!(be instanceof FourthRoomTableBlockEntity table)) {
-//            return super.useItemOn(stack, state, level, pos, player, hand, hit);
-//        }
-//        if (level.isClientSide) {
-//            return ItemInteractionResult.SUCCESS;
-//        }
-//        if (table.linkedRoomId() >= 0 && FourthRoomGameManager.of((net.minecraft.server.level.ServerLevel) level).data().active) {
-//            if (player instanceof ServerPlayer serverPlayer) {
-//                table.handleBattleInteraction(serverPlayer, resolveInteractionZone(state, pos, hit));
-//            }
-//            return ItemInteractionResult.SUCCESS;
-//        }
-//        if (player instanceof ServerPlayer serverPlayer) {
-//            table.onPlayerInteract(serverPlayer);
-//        }
+        BlockEntity be = level.getBlockEntity(corePos);
+        if (be instanceof DevilRouletteTableEntity table) {
+            // 只有玩家坐在座位上才能继续操作
+            if (player.getVehicle() instanceof SeatEntity seatEntity) {
+                var seatPos = seatEntity.getSeatPos();
+                if (seatPos != null && table.isSeatAvailable(seatPos))
+                {
+                    if (!table.isGameActive()) {
+                        boolean isFront = table.isFrontSeat(seatPos);
+                        // 满足开始条件，且操作玩家位置正确：开始游戏
+                        if (corePos.equals(hit.getBlockPos()) && table.checkCanStartGame() &&
+                                table.checkPlayerInRightSeat(player, isFront)) {
+                            table.startGame();
+                        }
+                        else {
+                            if (isFront){
+                                if(!table.removePlayerIfSame(player, true) && table.addPlayer(player, true)) {
+                                    return ItemInteractionResult.CONSUME;
+                                }
+                            }
+                            else {
+                                if(!table.removePlayerIfSame(player, false) && table.addPlayer(player, false)) {
+                                    return ItemInteractionResult.CONSUME;
+                                }
+                            }
+                        }
+                    }
+                    else {
+
+                    }
+                }
+            }
+        }
         return ItemInteractionResult.SUCCESS;
     }
 
-    /** 检测是否为在正确座位区域 */
+    /** 检测是否为在正确座位区域，座位是否正确 */
     protected boolean isSeatingZone(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-//        if (player.getVehicle() instanceof ToiletBlockEntity chair) {
-//            BlockPos tableCore = chair.getTableCorePos();
-//            return tableCore.equals(table.getBlockPos());
-//        }
-//
-//        // 方法2：检查玩家位置是否在椅子方块上（备选）
-//        BlockPos playerStandingOn = player.getOnPos();
-//        for (ChairPosition position : ChairPosition.values()) {
-//            BlockPos chairPos = table.getBlockPos().offset(
-//                    position.getXOffset(), 0, position.getZOffset()
-//            );
-//            if (playerStandingOn.equals(chairPos)) {
-//                return true;
+//        BlockEntity be = level.getBlockEntity(pos);
+//        if (be instanceof DevilRouletteTableEntity table) {
+//            if (player.getVehicle() instanceof SeatEntity seatEntity) {
+//                var seatPos = seatEntity.getSeatPos();
+//                if (table.getSeatArea().contains(seatPos))
+//                {
+//                    if (seatPos != null) {
+//                        return level.getBlockEntity(seatPos) instanceof ToiletBlockEntity;
+//                    }
+//                }
 //            }
 //        }
-
         return false;
     }
 
