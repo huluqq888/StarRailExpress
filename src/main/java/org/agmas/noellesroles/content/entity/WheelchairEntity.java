@@ -320,8 +320,8 @@ public class WheelchairEntity extends Mob {
     @Override
     protected void positionRider(Entity passenger, MoveFunction moveFunction) {
         if (this.hasPassenger(passenger)) {
-            double offsetY = -0.1;
-            double offsetZ = -0.2;
+            double offsetY = 0;
+            double offsetZ = 0;
             double offsetX = 0.0;
             Vec3 offset = new Vec3(offsetX, offsetY, offsetZ)
                     .yRot(-this.getYRot() * (float) Math.PI / 180.0F);
