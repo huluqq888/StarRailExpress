@@ -72,6 +72,12 @@ public class GhostPlayerComponent implements RoleComponent, ServerTickingCompone
     }
 
     public void clientTick() {
+        if (invisibilityTicks > 1) {
+            invisibilityTicks--;
+        }
+        if (cooldown > 1) {
+            cooldown--;
+        }
     }
 
     @Override
@@ -125,7 +131,7 @@ public class GhostPlayerComponent implements RoleComponent, ServerTickingCompone
         if (invisibilityTicks > 0) {
             invisibilityTicks--;
         }
-        if (cooldown % 20 == 0) {
+        if (cooldown % 200 == 0) {
             sync();
         }
     }
