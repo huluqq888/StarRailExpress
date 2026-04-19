@@ -160,7 +160,7 @@ public class YinYangSwordItem extends Item {
         int count = 0;
         for (Player target : targets) {
             count++;
-            if (count >= 2) // 最多杀2人，避免超模
+            if (count >= 5) // 最多杀5人，避免超模
                 break;
             GameUtils.killPlayer(target, true, sp, Noellesroles.id("yinyang_sword_aoe"));
         }
