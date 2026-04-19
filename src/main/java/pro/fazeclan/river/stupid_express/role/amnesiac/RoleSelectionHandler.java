@@ -57,6 +57,13 @@ public class RoleSelectionHandler {
             if (role == null) {
                 return InteractionResult.PASS;
             }
+            if (!role.canBeRandomed()) {
+                player.displayClientMessage(
+                        Component.translatable("msg.amnesiac.change_role.failed_not_support")
+                                .withStyle(ChatFormatting.RED),
+                        true);
+                return InteractionResult.PASS;
+            }
             if (role.identifier().equals(ModRoles.MA_CHEN_XU.identifier())) {
                 player.displayClientMessage(
                         Component.translatable("msg.amnesiac.change_role.failed_not_support")
