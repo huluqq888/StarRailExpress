@@ -23,7 +23,8 @@ public interface AutoResetBlockInterface {
      * @param level
      * @param state
      * @param pos
-     * @return 返回null代表不存在方块实体
+     * @return 返回null代表不存在方块实体或者不更改方块实体。返回类方法：
+     *         {@code new BlockEntityInfo(blockEntity.saveCustomOnly(level.registryAccess()),lockEntity.components());}
      */
-    BlockEntityInfo onResetBlockEntity(ServerLevel level, BlockState state, BlockEntity blockEntity,BlockPos pos);
+    BlockEntityInfo onResetBlockEntity(ServerLevel level, BlockState state, BlockEntity blockEntity, BlockPos pos);
 }
