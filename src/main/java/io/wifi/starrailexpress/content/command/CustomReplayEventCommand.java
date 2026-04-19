@@ -23,9 +23,7 @@ public class CustomReplayEventCommand {
     dispatcher.register(
         Commands.literal("sre:show_replay")
             .requires(source -> source.hasPermission(2))
-            .then(Commands.literal("record")
-                .then(Commands.argument("message", ComponentArgument.textComponent(registryAccess))
-                    .executes(CustomReplayEventCommand::executeShow))));
+            .executes(CustomReplayEventCommand::executeShow));
   }
 
   private static int executeShow(CommandContext<CommandSourceStack> ctx) {
