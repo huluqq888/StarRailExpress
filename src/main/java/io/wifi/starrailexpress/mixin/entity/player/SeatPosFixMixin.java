@@ -4,7 +4,6 @@ import io.wifi.starrailexpress.content.block.MountableBlock;
 import io.wifi.starrailexpress.index.TMMBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,16 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayer.class)
 public class SeatPosFixMixin {
-    @Inject(method = "dismountVehicle", at = @At("HEAD"), cancellable = true)
-    private void dismountVehicle(Entity entity, CallbackInfo ci) {
-        ServerPlayer player = (ServerPlayer) (Object) this;
-        if (entity.isAlive()) {
-            if (player.getCooldowns().isOnCooldown(TMMBlocks.ACACIA_BRANCH.asItem())) {
-                ci.cancel();
-                return;
-            }
-        }
-    }
 
     @Inject(method = "dismountTo", at = @At("HEAD"), cancellable = true)
     public void stopRiding(double d, double e, double f, CallbackInfo ci) {
