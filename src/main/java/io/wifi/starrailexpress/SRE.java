@@ -250,7 +250,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             SkinsCommand.register(dispatcher);
             io.wifi.starrailexpress.cca.network.SkinsNetworkSyncCommand.register(dispatcher);
             // CoinModifier.register(dispatcher, registryAccess);
-            net.exmo.sre.nametag.NameTagCommand.register(dispatcher,registryAccess);
+            net.exmo.sre.nametag.NameTagCommand.register(dispatcher, registryAccess);
             // io.wifi.starrailexpress.contents.command.UnlockAllRolesCommand.register(dispatcher);
         }));
     }
@@ -269,6 +269,11 @@ public class SRE extends StarRailExpressID implements ModInitializer {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             SREPlayerStatsComponent.KEY.get(handler.player).flushDatabaseAsync();
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(handler.player.level());
+            var psychocca = SREPlayerPsychoComponent.KEY.get(handler.player);
+            if (psychocca.psychoTicks > 0) {
+                psychocca.stopPsychoAndRefreshPsychoCount(true);
+                psychocca.sync();
+            }
             if (REPLAY_MANAGER != null) {
                 var role = gameWorldComponent.getRole(handler.player);
                 if (role != null) {
