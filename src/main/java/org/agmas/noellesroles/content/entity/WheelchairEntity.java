@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.content.entity;
 
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.index.TMMBlocks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -53,7 +54,9 @@ public class WheelchairEntity extends Mob {
     private Vec3 lastPos = null;
 
     // ===== 减速与红石冷却 =====
+    @SuppressWarnings("unused")
     private int slowTime; // ticks remaining for slow effect
+    @SuppressWarnings("unused")
     private float slowMultiplier = 1.0f; // applied multiplier when slowed
     private int redstoneCooldown; // ticks until redstone can trigger again
     private int emeraldCooldown; // ticks until emerald boost can be applied again
@@ -365,9 +368,10 @@ public class WheelchairEntity extends Mob {
             }
             return InteractionResult.SUCCESS;
         }
-        if (this.getPassengers().isEmpty() && !player.isShiftKeyDown()) {
+        if (this.getPassengers().isEmpty() && !player.isShiftKeyDown() && !player.getCooldowns().isOnCooldown(TMMBlocks.ACACIA_BRANCH.asItem())) {
             if (!this.level().isClientSide) {
                 player.startRiding(this, true);
+                player.getCooldowns().addCooldown(TMMBlocks.ACACIA_BRANCH.asItem(), 10);
                 if (this.getControllingPassenger() == null)
                     this.addPassenger(player);
             }
