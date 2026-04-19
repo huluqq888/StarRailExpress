@@ -39,6 +39,7 @@ public class YinYangSwordItem extends Item {
     /** 右键范围伤害半径 */
     private static final double AOE_RANGE = 3.2;
     /** Q键突进距离 */
+    @SuppressWarnings("unused")
     private static final double DASH_DISTANCE = 6.0;
 
     public YinYangSwordItem(Item.Properties settings) {
