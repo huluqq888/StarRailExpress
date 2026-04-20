@@ -5,6 +5,7 @@ import io.wifi.starrailexpress.api.RoleSkill;
 import io.wifi.starrailexpress.api.RoleSkill.RoleSkillContext;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.event.AllowPlayerDeathWithKiller;
+import io.wifi.starrailexpress.event.AllowPlayerInAreas;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -16,6 +17,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +50,7 @@ public class FoolPlayerComponent implements RoleComponent {
     // ==================== 塔罗会成员列表（存储在愚者身上） ====================
     /** 所有拥有"塔罗会成员"标签的玩家UUID */
     public Set<UUID> tarotMembers = new HashSet<>();
-    
+
     /** 塔罗会最大成员数量 */
     public static final int MAX_TAROT_MEMBERS = 12;
 
@@ -129,18 +133,31 @@ public class FoolPlayerComponent implements RoleComponent {
         return player;
     }
 
-    public static void useSkill(RoleSkillContext context){
+    public static void useSkill(RoleSkillContext context) {
         ServerPlayer player = context.player();
         org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager.startAssembly(player);
     }
 
     static {
+        AllowPlayerInAreas.EVENT.register((p) -> {
+            if (TarotAssemblyManager.havingMeeting) {
+                double x_min = TarotAssemblyManager.MEETING_X - TarotAssemblySceneBuilder.HALL_HALF_WIDTH - 5;
+                double x_max = TarotAssemblyManager.MEETING_X + TarotAssemblySceneBuilder.HALL_HALF_WIDTH + 5;
+                double y_min = TarotAssemblyManager.MEETING_Y - TarotAssemblySceneBuilder.ROOM_HEIGHT - 2;
+                double y_max = TarotAssemblyManager.MEETING_Y + TarotAssemblySceneBuilder.ROOM_HEIGHT + 2;
+                double z_min = TarotAssemblyManager.MEETING_Z - TarotAssemblySceneBuilder.HALL_HALF_LENGTH - 5;
+                double z_max = TarotAssemblyManager.MEETING_Z + TarotAssemblySceneBuilder.HALL_HALF_LENGTH + 5;
+                return new AABB(new Vec3(x_min, y_min, z_min), new Vec3(x_max, y_max, z_max)).contains(p.position());
+            }
+            return false;
+        });
         RoleSkill.register(ModRoles.THE_FOOL, FoolPlayerComponent::useSkill);
         AllowPlayerDeathWithKiller.EVENT.register((player, killer, deathReason) -> {
             SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(player.level());
             if (gameWorld.isRole(player, ModRoles.THE_FOOL)) {
                 FoolPlayerComponent foolPlayerComponent = KEY.get(player);
-                if (foolPlayerComponent.protectionSource==null)return true;
+                if (foolPlayerComponent.protectionSource == null)
+                    return true;
                 if (foolPlayerComponent.protectionSource.equals(killer.getUUID())) {
                     if (player instanceof ServerPlayer serverPlayer) {
                         serverPlayer
@@ -206,6 +223,7 @@ public class FoolPlayerComponent implements RoleComponent {
 
     /**
      * 添加塔罗会成员
+     * 
      * @return true 如果添加成功，false 如果已达到最大成员数
      */
     public boolean addTarotMember(UUID playerUuid) {

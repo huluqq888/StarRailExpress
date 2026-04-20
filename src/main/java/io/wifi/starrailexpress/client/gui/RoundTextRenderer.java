@@ -77,7 +77,6 @@ public class RoundTextRenderer {
         if (copyrightWidth <= 0) {
             copyrightWidth = renderer.width(copyright);
         }
-        // .isLooseEndMode()
         GameMode gamemode = SREGameWorldComponent.KEY.get(player.level()).getGameMode();
         boolean isLooseEnds = gamemode.isLooseEndMode();
 
