@@ -388,6 +388,9 @@ public class DevilRouletteGame {
     public Level getLevel() {
         return level;
     }
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
 
     protected List<GamePlayerData> playerDataList;
     /** 弹丸列表 */

@@ -1,12 +1,23 @@
 package io.wifi.starrailexpress.game.modes.funny;
 
 import io.wifi.starrailexpress.api.GameMode;
+import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.api.SpecialGameModeRoles;
+import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.index.TMMItems;
+import io.wifi.starrailexpress.network.original.AnnounceWelcomePayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import org.agmas.noellesroles.content.block_entity.DevilRouletteTableEntity;
+import org.agmas.noellesroles.role.ModRoles;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * 轮盘赌锦标赛
@@ -20,15 +31,14 @@ import java.util.List;
 public class SREDevilRouletteGameMode extends GameMode {
     /**
      * @param identifier       the game mode identifier
-     * @param defaultStartTime the default time at which the timer will be set at
-     *                         the start of the game mode, in minutes
-     * @param minPlayerCount   the minimum amount of players required to start the
-     *                         game mode
      */
-    public SREDevilRouletteGameMode(ResourceLocation identifier, int defaultStartTime, int minPlayerCount) {
-        super(identifier, defaultStartTime, minPlayerCount);
+    public SREDevilRouletteGameMode(ResourceLocation identifier) {
+        super(identifier, 10, 2);
+        initModeItems();
     }
-
+    protected void initModeItems() {
+        devilRouletteItems.add(() -> new ItemStack(TMMItems.DEFENSE_VIAL));
+    }
     @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
 
@@ -36,6 +46,44 @@ public class SREDevilRouletteGameMode extends GameMode {
 
     @Override
     public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent, List<ServerPlayer> players) {
-
+        initRoles(players, gameWorldComponent);
+        initPlayerItems(players, gameWorldComponent);
+        sendWelcomePackets(players, gameWorldComponent, SpecialGameModeRoles.DIRT);
     }
+
+    protected void initRoles(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent) {
+        for (ServerPlayer player : players)
+            gameWorldComponent.addRole(player, SpecialGameModeRoles.DIRT);
+    }
+    protected void initPlayerItems(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent) {
+        for (ServerPlayer player : players) {
+            player.getInventory().clearContent();
+            // 添加模式专属物品
+            for (Supplier<ItemStack> itemSupplier : devilRouletteItems) {
+                ItemStack itemStack = itemSupplier.get();
+                if (itemStack != null && !itemStack.isEmpty()) {
+                    player.addItem(itemStack);
+                }
+            }
+        }
+    }
+    protected void sendWelcomePackets(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent,
+                                      SRERole role) {
+        if (role == null)
+            return;
+        for (ServerPlayer player : players) {
+            ServerPlayNetworking.send(player,
+                    new AnnounceWelcomePayload(role.identifier().toString(), -1, -1));
+        }
+    }
+    public void addRouletteTableEntity(DevilRouletteTableEntity rouletteTableEntity) {
+        if (!rouletteTableEntities.contains(rouletteTableEntity))
+            rouletteTableEntities.add(rouletteTableEntity);
+    }
+    public List<DevilRouletteTableEntity> getRouletteTableEntities() {
+        return rouletteTableEntities;
+    }
+
+    public final List<Supplier<ItemStack>> devilRouletteItems = new ArrayList<>();
+    protected List<DevilRouletteTableEntity> rouletteTableEntities = new ArrayList<>();
 }

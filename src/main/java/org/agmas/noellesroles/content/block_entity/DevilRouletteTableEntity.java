@@ -70,6 +70,7 @@ public class DevilRouletteTableEntity extends BlockEntity {
         game = null;
         frontPlayerUUID = null;
         backPlayerUUID = null;
+        gameMode = null;
 
         gunStack = ItemStack.EMPTY;
         frontPlayerName = Component.empty();
@@ -96,7 +97,7 @@ public class DevilRouletteTableEntity extends BlockEntity {
         tempSubDisplays.clear();
         itemDisplays.clear();
     }
-    protected void reset() {
+    public void reset() {
         init();
     }
     @Override
@@ -214,6 +215,8 @@ public class DevilRouletteTableEntity extends BlockEntity {
             random = level.getRandom();
         // 创建游戏
         game = new DevilRouletteGame(frontPlayerUUID, backPlayerUUID, random, level);
+        if (gameMode != null)
+            game.setGameMode(gameMode);
         // 初始化游戏
         game.init();
         game.start();
@@ -575,6 +578,9 @@ public class DevilRouletteTableEntity extends BlockEntity {
         curAFKCount = 1;
         curLeftTickGap = 0;
     }
+    public void setGameMode(DevilRouletteGame.GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
     public Direction getFacing() {
         if (this.level == null) return Direction.NORTH;
         BlockState state = this.getBlockState();
@@ -629,6 +635,7 @@ public class DevilRouletteTableEntity extends BlockEntity {
      */
     protected final List<Display> tempSubDisplays = new ArrayList<>();
     protected DevilRouletteGame game;
+    protected DevilRouletteGame.GameMode gameMode;
     protected Component frontPlayerName;
     protected Component backPlayerName;
     protected Component shootSelfComponent;

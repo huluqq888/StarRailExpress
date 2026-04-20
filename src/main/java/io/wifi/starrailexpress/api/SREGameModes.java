@@ -5,6 +5,7 @@ import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
 import io.wifi.starrailexpress.game.modes.WTLooseEndsGameMode;
 import io.wifi.starrailexpress.game.modes.funny.*;
 import net.minecraft.resources.ResourceLocation;
+import org.agmas.noellesroles.content.block_entity.DevilRouletteTableEntity;
 import org.agmas.noellesroles.game.modes.ChairWheelRaceGame;
 import org.agmas.noellesroles.game.modes.fourthroom.game.FourthRoomGameMode;
 
@@ -33,6 +34,7 @@ public class SREGameModes {
     public static final ResourceLocation ANT_WAR_MODE_ID = SRE.xiaoheihandId("ant_war");
     public static final ResourceLocation SNIPER_RIFLE_ID = SRE.xiaoheihandId("sniper_war");
     public static final ResourceLocation EVIL_WAR_MODE_ID = SRE.xiaoheihandId("evil_war");
+    public static final ResourceLocation DEVIL_ROULETTE_ID = SRE.xiaoheihandId("devil_roulette");
 
     // Modified from Harpymodloader
     public static final GameMode MURDER = registerGameMode(new SREMurderGameMode(MURDER_ID));
@@ -56,6 +58,7 @@ public class SREGameModes {
     public static final GameMode ANT_WAR_MODE = registerGameMode(new SREAntWarGameMode(ANT_WAR_MODE_ID));
     public static final GameMode SNIPER_RIFLE_MODE = registerGameMode(new SRESniperRifleGameMode(SNIPER_RIFLE_ID));
     public static final GameMode EVIL_WAR_MODE = registerGameMode(new SREEvilWarGameMode(EVIL_WAR_MODE_ID));
+    public static final GameMode DEVIL_ROULETTE_MODE = registerGameMode(new SREDevilRouletteGameMode(DEVIL_ROULETTE_ID));
 
     // register
     public static GameMode registerGameMode(GameMode gameMode) {

@@ -1,8 +1,15 @@
 package org.agmas.noellesroles.content.block;
 
+import io.wifi.starrailexpress.api.GameMode;
+import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.content.block.api.AutoResetBlockInterface;
 import io.wifi.starrailexpress.content.block.entity.SeatEntity;
+import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.game.modes.funny.SREDevilRouletteGameMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -29,10 +36,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.agmas.noellesroles.content.block_entity.DevilRouletteTableEntity;
+import org.agmas.noellesroles.mini_gme.DevilRouletteGame;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
-public class DevilRouletteTable extends Block implements EntityBlock {
+public class DevilRouletteTable extends Block implements EntityBlock, AutoResetBlockInterface {
     public enum TablePart implements StringRepresentable {
         NORTH_WEST(-1, -1),
         NORTH(0, -1),
@@ -244,63 +252,30 @@ public class DevilRouletteTable extends Block implements EntityBlock {
         return ItemInteractionResult.SUCCESS;
     }
 
-    /** 检测是否为在正确座位区域，座位是否正确 */
-    protected boolean isSeatingZone(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-//        BlockEntity be = level.getBlockEntity(pos);
-//        if (be instanceof DevilRouletteTableEntity table) {
-//            if (player.getVehicle() instanceof SeatEntity seatEntity) {
-//                var seatPos = seatEntity.getSeatPos();
-//                if (table.getSeatArea().contains(seatPos))
-//                {
-//                    if (seatPos != null) {
-//                        return level.getBlockEntity(seatPos) instanceof ToiletBlockEntity;
-//                    }
-//                }
-//            }
-//        }
-        return false;
+    // 游戏模式内重置逻辑
+    @Override
+    public BlockState onResetBlockState(ServerLevel level, BlockState state, BlockPos pos) {
+        if (state.getValue(PART) == TablePart.CENTER) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof DevilRouletteTableEntity table) {
+                table.reset();
+                SREGameWorldComponent gameComponent = SREGameWorldComponent.KEY.get(level);
+                GameMode mode = gameComponent.getGameMode();
+                if (mode instanceof SREDevilRouletteGameMode devilRouletteGameMode) {
+                    table.setGameMode(DevilRouletteGame.GameMode.Roulette);
+                    // 将地图中的 轮盘赌桌 实体加入到游戏模式类中
+                    devilRouletteGameMode.addRouletteTableEntity(table);
+                }
+            }
+        }
+        return state;
     }
 
-//    // 获取最近的交互区域
-//    public static FourthRoomTableBlock.InteractionZone resolveInteractionZone(BlockState state, BlockPos pos, BlockHitResult hitResult) {
-//        if (!(state.getBlock() instanceof FourthRoomTableBlock)) {
-//            return FourthRoomTableBlock.InteractionZone.NONE;
-//        }
-//        BlockPos corePos = getCore(state, pos);
-//        Direction facing = state.getValue(FACING);
-//        Vec3 hitPos = hitResult.getLocation();
-//        FourthRoomTableBlock.InteractionZone zone = nearestZone(hitPos, corePos, facing);
-//        if (zone != FourthRoomTableBlock.InteractionZone.NONE) {
-//            return zone;
-//        }
-//        double x = hitPos.x - (corePos.getX() + 0.5D);
-//        double z = hitPos.z - (corePos.getZ() + 0.5D);
-//        if (Math.abs(x) <= 1.45D && Math.abs(z) <= 1.45D) {
-//            return FourthRoomTableBlock.InteractionZone.CENTER;
-//        }
-//        return FourthRoomTableBlock.InteractionZone.NONE;
-//    }
-//    private static FourthRoomTableBlock.InteractionZone nearestZone(Vec3 hitPos, BlockPos corePos, Direction facing) {
-//        FourthRoomTableBlock.InteractionZone closest = FourthRoomTableBlock.InteractionZone.NONE;
-//        double bestDistance = Double.MAX_VALUE;
-//        for (FourthRoomTableBlock.InteractionZone zone : FourthRoomTableBlock.InteractionZone.values()) {
-//            if (zone.anchor == null) {
-//                continue;
-//            }
-//            Vec3 anchorPos = zone.anchor.worldPos(corePos, facing);
-//            double distance = horizontalDistanceSquared(hitPos, anchorPos);
-//            if (distance <= zone.radius * zone.radius && distance < bestDistance) {
-//                closest = zone;
-//                bestDistance = distance;
-//            }
-//        }
-//        return closest;
-//    }
-//    private static double horizontalDistanceSquared(Vec3 first, Vec3 second) {
-//        double dx = first.x - second.x;
-//        double dz = first.z - second.z;
-//        return dx * dx + dz * dz;
-//    }
+    @Override
+    public GameUtils.BlockEntityInfo onResetBlockEntity(ServerLevel level, BlockState state, BlockEntity blockEntity, BlockPos pos) {
+        return null;
+    }
+
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final EnumProperty<TablePart> PART =
