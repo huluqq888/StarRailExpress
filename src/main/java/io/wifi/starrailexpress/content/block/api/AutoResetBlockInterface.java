@@ -13,7 +13,7 @@ public interface AutoResetBlockInterface {
      * @param level
      * @param state
      * @param pos
-     * @return 应该返回重置后的 BlockState
+     * @return 应该返回重置后的 BlockState。如果没有更改也需要返回原state。
      */
     BlockState onResetBlockState(ServerLevel level, BlockState state, BlockPos pos);
 

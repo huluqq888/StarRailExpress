@@ -180,7 +180,7 @@ public class RefugeeComponent implements AutoSyncedComponent, ServerTickingCompo
         player.getInventory().clearContent();
 
         // Change role to LOOSE_END and remove REFUGEE modifier
-        StupidRoleUtils.changeRole(player, TMMRoles.LOOSE_END, false);
+        StupidRoleUtils.changeRole(player, TMMRoles.LOOSE_END, false,false);
         SRE.REPLAY_MANAGER.recordPlayerRevival(player.getUUID(), TMMRoles.LOOSE_END);
         StupidRoleUtils.sendWelcomeAnnouncement(player);
 

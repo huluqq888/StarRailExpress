@@ -46,7 +46,7 @@ public class MapVoteCommand {
   }
 
   private static int startVoting(CommandSourceStack source, int time) {
-    if (GameUtils.isStartingGame) {
+    if (AutoShutdownWhenNotRunningCommand.autoShutdownWhenGameNotRunning || GameUtils.isStartingGame) {
       source.sendFailure(Component.literal("Game is starting! You cannot open map voting screen!"));
       return 0;
     }

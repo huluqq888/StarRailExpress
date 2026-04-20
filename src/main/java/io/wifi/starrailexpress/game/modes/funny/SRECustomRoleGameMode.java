@@ -254,6 +254,7 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
             }
             ServerPlayNetworking.send(p, new CloseUiPayload());
         }
+        GameUtils.recordPlayerStats(serverWorld, gameWorldComponent, new ArrayList<>(serverWorld.players()));
         int SAFE_TIME_COOLDOWN = SREConfig.instance().safeTimeCooldown * 20;
         addItemCooldowns(serverWorld, SAFE_TIME_COOLDOWN);
         SRE.REPLAY_MANAGER.updateReplayInitialRoles(players, gameWorldComponent.getRoles());
@@ -277,29 +278,10 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
         return AllowGameEnd.EVENT.invoker().allowGameEnd(serverWorld,
                 winStatus, false);
     }
-    
+
     @Override
     public void recordPlayerStats(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
             ArrayList<ServerPlayer> readyPlayerList) {
-        for (ServerPlayer player : readyPlayerList) {
-            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
-            var crgmtpc = CustomRoleGameModeTeamsPlayerComponent.KEY.get(player);
-            stats.incrementTotalGamesPlayed();
-            SRERole playerRole = gameComponent.getRole(player);
-            int roleType = crgmtpc.getTeam();
-            if (playerRole != null) {
-                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
-                // 统计阵营场次
-                if (roleType == 5) {
-                    stats.incrementTotalSheriffGames();
-                } else if (roleType == 4) {
-                    stats.incrementTotalKillerGames();
-                } else if (roleType == 2 || roleType == 3) {
-                    stats.incrementTotalNeutralGames();
-                } else {
-                    stats.incrementTotalCivilianGames();
-                }
-            }
-        }
+        // 开始游戏后记录
     }
 }

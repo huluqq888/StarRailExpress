@@ -7,6 +7,7 @@ import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameRoundEndComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.GameUtils.WinStatus;
 import io.wifi.starrailexpress.index.TMMItems;
@@ -236,7 +237,10 @@ public class RoleUtils extends MCItemsUtils {
     }
 
     public static void changeRole(Player player, SRERole role, boolean record) {
+        changeRole(player, role, record, record);
+    }
 
+    public static void changeRole(Player player, SRERole role, boolean record, boolean addStats) {
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
         // 删除旧职业
         var oldRole = gameWorldComponent.getRole(player);
@@ -245,6 +249,20 @@ public class RoleUtils extends MCItemsUtils {
                 SRE.REPLAY_MANAGER.recordPlayerRoleChange(player.getUUID(), oldRole, role);
             }
             ((ModdedRoleRemoved) ModdedRoleRemoved.EVENT.invoker()).removeModdedRole(player, oldRole);
+        }
+        if (addStats) {
+            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
+            stats.getOrCreateRoleStats(role.identifier()).incrementTimesPlayed();
+            // 统计阵营场次
+            if (role.isVigilanteTeam()) {
+                stats.incrementTotalSheriffGames();
+            } else if (role.canUseKiller()) {
+                stats.incrementTotalKillerGames();
+            } else if (role.isNeutrals()) {
+                stats.incrementTotalNeutralGames();
+            } else if (role.isInnocent() && !role.isVigilanteTeam()) {
+                stats.incrementTotalCivilianGames();
+            }
         }
         // 给新职业
         gameWorldComponent.addRole(player, role);

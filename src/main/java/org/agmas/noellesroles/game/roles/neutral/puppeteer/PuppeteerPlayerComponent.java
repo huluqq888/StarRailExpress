@@ -299,7 +299,7 @@ public class PuppeteerPlayerComponent implements RoleComponent, ServerTickingCom
         usedPuppetCount++;
 
         // 设置玩家为假人角色（临时更改角色以获得杀手能力）
-        RoleUtils.changeRole(player, puppetRole);
+        RoleUtils.changeRole(player, puppetRole, true, false);
         RoleUtils.sendWelcomeAnnouncement(serverPlayer);
 
         if (playerShopComponent != null) {
