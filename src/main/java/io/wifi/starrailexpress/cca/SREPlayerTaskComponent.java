@@ -178,11 +178,7 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
             this.tasks.remove(task.getType());
             this.parallelTaskTypes.remove(task.getType());
             // 更新计分板上的任务计数
-            if (this.player instanceof ServerPlayer serverPlayer) {
-                SREGameScoreboardComponent scoreboardComponent = SREGameScoreboardComponent.KEY
-                        .get(serverPlayer.getServer().getScoreboard());
-                scoreboardComponent.incrementPlayerTaskCount(this.player);
-
+            if (this.player instanceof ServerPlayer) {
                 // 调用角色的任务完成方法（完整奖励，并列任务不再减少奖励）
                 io.wifi.starrailexpress.api.RoleMethodDispatcher.callOnFinishQuest(this.player, task.getName(),
                         this.taskStreak, false);

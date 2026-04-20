@@ -5,7 +5,6 @@ import io.wifi.starrailexpress.DeathInfo;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.*;
-import io.wifi.starrailexpress.api.replay.GameReplayData;
 import io.wifi.starrailexpress.api.replay.GameReplayManager;
 import io.wifi.starrailexpress.cca.*;
 import io.wifi.starrailexpress.compat.TrainVoicePlugin;
@@ -95,6 +94,29 @@ public class GameUtils {
     private static Set<UUID> forcedReadyPlayers;
     public static boolean isStartingGame = false;
     public static boolean isGameStarted = false;
+
+    public static void recordPlayerStats(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+            ArrayList<ServerPlayer> readyPlayerList) {
+        for (ServerPlayer player : readyPlayerList) {
+            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
+            stats.incrementTotalGamesPlayed();
+            SRERole playerRole = gameComponent.getRole(player);
+            if (playerRole != null) {
+                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
+
+                // 统计阵营场次
+                if (playerRole.isVigilanteTeam()) {
+                    stats.incrementTotalSheriffGames();
+                } else if (playerRole.canUseKiller()) {
+                    stats.incrementTotalKillerGames();
+                } else if (playerRole.isNeutrals()) {
+                    stats.incrementTotalNeutralGames();
+                } else if (playerRole.isInnocent() && !playerRole.isVigilanteTeam()) {
+                    stats.incrementTotalCivilianGames();
+                }
+            }
+        }
+    }
 
     public static void limitPlayerToBox(ServerPlayer player, AABB box) {
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.serverLevel());
@@ -244,13 +266,7 @@ public class GameUtils {
         SREGameTimeComponent.KEY.get(world).setResetTime(time);
         RefugeeComponent.KEY.get(world).reset();
         if (playerCount >= gameMode.minPlayerCount) {
-
-            // 初始化计分板组件
-            SREGameScoreboardComponent scoreboardComponent = SREGameScoreboardComponent.KEY
-                    .get(world.getServer().getScoreboard());
-            scoreboardComponent.reset();
             game.setGameStatus(SREGameWorldComponent.GameStatus.STARTING);
-
         } else {
             clearForcedReadyPlayers();
             for (ServerPlayer player : players) {
@@ -265,9 +281,10 @@ public class GameUtils {
         SREGameWorldComponent component = SREGameWorldComponent.KEY.get(world);
         SREWorldBlackoutComponent.KEY.get(world).reset();
         component.setGameStatus(SREGameWorldComponent.GameStatus.STOPPING);
+        component.gameMode.stopGame(world);
     }
 
-    private static void executeFunction(CommandSourceStack source, String function) {
+    public static void executeFunction(CommandSourceStack source, String function) {
         try {
             source.getServer().getCommands().performPrefixedCommand(source, "function " + function);
         } catch (Exception e) {
@@ -301,62 +318,25 @@ public class GameUtils {
             player.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
         }
 
-        baseInitialize(serverWorld, gameComponent, readyPlayerList);
-
         GameInitializeEvent.EVENT.invoker().initializeGame(serverWorld, gameComponent, readyPlayerList);
-        // 先分配角色,然后再初始化回放管理器
+        // 初始化房间等
+        gameComponent.getGameMode().beforeInitializeGame(serverWorld, gameComponent, readyPlayerList);
+        // 分配角色
         gameComponent.getGameMode().initializeGame(serverWorld, gameComponent, readyPlayerList);
+        // 初始化回放管理器
+        gameComponent.getGameMode().afterInitializeGame(serverWorld, gameComponent, readyPlayerList);
 
-        // 初始化回放管理器,此时角色已经分配完成
-        SRE.REPLAY_MANAGER.initializeReplay(readyPlayerList, gameComponent.getRoles());
-        // 记录游戏开始事件
-        SRE.REPLAY_MANAGER.addEvent(GameReplayData.EventType.GAME_START, null, null, null, null);
-
-        // Update replay with actual roles after assignment
-        SRE.REPLAY_MANAGER.updateRolesFromComponent(gameComponent);
-
-        // Set game status to ACTIVE after roles are assigned
+        // 准备游戏开始（过渡状态）
         gameComponent.setGameStatus(SREGameWorldComponent.GameStatus.ACTIVE);
 
         gameComponent.sync();
 
-        // 初始化计分板组件
-        SREGameScoreboardComponent scoreboardComponent = SREGameScoreboardComponent.KEY
-                .get(serverWorld.getServer().getScoreboard());
-        scoreboardComponent.reset();
-
-        // 设置平民获胜所需的总任务数 (这里可以根据玩家数量动态计算)
-        int totalRequiredTasks = readyPlayerList.size() * 5; // 每个玩家需要完成5个任务
-        scoreboardComponent.setTotalRequiredTasks(totalRequiredTasks);
-
-        // 更新所有玩家的计分板显示
-        scoreboardComponent.updateAllPlayerScores();
-
-        // --- 新增统计数据更新逻辑 ---
-        // RoleUnlockStorage unlockStorage = RoleUnlockStorage.getInstance();
-        // int gamesBefore = unlockStorage.getGlobalGamesPlayed();
-        // unlockStorage.incrementGlobalGames();
-        // int gamesAfter = unlockStorage.getGlobalGamesPlayed();
-
-        // List<ResourceLocation> newlyUnlockedRoles = RoleUnlockManager.getInstance()
-        // .getNewlyUnlockedRoles(gamesBefore, gamesAfter,
-        // unlockStorage.getForceUnlockedRoles());
-        // if (!newlyUnlockedRoles.isEmpty()) {
-        // RoleUnlockedHudPayload unlockPayload = new RoleUnlockedHudPayload(
-        // gamesAfter,
-        // newlyUnlockedRoles.stream().map(ResourceLocation::toString).toList());
-        // for (ServerPlayer player : readyPlayerList) {
-        // ServerPlayNetworking.send(player, unlockPayload);
-        // }
-        // }
         gameComponent.getGameMode().recordPlayerStats(serverWorld, gameComponent, readyPlayerList);
 
-        gameComponent.getGameMode().afterInitializeGame(serverWorld, gameComponent, readyPlayerList);
+        gameComponent.getGameMode().gameTrueStarted(serverWorld, gameComponent, readyPlayerList);
 
         OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
         // --- 结束新增统计数据更新逻辑 ---
-        executeFunction(serverWorld.getServer().createCommandSourceStack(),
-                "harpymodloader:start_game_" + AreasWorldComponent.KEY.get(serverWorld).mapName);
         OnTrainAreaHaveReseted.EVENT.invoker().onWorldHaveInited(serverWorld);
         isGameStarted = true;
     }
@@ -481,7 +461,14 @@ public class GameUtils {
     // public static Map<TaskPointType, List<BlockPos>> taskPoints = new
     // HashMap<>();
 
-    private static void baseInitialize(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+    /**
+     * 基础重置，包含分配房间、重置玩家、游戏规则等
+     * 
+     * @param serverWorld
+     * @param gameComponent
+     * @param players
+     */
+    public static void baseInitialize(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
             List<ServerPlayer> players) {
         if (SRE.isLobby)
             return;
@@ -882,10 +869,6 @@ public class GameUtils {
         trainComponent.setTime(0);
         gameComponent.roleWorldComponent.sync();
 
-        // 重置计分板组件
-        SREGameScoreboardComponent scoreboardComponent = SREGameScoreboardComponent.KEY
-                .get(world.getServer().getScoreboard());
-        scoreboardComponent.reset();
         roundEnd.sync();
 
         if (AutoShutdownWhenNotRunningCommand.autoShutdownWhenGameNotRunning) {

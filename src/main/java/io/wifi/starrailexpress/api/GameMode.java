@@ -1,8 +1,10 @@
 package io.wifi.starrailexpress.api;
 
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
+import io.wifi.starrailexpress.api.replay.GameReplayData;
+import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
-import io.wifi.starrailexpress.cca.SREPlayerStatsComponent;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -64,25 +66,7 @@ public abstract class GameMode {
      */
     public void recordPlayerStats(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
             ArrayList<ServerPlayer> readyPlayerList) {
-        for (ServerPlayer player : readyPlayerList) {
-            SREPlayerStatsComponent stats = SREPlayerStatsComponent.KEY.get(player);
-            stats.incrementTotalGamesPlayed();
-            SRERole playerRole = gameComponent.getRole(player);
-            if (playerRole != null) {
-                stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
-
-                // 统计阵营场次
-                if (playerRole.isVigilanteTeam()) {
-                    stats.incrementTotalSheriffGames();
-                } else if (playerRole.canUseKiller()) {
-                    stats.incrementTotalKillerGames();
-                } else if (playerRole.isNeutrals()) {
-                    stats.incrementTotalNeutralGames();
-                } else if (playerRole.isInnocent() && !playerRole.isVigilanteTeam()) {
-                    stats.incrementTotalCivilianGames();
-                }
-            }
-        }
+        GameUtils.recordPlayerStats(serverWorld, gameComponent, readyPlayerList);
     }
 
     /**
@@ -92,12 +76,14 @@ public abstract class GameMode {
      * @param gameComponent
      * @param readyPlayerList
      */
-    public void afterInitializeGame(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+    public void gameTrueStarted(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
             ArrayList<ServerPlayer> readyPlayerList) {
         int SAFE_TIME_COOLDOWN = SREConfig.instance().safeTimeCooldown * 20;
         if (gameComponent.getGameMode().hasSafeTime()) {
             GameUtils.addItemCooldowns(serverWorld, SAFE_TIME_COOLDOWN);
         }
+        GameUtils.executeFunction(serverWorld.getServer().createCommandSourceStack(),
+                "harpymodloader:start_game_" + AreasWorldComponent.KEY.get(serverWorld).mapName);
     }
 
     public boolean enforcesPlayAreaElimination() {
@@ -108,6 +94,11 @@ public abstract class GameMode {
 
     public abstract void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> players);
+
+    public void beforeInitializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
+            List<ServerPlayer> players) {
+        GameUtils.baseInitialize(serverWorld, gameWorldComponent, players);
+    }
 
     public void finalizeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
 
@@ -125,5 +116,19 @@ public abstract class GameMode {
         // 根据游戏模式ID返回本地化的名称
         String gameModeId = this.identifier.getPath();
         return Component.translatableWithFallback("hud.sre.tip.gamemode." + gameModeId, gameModeId);
+    }
+
+    public void afterInitializeGame(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+            ArrayList<ServerPlayer> readyPlayerList) {
+        // 初始化回放管理器,此时角色已经分配完成
+        SRE.REPLAY_MANAGER.initializeReplay(readyPlayerList, gameComponent.getRoles());
+        // 记录游戏开始事件
+        SRE.REPLAY_MANAGER.addEvent(GameReplayData.EventType.GAME_START, null, null, null, null);
+
+        // Update replay with actual roles after assignment
+        SRE.REPLAY_MANAGER.updateRolesFromComponent(gameComponent);
+    }
+
+    public void stopGame(ServerLevel world) {
     }
 }
