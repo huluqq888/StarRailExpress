@@ -20,7 +20,7 @@ public class ModEntities {
     public static final EntityType<WheelchairEntity> WHEELCHAIR = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Noellesroles.id("wheelchair"),
-            EntityType.Builder.of(WheelchairEntity::new, MobCategory.MISC).sized(0.6f, 1.8f) // 玩家的宽度，高度
+            EntityType.Builder.of(WheelchairEntity::new, MobCategory.MISC).sized(0.8f, 1.6f) // 0.8 宽度，1.6 高度
                     .build("wheelchair"));
 
     public static final EntityType<WheelchairFieldItemEntity> WHEELCHAIR_FIELD_ITEM = Registry.register(

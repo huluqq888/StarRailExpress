@@ -16,6 +16,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.AABB;
+
 import org.agmas.noellesroles.content.entity.WheelchairEntity;
 import org.agmas.noellesroles.init.ModEntities;
 import org.agmas.noellesroles.init.ModItems;
@@ -27,6 +29,31 @@ import java.util.Objects;
 public class WheelchairItem extends Item {
    public WheelchairItem() {
       super(new Item.Properties().stacksTo(1).durability(90));
+   }
+
+   public static boolean canPlaceWheelchairAtPlayer(Player player) {
+      Level level = player.level();
+      // 轮椅碰撞箱尺寸（与玩家站立尺寸一致）
+      double width = 1;
+      double height = 1.6;
+      double depth = 1;
+
+      // 计算轮椅底部中心点：玩家脚部位置（player.getY() 即为脚部Y）
+      double centerX = player.getX();
+      double footY = player.getY();
+      double centerZ = player.getZ();
+
+      // 构建轮椅碰撞箱
+      AABB wheelchairBox = new AABB(
+            centerX - width / 2.0,
+            footY,
+            centerZ - depth / 2.0,
+            centerX + width / 2.0,
+            footY + height,
+            centerZ + depth / 2.0);
+
+      // 检测是否与任何方块碰撞（忽略玩家自身）
+      return level.noCollision(null, wheelchairBox);
    }
 
    public InteractionResult useOn(UseOnContext useOnContext) {
@@ -77,6 +104,9 @@ public class WheelchairItem extends Item {
       }
       if (player.getCooldowns().isOnCooldown(TMMBlocks.ACACIA_BRANCH.asItem())) {
          return InteractionResultHolder.pass(itemStack);
+      }
+      if (!canPlaceWheelchairAtPlayer(player)) {
+         return InteractionResultHolder.fail(itemStack);
       }
       if (!itemStack.is(ModItems.WHEELCHAIR))
          return InteractionResultHolder.pass(itemStack);
