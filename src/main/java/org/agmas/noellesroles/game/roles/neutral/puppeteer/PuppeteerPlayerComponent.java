@@ -531,7 +531,7 @@ public class PuppeteerPlayerComponent implements RoleComponent, ServerTickingCom
 
         // 触发角色分配事件 - 这会通知所有模组的监听器清除之前的角色状态
         // 其他扩展模组（如 NoellesRoles）会在 onRoleAssigned 中检测角色变化并自动清除组件
-        RoleUtils.changeRole(player, ModRoles.PUPPETEER);
+        RoleUtils.changeRole(player, ModRoles.PUPPETEER, true, false);
         playerShop.setBalance(balance);
         playerShop.sync();
         // 设置技能冷却
