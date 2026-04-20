@@ -162,7 +162,11 @@ public class RoleNameRenderer {
                 context.pose().translate(context.guiWidth() / 2f, context.guiHeight() / 2f + 6, 0);
                 context.pose().scale(0.6f, 0.6f, 1f);
                 int nameWidth2 = renderer.width(name2);
+                Component tipC = Component.translatable("entity.noellesroles.puppeteer_body")
+                        .withStyle(ChatFormatting.GRAY);
                 context.drawString(renderer, name2, -nameWidth2 / 2, 16,
+                        Mth.color(1f, 1f, 1f) | ((int) (1 * 255) << 24));
+                context.drawString(renderer, tipC, -renderer.width(tipC) / 2, 4,
                         Mth.color(1f, 1f, 1f) | ((int) (1 * 255) << 24));
                 context.pose().popPose();
             }
