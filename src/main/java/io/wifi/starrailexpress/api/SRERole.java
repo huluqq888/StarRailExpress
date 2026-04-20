@@ -21,6 +21,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
+
+import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -652,5 +654,9 @@ public abstract class SRERole {
         String suffix = isSlim ? "_thin" : "";
         ResourceLocation texture = SRE.watheId("textures/entity/psycho" + suffix + ".png");
         return texture;
+    }
+
+    public int getRoleType() {
+        return PlayerRoleWeightManager.getRoleType(this);
     };
 }

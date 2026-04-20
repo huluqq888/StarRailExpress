@@ -289,7 +289,6 @@ public class SRECustomRoleGameMode extends SREMurderGameMode {
             int roleType = crgmtpc.getTeam();
             if (playerRole != null) {
                 stats.getOrCreateRoleStats(playerRole.identifier()).incrementTimesPlayed();
-
                 // 统计阵营场次
                 if (roleType == 5) {
                     stats.incrementTotalSheriffGames();
