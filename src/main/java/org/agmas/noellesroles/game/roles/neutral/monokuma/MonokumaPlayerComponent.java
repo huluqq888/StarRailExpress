@@ -377,6 +377,13 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                         0,
                         true, false, false));
             }
+            if (!player.hasEffect(MobEffects.INVISIBILITY)) {
+                player.addEffect(new MobEffectInstance(
+                        MobEffects.INVISIBILITY,
+                        -1,
+                        0,
+                        true, false, false));
+            }
         }
     }
 
