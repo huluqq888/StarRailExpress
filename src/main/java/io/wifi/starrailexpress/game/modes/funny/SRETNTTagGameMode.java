@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.game.modes.funny;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.api.replay.GameReplayUtils;
 import io.wifi.starrailexpress.cca.SREGameTimeComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
@@ -29,6 +30,7 @@ import org.agmas.noellesroles.commands.BroadcastCommand;
 import org.agmas.noellesroles.init.FunnyItems;
 import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.utils.MCItemsUtils;
+import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -190,7 +192,7 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
             if (alivePlayer != null) {
                 SREGameWorldComponent.KEY.get(serverWorld).setLooseEndWinner(alivePlayer.getUUID());
             }
-            GameUtils.stopGame(serverWorld);
+            RoleUtils.customWinnerWin(serverWorld, "hot_potato", TMMRoles.KILLER.color());
             return;
         }
         if (this.nextBombTime > 0 && serverWorld.getGameTime() >= this.nextBombTime) {
