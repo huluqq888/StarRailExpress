@@ -172,6 +172,11 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
     }
 
     @Override
+    public boolean hasMood() {
+        return false;
+    }
+
+    @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         boolean haveSafeTime = false;
         int aliveCount = 0;
@@ -212,6 +217,14 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
             for (ServerPlayer sp : serverWorld.players()) {
                 sp.addEffect(new MobEffectInstance(
                         MobEffects.MOVEMENT_SPEED,
+                        (int) (100), // 持续时间（tick）
+                        0, // 等级（0 = 速度 I）
+                        false, // ambient（环境效果，如信标）
+                        true, // showParticles（显示粒子）
+                        false // showIcon（显示图标）
+                ));
+                sp.addEffect(new MobEffectInstance(
+                        ModEffects.INFINITE_STAMINA,
                         (int) (100), // 持续时间（tick）
                         0, // 等级（0 = 速度 I）
                         false, // ambient（环境效果，如信标）
