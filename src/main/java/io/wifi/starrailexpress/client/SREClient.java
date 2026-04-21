@@ -891,6 +891,10 @@ public class SREClient implements ClientModInitializer {
     }
 
     public static int getInstinctHighlight(Entity target) {
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.player == null || gameComponent == null) {
+            return -1;
+        }
         int invokerColor = OnGetInstinctHighlight.EVENT.invoker().GetInstinctHighlight(target, isInstinctEnabled());
         if (invokerColor != -1) {
             if (invokerColor == -2)
