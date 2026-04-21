@@ -58,7 +58,7 @@
   "gui.sre.gamemode.tnt_tag.bomb_time_having": "你当前持有烫手的山芋！烫手的山芋将在 %s 后爆炸！",
   "gui.sre.gamemode.tnt_tag.bomb": "烫手的山芋爆炸了！受害者：\n%s",
   "gui.sre.gamemode.tnt_tag.next_round_time": "下一轮将在 %ss 后开始",
-  "gui.sre.gamemode.tnt_tag.new_round": "新一轮开始了！持有者：%s",
+  "gui.sre.gamemode.tnt_tag.new_round": "新一轮开始了！持有者：\n%s",
   "gui.sre.gamemode.hide_and_seek": "你的附近 %s 格有%s",
   "gui.sre.gamemode.hider": "躲藏者",
   "gui.sre.gamemode.seeker": "寻找者",

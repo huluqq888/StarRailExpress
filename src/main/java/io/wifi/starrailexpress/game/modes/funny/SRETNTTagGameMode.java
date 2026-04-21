@@ -145,8 +145,9 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
                 .filter((p) -> GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p)).count();
         int roundTime = getRoundTime(serverWorld, (int) player_size);
         nextRoundTime = 0;
+        nextBombTime = serverWorld.getGameTime() + roundTime;
         SREGameTimeComponent.KEY.get(serverWorld).setTime(roundTime);
-        int tagCount = getTagCounts(serverWorld, roundTime);
+        int tagCount = getTagCounts(serverWorld, (int) player_size);
         var players = new ArrayList<>(serverWorld.players());
         players.removeIf(p -> !GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p));
         Collections.shuffle(players);
