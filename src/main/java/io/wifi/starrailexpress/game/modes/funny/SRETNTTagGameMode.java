@@ -115,10 +115,10 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
 
     public int getRoundTime(ServerLevel serverWorld, int player_size) {
 
-        if (player_size <= 5) {
+        if (player_size <= 12) {
             return 45;
         }
-        return 60;
+        return 30;
     }
 
     public int getTagCounts(ServerLevel world, int player_size) {
@@ -131,13 +131,13 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
         if (player_size <= 12) {
             return 3;
         }
-        if (player_size <= 18) {
+        if (player_size <= 16) {
             return 4;
         }
-        if (player_size <= 24) {
+        if (player_size <= 20) {
             return 5;
         }
-        return (int) ((player_size / 6) + 1);
+        return (int) ((player_size / 5) + 1);
     }
 
     public void newRound(ServerLevel serverWorld) {
