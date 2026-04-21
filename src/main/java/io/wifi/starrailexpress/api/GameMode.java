@@ -43,6 +43,8 @@ import io.wifi.starrailexpress.network.PlayerDeathPayload;
 import io.wifi.starrailexpress.network.TriggerScreenEdgeEffectPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -74,6 +76,12 @@ public abstract class GameMode {
         this.identifier = identifier;
         this.defaultStartTime = defaultStartTime;
         this.minPlayerCount = minPlayerCount;
+    }
+
+    public void writeToNbt(CompoundTag nbtCompound, HolderLookup.Provider wrapperLookup) {
+    }
+
+    public void readFromNbt(CompoundTag nbtCompound, HolderLookup.Provider wrapperLookup) {
     }
 
     /**
@@ -650,5 +658,9 @@ public abstract class GameMode {
         if (gameTimeComponent.getTime() < gameTimeComponent.getResetTime()) {
             gameTimeComponent.addTime(GameConstants.TIME_ON_CIVILIAN_KILL);
         }
+    }
+
+    public boolean canAllPeopleSeeTime() {
+        return false;
     }
 }

@@ -80,6 +80,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
     public static List<Predicate<Entity>> canCollideEntity = new ArrayList<>();
     public static List<Predicate<DeathInfo>> canStickArmor = new ArrayList<>();
     public static List<Predicate<ServerPlayer>> cantSendReplay = new ArrayList<>();
+    public static List<Predicate<ServerPlayer>> canSendReplay = new ArrayList<>();
 
     public static ArrayList<String> canDropItem = new ArrayList<>();
     public static ArrayList<Predicate<Player>> canDrop = new ArrayList<>();

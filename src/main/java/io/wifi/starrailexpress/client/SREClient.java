@@ -939,6 +939,7 @@ public class SREClient implements ClientModInitializer {
         return false;
     };
     private static boolean cachedPlayerAliveAndInSurvivalIgnoreShitSplit = false;
+    public static boolean cachedCanSeeTime = false;
 
     public static boolean isInstinctEnabled() {
         boolean canUseInstinct = isKiller();
@@ -972,6 +973,7 @@ public class SREClient implements ClientModInitializer {
                 && DeathPenaltyComponent.KEY.get(client.player).hasPenalty();
         LocalPlayer player = client.player;
         cachedPlayerAliveAndInSurvival = GameUtils.isPlayerAliveAndSurvival(player);
+        cachedCanSeeTime = SREClient.gameComponent.getGameMode().canAllPeopleSeeTime();
         cachedPlayerAliveAndInSurvivalIgnoreShitSplit = GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player);
         cachedPlayerSpectatingOrCreative = GameUtils.isPlayerSpectatingOrCreative(player);
         cachedPlayerCreative = player != null && player.isCreative();
