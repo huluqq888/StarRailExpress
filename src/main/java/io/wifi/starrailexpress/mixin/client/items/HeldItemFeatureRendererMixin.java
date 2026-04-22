@@ -69,7 +69,7 @@ public class HeldItemFeatureRendererMixin {
             }
         }
 
-        if (SREClient.moodComponent != null && SREClient.moodComponent.isLowerThanMid()) {
+        if (SREClient.moodComponent != null && SREClient.moodComponent.isLowerThanMid() && !instance.isInvisible()) {
             HashMap<UUID, ItemStack> psychosisItems = SREClient.moodComponent.getPsychosisItems();
             UUID uuid = instance.getUUID();
             if (psychosisItems.containsKey(uuid)) {

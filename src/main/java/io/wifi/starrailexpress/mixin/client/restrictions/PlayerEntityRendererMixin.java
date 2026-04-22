@@ -72,10 +72,38 @@ public class PlayerEntityRendererMixin {
 
     @ModifyVariable(method = "renderHand", at = @At("STORE"), ordinal = 0)
     private ResourceLocation tmm$psychoArmTexture(ResourceLocation skinTexture) {
-        if (Minecraft.getInstance().player != null && SREClient.localPlayerPsychoActive) {
-            PlayerSkin.Model model = Minecraft.getInstance().player.getSkin().model();
-            String suffix = model == PlayerSkin.Model.SLIM ? "_thin" : "";
-            return SRE.watheId("textures/entity/psycho" + suffix + ".png");
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null && SREClient.localPlayerPsychoActive) {
+            if (SREClient.gameComponent == null)
+                return skinTexture;
+            var result = OnGettingPlayerSkin.EVENT.invoker().onGetSkin(client.player);
+            if (result == OnGettingPlayerSkin.PlayerSkinResult.DEFAULT) {
+                return skinTexture;
+            } else if (result != null && result != OnGettingPlayerSkin.PlayerSkinResult.SKIP) {
+                return result.texture;
+            }
+            // 获取普通状态下职业皮肤
+            SRERole role = SREClient.gameComponent.getRole(client.player.getUUID());
+            PlayerSkin.Model model = client.player.getSkin().model();
+            boolean isSLIM = (model == PlayerSkin.Model.SLIM);
+            if (role != null) {
+                ResourceLocation rolenormalskinresult = role.getNormalSkin(client.player, isSLIM);
+                if (rolenormalskinresult != null) {
+                    return (rolenormalskinresult);
+                }
+            }
+            // 获取疯魔状态下职业皮肤
+            if (SREClient.PLAYER_PSYCHO_CACHE.getOrDefault(client.player.getUUID(), false)) {
+                String suffix = isSLIM ? "_thin" : "";
+                ResourceLocation texture = SRE.watheId("textures/entity/psycho" + suffix + ".png");
+                if (role != null) {
+                    var res = role.getPsychoSkin(client.player, isSLIM);
+                    if (res != null) {
+                        texture = res;
+                    }
+                }
+                return (texture);
+            }
         }
         return skinTexture;
     }

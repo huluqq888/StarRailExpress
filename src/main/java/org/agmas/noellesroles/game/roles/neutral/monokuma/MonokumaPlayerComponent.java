@@ -4,10 +4,10 @@ import io.wifi.starrailexpress.api.RoleComponent;
 import io.wifi.starrailexpress.cca.SREArmorPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
+import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMItems;
-import io.wifi.starrailexpress.util.SkinManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -284,7 +284,7 @@ public class MonokumaPlayerComponent implements RoleComponent, ServerTickingComp
                 if (!GameUtils.isPlayerAliveAndSurvival(target))
                     continue;
                 if (sp.distanceTo(target) <= AURA_RANGE) {
-                    SkinManager.addCoinNum(target, AURA_COIN_AMOUNT);
+                    SREPlayerShopComponent.KEY.get(target).addToBalance(AURA_COIN_AMOUNT);
                     target.sendSystemMessage(
                             Component.translatable("message.noellesroles.monokuma.aura_coin", AURA_COIN_AMOUNT)
                                     .withStyle(ChatFormatting.GOLD),

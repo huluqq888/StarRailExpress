@@ -41,7 +41,7 @@ public class PlayerEntityRendererMixin {
             if (eventRes != null) {
                 return eventRes;
             }
-            if (SREClient.moodComponent != null && SREClient.moodComponent.isLowerThanMid()) {
+            if (SREClient.moodComponent != null && SREClient.moodComponent.isLowerThanMid() && !player.isInvisible()) {
                 HashMap<UUID, ItemStack> psychosisItems = SREClient.moodComponent.getPsychosisItems();
                 UUID uuid = player.getUUID();
                 if (psychosisItems.containsKey(uuid)) {
