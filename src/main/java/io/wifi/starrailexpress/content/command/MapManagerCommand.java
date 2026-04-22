@@ -12,6 +12,9 @@ import io.wifi.starrailexpress.game.MapManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.AABB;
@@ -178,25 +181,23 @@ public class MapManagerCommand {
   // ======================== set 实现方法 ========================
 
   // 1. spawnPos
-  private static void setSpawnPos(CommandSourceStack source,
-      double x, double y, double z, float yaw, float pitch) {
+  private static void setSpawnPos(CommandSourceStack source, Vec3 pos, float yaw, float pitch) {
     AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    PosWithOrientation newPos = new PosWithOrientation(x, y, z, yaw, pitch);
+    PosWithOrientation newPos = new PosWithOrientation(pos.x, pos.y, pos.z, yaw, pitch);
     areas.setSpawnPos(newPos);
     areas.sync();
     sendSetFeedback(source, "spawnPos", formatPosWithOrientation(newPos));
   }
 
-  private static void setSpectatorSpawnPos(CommandSourceStack source,
-      double x, double y, double z, float yaw, float pitch) {
+  private static void setSpectatorSpawnPos(CommandSourceStack source, Vec3 pos, float yaw, float pitch) {
     AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    PosWithOrientation newPos = new PosWithOrientation(x, y, z, yaw, pitch);
+    PosWithOrientation newPos = new PosWithOrientation(pos.x, pos.y, pos.z, yaw, pitch);
     areas.setSpectatorSpawnPos(newPos);
     areas.sync();
     sendSetFeedback(source, "spectatorSpawnPos", formatPosWithOrientation(newPos));
   }
 
-  // 2. AABB 通用设置
+  // 2. AABB 通用设置（基于 BlockPos）
   private static void updateAABB(AreasWorldComponent areas,
       BiConsumer<AreasWorldComponent, AABB> setter,
       AABB newBox, CommandSourceStack source, String fieldName) {
@@ -205,120 +206,40 @@ public class MapManagerCommand {
     sendSetFeedback(source, fieldName, formatAABB(newBox));
   }
 
-  // readyArea
-  private static void setReadyArea(CommandSourceStack source,
-      double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    updateAABB(areas, (a, box) -> a.setReadyArea(box),
-        new AABB(minX, minY, minZ, maxX, maxY, maxZ), source, "readyArea");
+  private static void setAABBFull(AreasWorldComponent areas,
+      BiConsumer<AreasWorldComponent, AABB> setter,
+      BlockPos min, BlockPos max,
+      CommandSourceStack source, String fieldName) {
+    AABB box = new AABB(min.getX(), min.getY(), min.getZ(),
+        max.getX() + 1.0, max.getY() + 1.0, max.getZ() + 1.0);
+    updateAABB(areas, setter, box, source, fieldName);
   }
 
-  private static void setReadyAreaMin(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getReadyArea();
-    updateAABB(areas, (a, box) -> a.setReadyArea(box),
-        new AABB(x, y, z, old.maxX, old.maxY, old.maxZ), source, "readyArea.min");
+  private static void setAABBMin(AreasWorldComponent areas,
+      BiConsumer<AreasWorldComponent, AABB> setter,
+      Function<AreasWorldComponent, AABB> getter,
+      BlockPos min,
+      CommandSourceStack source, String fieldName) {
+    AABB old = getter.apply(areas);
+    AABB newBox = new AABB(min.getX(), min.getY(), min.getZ(),
+        old.maxX, old.maxY, old.maxZ);
+    updateAABB(areas, setter, newBox, source, fieldName + ".min");
   }
 
-  private static void setReadyAreaMax(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getReadyArea();
-    updateAABB(areas, (a, box) -> a.setReadyArea(box),
-        new AABB(old.minX, old.minY, old.minZ, x, y, z), source, "readyArea.max");
-  }
-
-  // playArea
-  private static void setPlayArea(CommandSourceStack source,
-      double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    updateAABB(areas, (a, box) -> a.setPlayArea(box),
-        new AABB(minX, minY, minZ, maxX, maxY, maxZ), source, "playArea");
-  }
-
-  private static void setPlayAreaMin(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getPlayArea();
-    updateAABB(areas, (a, box) -> a.setPlayArea(box),
-        new AABB(x, y, z, old.maxX, old.maxY, old.maxZ), source, "playArea.min");
-  }
-
-  private static void setPlayAreaMax(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getPlayArea();
-    updateAABB(areas, (a, box) -> a.setPlayArea(box),
-        new AABB(old.minX, old.minY, old.minZ, x, y, z), source, "playArea.max");
-  }
-
-  // sceneArea
-  private static void setSceneArea(CommandSourceStack source,
-      double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    updateAABB(areas, (a, box) -> a.setSceneArea(box),
-        new AABB(minX, minY, minZ, maxX, maxY, maxZ), source, "sceneArea");
-  }
-
-  private static void setSceneAreaMin(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getSceneArea();
-    updateAABB(areas, (a, box) -> a.setSceneArea(box),
-        new AABB(x, y, z, old.maxX, old.maxY, old.maxZ), source, "sceneArea.min");
-  }
-
-  private static void setSceneAreaMax(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getSceneArea();
-    updateAABB(areas, (a, box) -> a.setSceneArea(box),
-        new AABB(old.minX, old.minY, old.minZ, x, y, z), source, "sceneArea.max");
-  }
-
-  // resetTemplateArea
-  private static void setResetTemplateArea(CommandSourceStack source,
-      double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    updateAABB(areas, (a, box) -> a.setResetTemplateArea(box),
-        new AABB(minX, minY, minZ, maxX, maxY, maxZ), source, "resetTemplateArea");
-  }
-
-  private static void setResetTemplateAreaMin(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getResetTemplateArea();
-    updateAABB(areas, (a, box) -> a.setResetTemplateArea(box),
-        new AABB(x, y, z, old.maxX, old.maxY, old.maxZ), source, "resetTemplateArea.min");
-  }
-
-  private static void setResetTemplateAreaMax(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getResetTemplateArea();
-    updateAABB(areas, (a, box) -> a.setResetTemplateArea(box),
-        new AABB(old.minX, old.minY, old.minZ, x, y, z), source, "resetTemplateArea.max");
-  }
-
-  // resetPasteArea
-  private static void setResetPasteArea(CommandSourceStack source,
-      double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    updateAABB(areas, (a, box) -> a.setResetPasteArea(box),
-        new AABB(minX, minY, minZ, maxX, maxY, maxZ), source, "resetPasteArea");
-  }
-
-  private static void setResetPasteAreaMin(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getResetPasteArea();
-    updateAABB(areas, (a, box) -> a.setResetPasteArea(box),
-        new AABB(x, y, z, old.maxX, old.maxY, old.maxZ), source, "resetPasteArea.min");
-  }
-
-  private static void setResetPasteAreaMax(CommandSourceStack source, double x, double y, double z) {
-    AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    AABB old = areas.getResetPasteArea();
-    updateAABB(areas, (a, box) -> a.setResetPasteArea(box),
-        new AABB(old.minX, old.minY, old.minZ, x, y, z), source, "resetPasteArea.max");
+  private static void setAABBMax(AreasWorldComponent areas,
+      BiConsumer<AreasWorldComponent, AABB> setter,
+      Function<AreasWorldComponent, AABB> getter,
+      BlockPos max,
+      CommandSourceStack source, String fieldName) {
+    AABB old = getter.apply(areas);
+    AABB newBox = new AABB(old.minX, old.minY, old.minZ,
+        max.getX() + 1.0, max.getY() + 1.0, max.getZ() + 1.0);
+    updateAABB(areas, setter, newBox, source, fieldName + ".max");
   }
 
   // 3. playAreaOffset
-  private static void setPlayAreaOffset(CommandSourceStack source, double x, double y, double z) {
+  private static void setPlayAreaOffset(CommandSourceStack source, Vec3 offset) {
     AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    Vec3 offset = new Vec3(x, y, z);
     areas.setPlayAreaOffset(offset);
     areas.sync();
     sendSetFeedback(source, "playAreaOffset", formatVec3(offset));
@@ -333,9 +254,8 @@ public class MapManagerCommand {
   }
 
   // 5. roomPositions
-  private static void addRoomPosition(CommandSourceStack source, int roomId, double x, double y, double z) {
+  private static void addRoomPosition(CommandSourceStack source, int roomId, Vec3 pos) {
     AreasWorldComponent areas = AreasWorldComponent.KEY.get(source.getLevel());
-    Vec3 pos = new Vec3(x, y, z);
     areas.setRoomPosition(roomId, pos);
     areas.sync();
     sendSetFeedback(source, "roomPositions." + roomId, formatVec3(pos));
@@ -501,163 +421,109 @@ public class MapManagerCommand {
 
   private static LiteralArgumentBuilder<CommandSourceStack> setSpawnPos() {
     return Commands.literal("spawnPos")
-        .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-            .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                    .then(Commands.argument("yaw", FloatArgumentType.floatArg())
-                        .then(Commands.argument("pitch", FloatArgumentType.floatArg())
-                            .executes(ctx -> {
-                              setSpawnPos(ctx.getSource(),
-                                  DoubleArgumentType.getDouble(ctx, "x"),
-                                  DoubleArgumentType.getDouble(ctx, "y"),
-                                  DoubleArgumentType.getDouble(ctx, "z"),
-                                  FloatArgumentType.getFloat(ctx, "yaw"),
-                                  FloatArgumentType.getFloat(ctx, "pitch"));
-                              return 1;
-                            }))))));
+        .then(Commands.argument("pos", Vec3Argument.vec3())
+            .then(Commands.argument("yaw", FloatArgumentType.floatArg())
+                .then(Commands.argument("pitch", FloatArgumentType.floatArg())
+                    .executes(ctx -> {
+                      Vec3 pos = Vec3Argument.getVec3(ctx, "pos");
+                      float yaw = FloatArgumentType.getFloat(ctx, "yaw");
+                      float pitch = FloatArgumentType.getFloat(ctx, "pitch");
+                      setSpawnPos(ctx.getSource(), pos, yaw, pitch);
+                      return 1;
+                    }))));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setSpectatorSpawnPos() {
     return Commands.literal("spectatorSpawnPos")
-        .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-            .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                    .then(Commands.argument("yaw", FloatArgumentType.floatArg())
-                        .then(Commands.argument("pitch", FloatArgumentType.floatArg())
-                            .executes(ctx -> {
-                              setSpectatorSpawnPos(ctx.getSource(),
-                                  DoubleArgumentType.getDouble(ctx, "x"),
-                                  DoubleArgumentType.getDouble(ctx, "y"),
-                                  DoubleArgumentType.getDouble(ctx, "z"),
-                                  FloatArgumentType.getFloat(ctx, "yaw"),
-                                  FloatArgumentType.getFloat(ctx, "pitch"));
-                              return 1;
-                            }))))));
+        .then(Commands.argument("pos", Vec3Argument.vec3())
+            .then(Commands.argument("yaw", FloatArgumentType.floatArg())
+                .then(Commands.argument("pitch", FloatArgumentType.floatArg())
+                    .executes(ctx -> {
+                      Vec3 pos = Vec3Argument.getVec3(ctx, "pos");
+                      float yaw = FloatArgumentType.getFloat(ctx, "yaw");
+                      float pitch = FloatArgumentType.getFloat(ctx, "pitch");
+                      setSpectatorSpawnPos(ctx.getSource(), pos, yaw, pitch);
+                      return 1;
+                    }))));
   }
 
-  @FunctionalInterface
-  private interface HexConsumer<A, B, C, D, E, F, G> {
-    void accept(A a, B b, C c, D d, E e, F f, G g);
+  private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
+      String name,
+      Function<AreasWorldComponent, AABB> getter,
+      BiConsumer<AreasWorldComponent, AABB> setter) {
+
+    return Commands.literal(name)
+        // 完整设置：min <BlockPos> max <BlockPos>
+        .then(Commands.literal("min")
+            .then(Commands.argument("min", BlockPosArgument.blockPos())
+                .then(Commands.literal("max")
+                    .then(Commands.argument("max", BlockPosArgument.blockPos())
+                        .executes(ctx -> {
+                          CommandSourceStack src = ctx.getSource();
+                          AreasWorldComponent areas = AreasWorldComponent.KEY.get(src.getLevel());
+                          BlockPos min = BlockPosArgument.getBlockPos(ctx, "min");
+                          BlockPos max = BlockPosArgument.getBlockPos(ctx, "max");
+                          setAABBFull(areas, setter, min, max, src, name);
+                          return 1;
+                        })))
+                // 仅设置 min 角
+                .executes(ctx -> {
+                  CommandSourceStack src = ctx.getSource();
+                  AreasWorldComponent areas = AreasWorldComponent.KEY.get(src.getLevel());
+                  BlockPos min = BlockPosArgument.getBlockPos(ctx, "min");
+                  setAABBMin(areas, setter, getter, min, src, name);
+                  return 1;
+                })))
+        // 仅设置 max 角
+        .then(Commands.literal("max")
+            .then(Commands.argument("max", BlockPosArgument.blockPos())
+                .executes(ctx -> {
+                  CommandSourceStack src = ctx.getSource();
+                  AreasWorldComponent areas = AreasWorldComponent.KEY.get(src.getLevel());
+                  BlockPos max = BlockPosArgument.getBlockPos(ctx, "max");
+                  setAABBMax(areas, setter, getter, max, src, name);
+                  return 1;
+                })));
   }
-
-  @FunctionalInterface
-  private interface TriConsumer<A, B, C, D> {
-    void accept(A a, B b, C c, D d);
-  }
-
-private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
-    String name,
-    HexConsumer<CommandSourceStack, Double, Double, Double, Double, Double, Double> fullSetter,
-    TriConsumer<CommandSourceStack, Double, Double, Double> minSetter,
-    TriConsumer<CommandSourceStack, Double, Double, Double> maxSetter) {
-
-  return Commands.literal(name)
-      .then(Commands.literal("set")
-          .then(Commands.argument("minX", DoubleArgumentType.doubleArg())
-              .then(Commands.argument("minY", DoubleArgumentType.doubleArg())
-                  .then(Commands.argument("minZ", DoubleArgumentType.doubleArg())
-                      .then(Commands.argument("maxX", DoubleArgumentType.doubleArg())
-                          .then(Commands.argument("maxY", DoubleArgumentType.doubleArg())
-                              .then(Commands.argument("maxZ", DoubleArgumentType.doubleArg())
-                                  .executes(ctx -> {
-                                    fullSetter.accept(ctx.getSource(),
-                                        DoubleArgumentType.getDouble(ctx, "minX"),
-                                        DoubleArgumentType.getDouble(ctx, "minY"),
-                                        DoubleArgumentType.getDouble(ctx, "minZ"),
-                                        DoubleArgumentType.getDouble(ctx, "maxX"),
-                                        DoubleArgumentType.getDouble(ctx, "maxY"),
-                                        DoubleArgumentType.getDouble(ctx, "maxZ"));
-                                    return 1;
-                                  })))))))
-          .then(Commands.literal("min")
-              .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-                  .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                      .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                          .executes(ctx -> {
-                            minSetter.accept(ctx.getSource(),
-                                DoubleArgumentType.getDouble(ctx, "x"),
-                                DoubleArgumentType.getDouble(ctx, "y"),
-                                DoubleArgumentType.getDouble(ctx, "z"));
-                            return 1;
-                          })))))
-          .then(Commands.literal("max")
-              .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-                  .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                      .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                          .executes(ctx -> {
-                            maxSetter.accept(ctx.getSource(),
-                                DoubleArgumentType.getDouble(ctx, "x"),
-                                DoubleArgumentType.getDouble(ctx, "y"),
-                                DoubleArgumentType.getDouble(ctx, "z"));
-                            return 1;
-                          })))))
-          .then(Commands.literal("minPos")
-              .then(Commands.argument("minX", DoubleArgumentType.doubleArg())
-                  .then(Commands.argument("minY", DoubleArgumentType.doubleArg())
-                      .then(Commands.argument("minZ", DoubleArgumentType.doubleArg())
-                          .then(Commands.literal("maxPos")
-                              .then(Commands.argument("maxX", DoubleArgumentType.doubleArg())
-                                  .then(Commands.argument("maxY", DoubleArgumentType.doubleArg())
-                                      .then(Commands.argument("maxZ", DoubleArgumentType.doubleArg())
-                                          .executes(ctx -> {
-                                            fullSetter.accept(ctx.getSource(),
-                                                DoubleArgumentType.getDouble(ctx, "minX"),
-                                                DoubleArgumentType.getDouble(ctx, "minY"),
-                                                DoubleArgumentType.getDouble(ctx, "minZ"),
-                                                DoubleArgumentType.getDouble(ctx, "maxX"),
-                                                DoubleArgumentType.getDouble(ctx, "maxY"),
-                                                DoubleArgumentType.getDouble(ctx, "maxZ"));
-                                            return 1;
-                                          }))))))))));
-}
 
   private static LiteralArgumentBuilder<CommandSourceStack> setReadyArea() {
     return buildSetAABB("readyArea",
-        (src, x0, y0, z0, x1, y1, z1) -> setReadyArea(src, x0, y0, z0, x1, y1, z1),
-        (src, x, y, z) -> setReadyAreaMin(src, x, y, z),
-        (src, x, y, z) -> setReadyAreaMax(src, x, y, z));
+        AreasWorldComponent::getReadyArea,
+        (a, box) -> a.setReadyArea(box));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setPlayArea() {
     return buildSetAABB("playArea",
-        (src, x0, y0, z0, x1, y1, z1) -> setPlayArea(src, x0, y0, z0, x1, y1, z1),
-        (src, x, y, z) -> setPlayAreaMin(src, x, y, z),
-        (src, x, y, z) -> setPlayAreaMax(src, x, y, z));
+        AreasWorldComponent::getPlayArea,
+        (a, box) -> a.setPlayArea(box));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setSceneArea() {
     return buildSetAABB("sceneArea",
-        (src, x0, y0, z0, x1, y1, z1) -> setSceneArea(src, x0, y0, z0, x1, y1, z1),
-        (src, x, y, z) -> setSceneAreaMin(src, x, y, z),
-        (src, x, y, z) -> setSceneAreaMax(src, x, y, z));
+        AreasWorldComponent::getSceneArea,
+        (a, box) -> a.setSceneArea(box));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setResetTemplateArea() {
     return buildSetAABB("resetTemplateArea",
-        (src, x0, y0, z0, x1, y1, z1) -> setResetTemplateArea(src, x0, y0, z0, x1, y1, z1),
-        (src, x, y, z) -> setResetTemplateAreaMin(src, x, y, z),
-        (src, x, y, z) -> setResetTemplateAreaMax(src, x, y, z));
+        AreasWorldComponent::getResetTemplateArea,
+        (a, box) -> a.setResetTemplateArea(box));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setResetPasteArea() {
     return buildSetAABB("resetPasteArea",
-        (src, x0, y0, z0, x1, y1, z1) -> setResetPasteArea(src, x0, y0, z0, x1, y1, z1),
-        (src, x, y, z) -> setResetPasteAreaMin(src, x, y, z),
-        (src, x, y, z) -> setResetPasteAreaMax(src, x, y, z));
+        AreasWorldComponent::getResetPasteArea,
+        (a, box) -> a.setResetPasteArea(box));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setPlayAreaOffset() {
     return Commands.literal("playAreaOffset")
-        .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-            .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                    .executes(ctx -> {
-                      setPlayAreaOffset(ctx.getSource(),
-                          DoubleArgumentType.getDouble(ctx, "x"),
-                          DoubleArgumentType.getDouble(ctx, "y"),
-                          DoubleArgumentType.getDouble(ctx, "z"));
-                      return 1;
-                    }))));
+        .then(Commands.argument("offset", Vec3Argument.vec3())
+            .executes(ctx -> {
+              Vec3 offset = Vec3Argument.getVec3(ctx, "offset");
+              setPlayAreaOffset(ctx.getSource(), offset);
+              return 1;
+            }));
   }
 
   private static LiteralArgumentBuilder<CommandSourceStack> setRoomCount() {
@@ -673,17 +539,13 @@ private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
     return Commands.literal("roomPositions")
         .then(Commands.literal("add")
             .then(Commands.argument("roomId", IntegerArgumentType.integer())
-                .then(Commands.argument("x", DoubleArgumentType.doubleArg())
-                    .then(Commands.argument("y", DoubleArgumentType.doubleArg())
-                        .then(Commands.argument("z", DoubleArgumentType.doubleArg())
-                            .executes(ctx -> {
-                              addRoomPosition(ctx.getSource(),
-                                  IntegerArgumentType.getInteger(ctx, "roomId"),
-                                  DoubleArgumentType.getDouble(ctx, "x"),
-                                  DoubleArgumentType.getDouble(ctx, "y"),
-                                  DoubleArgumentType.getDouble(ctx, "z"));
-                              return 1;
-                            }))))))
+                .then(Commands.argument("pos", Vec3Argument.vec3())
+                    .executes(ctx -> {
+                      int roomId = IntegerArgumentType.getInteger(ctx, "roomId");
+                      Vec3 pos = Vec3Argument.getVec3(ctx, "pos");
+                      addRoomPosition(ctx.getSource(), roomId, pos);
+                      return 1;
+                    }))))
         .then(Commands.literal("remove")
             .then(Commands.argument("roomId", IntegerArgumentType.integer())
                 .executes(ctx -> {
@@ -818,13 +680,6 @@ private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
         });
   }
 
-  /**
-   * 通用 AABB get 子树构建器。
-   * 生成以下子命令：
-   * get <name> → 完整 AABB
-   * get <name> min → 仅 minX/Y/Z
-   * get <name> max → 仅 maxX/Y/Z
-   */
   private static LiteralArgumentBuilder<CommandSourceStack> buildGetAABB(
       String name, Function<AreasWorldComponent, AABB> getter) {
     return Commands.literal(name)
@@ -867,13 +722,11 @@ private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
 
   private static LiteralArgumentBuilder<CommandSourceStack> getRoomPositions() {
     return Commands.literal("roomPositions")
-        // 无参数：列出全部
         .executes(ctx -> {
           AreasWorldComponent a = AreasWorldComponent.KEY.get(ctx.getSource().getLevel());
           sendGetFeedback(ctx.getSource(), "roomPositions", formatRoomPositions(a.getRoomPositions()));
           return 1;
         })
-        // 带 roomId：查询单个房间
         .then(Commands.argument("roomId", IntegerArgumentType.integer())
             .executes(ctx -> {
               int id = IntegerArgumentType.getInteger(ctx, "roomId");
@@ -888,9 +741,6 @@ private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
             }));
   }
 
-  /**
-   * 通用简单字段 get 构建器（布尔、数值、字符串）。
-   */
   private static LiteralArgumentBuilder<CommandSourceStack> buildGetSimple(
       String name, Function<AreasWorldComponent, String> valueGetter) {
     return Commands.literal(name)
@@ -903,13 +753,11 @@ private static LiteralArgumentBuilder<CommandSourceStack> buildSetAABB(
 
   private static LiteralArgumentBuilder<CommandSourceStack> getDisabledTasks() {
     return Commands.literal("disabledTasks")
-        // 无参数：列出全部
         .executes(ctx -> {
           AreasWorldComponent a = AreasWorldComponent.KEY.get(ctx.getSource().getLevel());
           sendGetFeedback(ctx.getSource(), "disabledTasks", formatDisabledTasks(a.disabledTasks));
           return 1;
         })
-        // 带 taskId：查询该任务是否被禁用
         .then(Commands.argument("taskId", StringArgumentType.string())
             .executes(ctx -> {
               String taskId = StringArgumentType.getString(ctx, "taskId");

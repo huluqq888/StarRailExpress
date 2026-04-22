@@ -10,10 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.agmas.noellesroles.client.widget.custom_button.ModernButton;
 import org.agmas.noellesroles.client.widget.custom_button.ModernButton.AccentSide;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -24,33 +20,9 @@ public class MapBuildHelperScreen extends Screen {
     // 偏移量（静态 + 文件持久化）
     // ══════════════════════════════════════════════════════════════════
 
-    private static double offsetX = 0;
-    private static double offsetY = 0;
-    private static double offsetZ = 0;
-
-    private static final Path OFFSET_FILE = Path.of("config/sre_map_offset.txt");
-
-    private static void loadOffset() {
-        try {
-            if (!Files.exists(OFFSET_FILE))
-                return;
-            String[] p = Files.readString(OFFSET_FILE).trim().split(",");
-            if (p.length >= 3) {
-                offsetX = Double.parseDouble(p[0].trim());
-                offsetY = Double.parseDouble(p[1].trim());
-                offsetZ = Double.parseDouble(p[2].trim());
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
-    private static void saveOffset() {
-        try {
-            Files.createDirectories(OFFSET_FILE.getParent());
-            Files.writeString(OFFSET_FILE, offsetX + "," + offsetY + "," + offsetZ);
-        } catch (IOException ignored) {
-        }
-    }
+    private static double offsetX = 0.5;
+    private static double offsetY = 1;
+    private static double offsetZ = 0.5;
 
     // ══════════════════════════════════════════════════════════════════
     // 实例字段
@@ -77,7 +49,6 @@ public class MapBuildHelperScreen extends Screen {
     public MapBuildHelperScreen(BlockPos position) {
         super(Component.translatable("sre.map_helper.title"));
         this.position = position;
-        loadOffset();
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -148,7 +119,7 @@ public class MapBuildHelperScreen extends Screen {
         // ---------- Tab 0: Positions ----------
         addTabWidget(tabWidgets0, ModernButton.builder(
                 Component.translatable("sre.map_helper.set_spawn"),
-                b -> sendAndClose(String.format("sre:area_manager set spawnPos %.4f %.4f %.4f %.4f %.4f",
+                b -> sendAndClose(String.format("sre:area_manager set spawnPos %f %f %f %.1f %.1f",
                         ax(), ay(), az(), playerYaw(), playerPitch())))
                 .bounds(panelLeftX + 6, cy, bw, bh)
                 .accentBar(AccentSide.LEFT)
@@ -156,10 +127,10 @@ public class MapBuildHelperScreen extends Screen {
 
         addTabWidget(tabWidgets0, ModernButton.builder(
                 Component.translatable("sre.map_helper.set_spectator_spawn"),
-                b -> sendAndClose(String.format("sre:area_manager set spectatorSpawnPos %.4f %.4f %.4f %.4f %.4f",
+                b -> sendAndClose(String.format("sre:area_manager set spectatorSpawnPos %f %f %f %.1f %.1f",
                         ax(), ay(), az(), playerYaw(), playerPitch())))
-                .bounds(panelLeftX + bw + gap, cy, bw, bh)
-                .accentBar(AccentSide.LEFT)
+                .bounds(panelLeftX + 6 + bw + gap, cy, bw, bh)
+                .accentBar(AccentSide.RIGHT)
                 .build());
 
         // ---------- Tab 1: Areas ----------
@@ -172,7 +143,7 @@ public class MapBuildHelperScreen extends Screen {
             addTabWidget(tabWidgets1, ModernButton.builder(
                     Component.translatable("sre.map_helper.area.set_min", areaName),
                     b -> sendAndClose(
-                            String.format("sre:area_manager set %s set min %.4f %.4f %.4f", cmd, ax(), ay(), az())))
+                            String.format("sre:area_manager set %s min %.0f %.0f %.0f", cmd, Math.floor(ax()), Math.floor(ay()), Math.floor(az()))))
                     .bounds(panelLeftX + 6, rowY, bw, bh)
                     .accentBar(AccentSide.LEFT)
                     .build());
@@ -180,8 +151,8 @@ public class MapBuildHelperScreen extends Screen {
             addTabWidget(tabWidgets1, ModernButton.builder(
                     Component.translatable("sre.map_helper.area.set_max", areaName),
                     b -> sendAndClose(
-                            String.format("sre:area_manager set %s set max %.4f %.4f %.4f", cmd, ax(), ay(), az())))
-                    .bounds(panelLeftX + 12 + bw + gap, rowY, bw, bh)
+                            String.format("sre:area_manager set %s max %.0f %.0f %.0f", cmd, Math.floor(ax()), Math.floor(ay()), Math.floor(az()))))
+                    .bounds(panelLeftX + 6 + bw + gap, rowY, bw, bh)
                     .accentBar(AccentSide.RIGHT)
                     .build());
         }
@@ -210,7 +181,7 @@ public class MapBuildHelperScreen extends Screen {
             addTabWidget(tabWidgets2, ModernButton.builder(
                     Component.translatable("sre.map_helper.set_false", Component.translatable(boolFieldKeys[i])),
                     b -> sendOnly("sre:area_manager set " + field + " false"))
-                    .bounds(panelLeftX + 12 + bw + gap, rowY, bw, bh)
+                    .bounds(panelLeftX + 6 + bw + gap, rowY, bw, bh)
                     .accentBar(AccentSide.RIGHT)
                     .build());
         }
@@ -238,7 +209,6 @@ public class MapBuildHelperScreen extends Screen {
                 v -> {
                     try {
                         offsetX = Double.parseDouble(v);
-                        saveOffset();
                     } catch (Exception ignored) {
                     }
                 });
@@ -246,11 +216,10 @@ public class MapBuildHelperScreen extends Screen {
         addRenderableWidget(dxBox);
 
         int yStart = startX + groupW + bigGap;
-        dyBox = makeField(yStart + labelW + smallGap, oy, fieldW, fh, "0",
+        dyBox = makeField(yStart + labelW + smallGap, oy, fieldW, fh, "1",
                 v -> {
                     try {
                         offsetY = Double.parseDouble(v);
-                        saveOffset();
                     } catch (Exception ignored) {
                     }
                 });
@@ -262,7 +231,6 @@ public class MapBuildHelperScreen extends Screen {
                 v -> {
                     try {
                         offsetZ = Double.parseDouble(v);
-                        saveOffset();
                     } catch (Exception ignored) {
                     }
                 });
@@ -271,11 +239,11 @@ public class MapBuildHelperScreen extends Screen {
 
         int resetX = zStart + groupW + bigGap;
         addRenderableWidget(ModernButton.builder(Component.translatable("sre.map_helper.reset"), b -> {
-            offsetX = offsetY = offsetZ = 0;
-            dxBox.setValue("0");
-            dyBox.setValue("0");
-            dzBox.setValue("0");
-            saveOffset();
+            offsetX = offsetZ = 0.5;
+            offsetY = 1;
+            dxBox.setValue("0.5");
+            dyBox.setValue("1");
+            dzBox.setValue("0.5");
         }).bounds(resetX, oy, resetW, fh)
                 .accentBar(AccentSide.BOTTOM)
                 .build());
@@ -389,7 +357,7 @@ public class MapBuildHelperScreen extends Screen {
         g.drawString(font,
                 Component.translatable("sre.map_helper.tab_title." + tabTitlesKeys[activeTab])
                         .withStyle(Style.EMPTY.withColor(0x5577CC).withBold(true)),
-                panelLeftX + 6, panelTopY + 98, 0xFFFFFF, false);
+                panelLeftX + 6, panelTopY + 100, 0xFFFFFF, false);
 
         if (activeTab == 1) {
             g.drawString(font,
@@ -406,7 +374,6 @@ public class MapBuildHelperScreen extends Screen {
 
     @Override
     public void onClose() {
-        saveOffset();
         super.onClose();
     }
 }
