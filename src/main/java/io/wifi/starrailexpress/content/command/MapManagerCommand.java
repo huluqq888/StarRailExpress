@@ -118,7 +118,7 @@ public class MapManagerCommand {
                             context.getSource(),
                             StringArgumentType.getString(context, "mapName"),
                             true)))))
-            .then(Commands.literal("list")
+            .then(Commands.literal("info")
                 .requires(source -> source.hasPermission(2))
                 .executes(ctx -> executeList(ctx.getSource()))));
   }
