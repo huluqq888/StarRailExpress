@@ -9,9 +9,9 @@ import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.roles.SpecialGameModeRoles;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.network.original.AnnounceWelcomePayload;
-import io.wifi.starrailexpress.util.Scheduler;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -29,15 +29,21 @@ import java.util.function.Supplier;
 /**
  * 轮盘赌锦标赛
  * <p>
- *     - 模式特性：玩家两两分组先后进行多轮赛
- *          每轮后可购买道具（根据本轮剩余生命值获得金币）：包括局内道具（便宜，仅对局内使用增加获胜可能性）和场外道具（较贵，如一次性手枪直接打死对手相当于掀桌子）
- *     - 局内死亡条件：生命值不足将死亡，或被对手使用场外道具击杀
- *     - 局外死亡条件：死亡次数累计到一定值死亡旁观
+ * - 模式特性：玩家两两分组先后进行多轮赛
+ * 每轮后可购买道具（根据本轮剩余生命值获得金币）：包括局内道具（便宜，仅对局内使用增加获胜可能性）和场外道具（较贵，如一次性手枪直接打死对手相当于掀桌子）
+ * - 局内死亡条件：生命值不足将死亡，或被对手使用场外道具击杀
+ * - 局外死亡条件：死亡次数累计到一定值死亡旁观
  * </p>
  */
 public class SREDevilRouletteGameMode extends GameMode {
     public static interface StartMatchHandler {
         void onStartMatch(DevilRouletteTableEntity tableEntity, Player player1, Player player2);
+    }
+
+    @Override
+    public void finalizeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        super.finalizeGame(serverWorld, gameWorldComponent);
+        rouletteTablePos.clear();
     }
 
     /**
@@ -53,16 +59,16 @@ public class SREDevilRouletteGameMode extends GameMode {
     }
 
     @Override
-    public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent, List<ServerPlayer> players) {
+    public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
+            List<ServerPlayer> players) {
         reset();
-        checkCanTableUse();
         initRoles(players, gameWorldComponent);
         initPlayerItems(players, gameWorldComponent);
         sendWelcomePackets(players, gameWorldComponent, SpecialGameModeRoles.DIRT);
 
         addAllPlayers(players);
         assignMatch(serverWorld);
-        convenePlayers();
+        convenePlayers(serverWorld);
 
         curAssignTick = 0;
     }
@@ -93,12 +99,8 @@ public class SREDevilRouletteGameMode extends GameMode {
         }
     }
 
-    protected void checkCanTableUse() {
-        rouletteTableEntities.removeIf(table -> table.isRemoved() || table.getLevel() == null);
-    }
-
     protected void sendWelcomePackets(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent,
-                                      SRERole role) {
+            SRERole role) {
         if (role == null)
             return;
         for (ServerPlayer player : players) {
@@ -137,12 +139,14 @@ public class SREDevilRouletteGameMode extends GameMode {
 
                     player1.displayClientMessage(
                             Component.translatable("noellesroles.game.devil_roulette.tip.play_with",
-                                            player2.getDisplayName().getString(), tableEntity.getTrueBulletNumber())
-                                    .withStyle(ChatFormatting.BLUE), true);
+                                    player2.getDisplayName().getString(), tableEntity.getTrueBulletNumber())
+                                    .withStyle(ChatFormatting.BLUE),
+                            true);
                     player2.displayClientMessage(
                             Component.translatable("noellesroles.game.devil_roulette.tip.play_with",
-                                            player1.getName().getString(), tableEntity.getTrueBulletNumber())
-                                    .withStyle(ChatFormatting.BLUE), true);
+                                    player1.getName().getString(), tableEntity.getTrueBulletNumber())
+                                    .withStyle(ChatFormatting.BLUE),
+                            true);
                     break;
                 }
             }
@@ -157,14 +161,15 @@ public class SREDevilRouletteGameMode extends GameMode {
             if (player != null) {
                 player.displayClientMessage(
                         Component.translatable("noellesroles.game.devil_roulette.tip.wait_player")
-                                .withStyle(ChatFormatting.WHITE), true);
+                                .withStyle(ChatFormatting.WHITE),
+                        true);
                 winners.add(player.getUUID());
             }
         }
     }
 
     protected void assignMatch(ServerLevel serverWorld) {
-        updateUsableTableEntities();
+        updateUsableTableEntities(serverWorld);
         removeAllIfPlayerEliminated(serverWorld);
         assignPlayerQueue(currentPlayers, serverWorld);
         assignPlayerQueue(losers, serverWorld);
@@ -173,19 +178,25 @@ public class SREDevilRouletteGameMode extends GameMode {
     /**
      * 将玩家召集到桌子上对局
      */
-    protected void convenePlayers() {
-        for (DevilRouletteTableEntity tableEntity : rouletteTableEntities) {
-            if (tableEntity.isGameActive())
-                tableEntity.convenePlayers();
+    protected void convenePlayers(ServerLevel serverLevel) {
+        for (BlockPos pos : rouletteTablePos) {
+            if (serverLevel.getBlockEntity(pos) instanceof DevilRouletteTableEntity tableEntity) {
+
+                if (tableEntity.isGameActive())
+                    tableEntity.convenePlayers();
+            }
         }
     }
 
-    protected void updateUsableTableEntities() {
+    protected void updateUsableTableEntities(ServerLevel serverLevel) {
         usableTableEntities.clear();
-        for (DevilRouletteTableEntity tableEntity : rouletteTableEntities) {
-            // 游戏未启用且未被分配的桌子可以被添加
-            if (!tableEntity.isGameActive()) {
-                usableTableEntities.add(tableEntity);
+        for (BlockPos pos : rouletteTablePos) {
+            if (serverLevel.getBlockEntity(pos) instanceof DevilRouletteTableEntity tableEntity) {
+                tableEntity.setGameMode(DevilRouletteGame.GameMode.Roulette);
+                // 游戏未启用且未被分配的桌子可以被添加
+                if (!tableEntity.isGameActive()) {
+                    usableTableEntities.add(tableEntity);
+                }
             }
         }
     }
@@ -210,7 +221,8 @@ public class SREDevilRouletteGameMode extends GameMode {
      * 移除所有淘汰的玩家
      */
     public void removeAllIfPlayerEliminated(ServerLevel level) {
-        currentPlayers.removeIf(playerID -> playerID == null || GameUtils.isPlayerEliminated(level.getPlayerByUUID(playerID)));
+        currentPlayers.removeIf(
+                playerID -> playerID == null || GameUtils.isPlayerEliminated(level.getPlayerByUUID(playerID)));
         winners.removeIf(playerID -> playerID == null || GameUtils.isPlayerEliminated(level.getPlayerByUUID(playerID)));
         losers.removeIf(playerID -> playerID == null || GameUtils.isPlayerEliminated(level.getPlayerByUUID(playerID)));
     }
@@ -225,13 +237,12 @@ public class SREDevilRouletteGameMode extends GameMode {
             losers.add(player.getUUID());
     }
 
-    public void addRouletteTableEntity(DevilRouletteTableEntity rouletteTableEntity) {
-        if (!rouletteTableEntities.contains(rouletteTableEntity))
-            rouletteTableEntities.add(rouletteTableEntity);
+    public void addRouletteTableEntity(BlockPos pos) {
+        rouletteTablePos.add(pos);
     }
 
-    public List<DevilRouletteTableEntity> getRouletteTableEntities() {
-        return rouletteTableEntities;
+    public HashSet<BlockPos> getRouletteTableEntities() {
+        return rouletteTablePos;
     }
 
     @Override
@@ -277,8 +288,11 @@ public class SREDevilRouletteGameMode extends GameMode {
                 && gameWorldComponent.getGameStatus() == SREGameWorldComponent.GameStatus.ACTIVE) {
             SREGameRoundEndComponent.KEY.get(serverWorld).setRoundEndData(serverWorld.players(), winStatus);
             GameUtils.stopGame(serverWorld);
-            for (DevilRouletteTableEntity rouletteTableEntity : rouletteTableEntities)
-                rouletteTableEntity.reset();
+
+            for (BlockPos pos : rouletteTablePos) {
+                if (serverWorld.getBlockEntity(pos) instanceof DevilRouletteTableEntity entity)
+                    entity.reset();
+            }
         }
     }
 
@@ -301,8 +315,8 @@ public class SREDevilRouletteGameMode extends GameMode {
      * 游戏对局结束每点生命值转化的金币数
      */
     public static final int WINNER_COIN = 100;
-    protected final List<Supplier<ItemStack>> devilRouletteItems = new ArrayList<>();
-    protected final List<DevilRouletteTableEntity> rouletteTableEntities = new ArrayList<>();
+    protected static final List<Supplier<ItemStack>> devilRouletteItems = new ArrayList<>();
+    protected static final HashSet<BlockPos> rouletteTablePos = new HashSet<>();
     /**
      * 延迟启动列表
      */
