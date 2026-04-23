@@ -321,7 +321,7 @@ public class ModRoles {
             .setVigilanteTeam(true).setCanSeeCoin(true).setCanPickUpRevolver(false).setCanAutoAddMoney(true);
         public static final ResourceLocation GUARD_ID = Noellesroles.id("guard");
         public static SRERole GUARD = TMMRoles.registerRole(
-                        new NormalRole(GUARD_ID, new Color(120, 120, 120).getRGB(), true, false, SRERole.MoodType.REAL,
+                        new NormalRole(GUARD_ID, new Color(170, 170, 170).getRGB(), true, false, SRERole.MoodType.REAL,
                                         TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
                                 @Override
                                 public java.util.function.Predicate<net.minecraft.world.item.Item> cantPickupItem(net.minecraft.world.entity.player.Player player) {
