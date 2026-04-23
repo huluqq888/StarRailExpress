@@ -3,6 +3,7 @@ package org.agmas.noellesroles.content.item;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.content.block.SecurityMonitorBlock;
 import io.wifi.starrailexpress.content.block_entity.SecurityMonitorBlockEntity;
+import io.wifi.starrailexpress.util.AdventureUsable;
 import io.wifi.starrailexpress.util.SRENBTUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -27,7 +28,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MonitoringTerminalItem extends Item {
+public class MonitoringTerminalItem extends Item implements AdventureUsable {
     private static final String MONITOR_POS_FATHER = "monitor_pos";
     private static int stackIdx = 0;
 
@@ -44,9 +45,6 @@ public class MonitoringTerminalItem extends Item {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
 
         Player player = context.getPlayer();
         if (player == null) {
@@ -59,6 +57,9 @@ public class MonitoringTerminalItem extends Item {
             return InteractionResult.PASS;
         }
 
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
         ItemStack stack = context.getItemInHand();
         if (containsBoundMonitorPos(stack, clickedPos)) {
             removeBoundMonitorPos(stack, clickedPos);
@@ -120,11 +121,11 @@ public class MonitoringTerminalItem extends Item {
         if (!tag.contains(MONITOR_POS_FATHER)) {
             return false;
         }
-        ListTag listTag = tag.getList(MONITOR_POS_FATHER, Tag.TAG_LIST);
+        ListTag listTag = tag.getList(MONITOR_POS_FATHER, Tag.TAG_COMPOUND);
         for (Tag t : listTag) {
             CompoundTag t1 = (CompoundTag) t;
-
             var ppos = SRENBTUtils.tagToBlockPos(t1);
+
             if (ppos == null)
                 continue;
             if (pos.equals(ppos)) {
@@ -140,7 +141,7 @@ public class MonitoringTerminalItem extends Item {
         if (!tag.contains(MONITOR_POS_FATHER)) {
             return;
         }
-        ListTag listTag = tag.getList(MONITOR_POS_FATHER, Tag.TAG_LIST);
+        ListTag listTag = tag.getList(MONITOR_POS_FATHER, Tag.TAG_COMPOUND);
         int l = -1;
         for (int i = 0; i < listTag.size(); i++) {
 
@@ -166,7 +167,7 @@ public class MonitoringTerminalItem extends Item {
         if (!tag.contains(MONITOR_POS_FATHER)) {
             tag.put(MONITOR_POS_FATHER, new ListTag());
         }
-        ListTag listTag = tag.getList(MONITOR_POS_FATHER, Tag.TAG_LIST);
+        ListTag listTag = tag.getList(MONITOR_POS_FATHER, Tag.TAG_COMPOUND);
         listTag.add(SRENBTUtils.blockPosToTag(pos));
         tag.put(MONITOR_POS_FATHER, listTag);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));

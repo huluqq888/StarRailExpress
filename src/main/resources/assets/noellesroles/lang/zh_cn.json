@@ -162,7 +162,7 @@
   "item.noellesroles.short_shotgun.tooltip": "右键射击，击杀2格扇形范围内的所有玩家，使用后损坏",
   "item.noellesroles.riot_shield": "防暴盾牌",
   "item.noellesroles.monitoring_terminal": "远程监控终端",
-  "item.noellesroles.monitoring_terminal.tooltip": "先蹲下右键安全监控器进行绑定，再次右键可远程查看绑定的监控器",
+  "item.noellesroles.monitoring_terminal.tooltip": "右键安全监控器进行绑定，再次右键可取消绑定\n对非监视器右键可远程查看绑定的监控器",
   "message.item.noellesroles.monitoring_terminal.please_bind": "请先右键一个安全监控器进行绑定",
   "message.item.noellesroles.monitoring_terminal.bind_successfully": "已绑定远程监控器：%s",
   "message.item.noellesroles.monitoring_terminal.remove_successfully": "已取消绑定远程监视器：%s",

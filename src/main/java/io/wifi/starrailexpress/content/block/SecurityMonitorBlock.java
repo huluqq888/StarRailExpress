@@ -15,9 +15,11 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -36,6 +38,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import org.agmas.noellesroles.init.ModItems;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -247,10 +251,13 @@ public class SecurityMonitorBlock extends BaseEntityBlock {
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player,
             BlockHitResult hit) {
+        ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
+        if (stack.is(ModItems.MONITORING_TERMINAL)) {
+            return InteractionResult.PASS; // 传递给物品处理
+        }
         if (world.isClientSide) {
             return InteractionResult.SUCCESS; // 客户端直接返回，主要逻辑在服务端
         }
-
         // 检查玩家是否按下了Shift键
         if (player.isShiftKeyDown()) {
             // 退出监控模式
