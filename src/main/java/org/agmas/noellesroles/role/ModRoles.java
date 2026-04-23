@@ -322,7 +322,25 @@ public class ModRoles {
         public static final ResourceLocation GUARD_ID = Noellesroles.id("guard");
         public static SRERole GUARD = TMMRoles.registerRole(
                         new NormalRole(GUARD_ID, new Color(120, 120, 120).getRGB(), true, false, SRERole.MoodType.REAL,
-                                        TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanSeeCoin(true).setCanAutoAddMoney(false).setVigilanteTeam(true).setOccupiedRoleCount(1);
+                                        TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
+                                @Override
+                                public java.util.function.Predicate<net.minecraft.world.item.Item> cantPickupItem(net.minecraft.world.entity.player.Player player) {
+                                        return item -> {
+                                                // 检查是否是左轮手枪或巡警手枪
+                                                if (item == io.wifi.starrailexpress.index.TMMItems.REVOLVER
+                                                        || item == org.agmas.noellesroles.init.ModItems.PATROLLER_REVOLVER) {
+                                                        // 检查主手、副手和背包是否有警棍
+                                                        if (player.getMainHandItem().is(org.agmas.noellesroles.init.ModItems.BATON)) return true;
+                                                        if (player.getOffhandItem().is(org.agmas.noellesroles.init.ModItems.BATON)) return true;
+                                                        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                                                                if (player.getInventory().getItem(i).is(org.agmas.noellesroles.init.ModItems.BATON)) return true;
+                                                        }
+                                                        return false;
+                                                }
+                                                return false;
+                                        };
+                                }
+                        }).setCanSeeCoin(true).setCanPickUpRevolver(true).setCanAutoAddMoney(false).setVigilanteTeam(true).setOccupiedRoleCount(1);
     public static SRERole WIND_YAOSE = TMMRoles.registerRole(
             new ExtraEffectRole(WIND_YAOSE_ID, new Color(127, 231, 255).getRGB(),
                     false, false, SRERole.MoodType.FAKE,
