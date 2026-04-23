@@ -68,6 +68,7 @@ import org.agmas.noellesroles.content.entity.PuppeteerBodyEntity;
 import org.agmas.noellesroles.content.entity.ServerSmokeAreaManager;
 import org.agmas.noellesroles.content.entity.WheelchairEntity;
 import org.agmas.noellesroles.content.item.HandCuffsItem;
+import org.agmas.noellesroles.content.item.RadioItem;
 import org.agmas.noellesroles.content.item.BatonHandler;
 import org.agmas.noellesroles.content.item.RiotShieldHandler;
 import org.agmas.noellesroles.events.OnVendingMachinesBuyItems;
@@ -1308,6 +1309,29 @@ public class ModEventsRegister {
             ServerLevel level = server.overworld();
             {
                 org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager.serverLevelTick(level);
+            }
+            {
+                if (server.getTickCount() % 10 == 0) {
+                    HashSet<UUID> toDeleted = new HashSet<>();
+                    for (var p_u : RadioItem.RADIO_GROUP) {
+                        ServerPlayer p = server.getPlayerList().getPlayer(p_u);
+                        if (p == null) {
+                            toDeleted.add(p_u);
+                        } else {
+                            if (p.isSpectator()) {
+                                toDeleted.add(p_u);
+                            } else {
+                                if (!MCItemsUtils.hasItem(p, ModItems.RADIO)) {
+                                    toDeleted.add(p_u);
+                                    p.displayClientMessage(Component.translatable("message.noellesroles.radio.left")
+                                            .withStyle(ChatFormatting.RED), true);
+                                }
+                            }
+                        }
+                    }
+                    RadioItem.RADIO_GROUP.removeAll(toDeleted);
+                }
+
             }
         }));
         ServerTickEvents.START_SERVER_TICK.register(((server) -> {

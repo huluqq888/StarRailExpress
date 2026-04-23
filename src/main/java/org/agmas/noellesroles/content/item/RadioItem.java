@@ -6,11 +6,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 
 import java.util.HashSet;
@@ -31,33 +29,21 @@ public class RadioItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player user, InteractionHand hand) {
-        user.startUsingItem(hand);
         ItemStack itemStack = user.getItemInHand(hand);
         if (!world.isClientSide) {
             UUID id = user.getUUID();
-            RADIO_GROUP.add(id);
-            user.displayClientMessage(
-                    Component.translatable("message.noellesroles.radio.joined").withStyle(ChatFormatting.GREEN),
-                    true);
-        }
-        return InteractionResultHolder.consume(itemStack);
-    }
-
-    @Override
-    public void releaseUsing(ItemStack itemStack, Level level, LivingEntity livingEntity, int i) {
-        if (livingEntity instanceof ServerPlayer player) {
-            UUID id = livingEntity.getUUID();
             if (RADIO_GROUP.contains(id)) {
                 RADIO_GROUP.remove(id);
-                player.displayClientMessage(
+                user.displayClientMessage(
                         Component.translatable("message.noellesroles.radio.left").withStyle(ChatFormatting.RED), true);
+            } else {
+                RADIO_GROUP.add(id);
+                user.displayClientMessage(
+                        Component.translatable("message.noellesroles.radio.joined").withStyle(ChatFormatting.GREEN),
+                        true);
             }
         }
-    }
-
-    @Override
-    public UseAnim getUseAnimation(ItemStack stack) {
-        return UseAnim.SPYGLASS;
+        return InteractionResultHolder.consume(itemStack);
     }
 
     public static ServerPlayer getPlayerByUUID(ServerLevel level, UUID uUID) {

@@ -55,6 +55,7 @@ import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.harpymodloader.events.GameInitializeEvent;
 import org.agmas.harpymodloader.events.ResetPlayerEvent;
 import org.agmas.noellesroles.content.item.LetterItem;
+import org.agmas.noellesroles.content.item.RadioItem;
 import org.agmas.noellesroles.game.roles.Innocent.hoan_meirin.HoanMeirinFistPunchHandler;
 import org.agmas.noellesroles.game.roles.neutral.mercenary.MercenaryPlayerComponent;
 import org.agmas.noellesroles.init.ModEffects;
@@ -304,7 +305,7 @@ public class GameUtils {
 
         isStartingGame = false;
         HoanMeirinFistPunchHandler.PUNCH_RECORDS.clear();
-
+        RadioItem.RADIO_GROUP.clear();
         SREGameWorldComponent gameComponent = SREGameWorldComponent.KEY.get(serverWorld);
         gameComponent.isSkillAvailable = true;
         // AreasWorldComponent areasWorldComponent =
@@ -714,6 +715,7 @@ public class GameUtils {
             resetPlayerAfterGame(player);
         }
         HoanMeirinFistPunchHandler.PUNCH_RECORDS.clear();
+        RadioItem.RADIO_GROUP.clear();
 
         // reset game component
         roundEnd.CustomWinnerPlayers.clear();
