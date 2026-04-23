@@ -530,11 +530,11 @@ public class GameUtilsCommand {
         wbc.triggerBroken(true, time);
       }
       context.getSource()
-          .sendSuccess(() -> Component.translatable("Triggered Blackout!"), true);
+          .sendSuccess(() -> Component.translatable("Triggered Monitor Broken!"), true);
 
     } else {
       context.getSource()
-          .sendSuccess(() -> Component.translatable("Stopped All Blackouts!"), true);
+          .sendSuccess(() -> Component.translatable("Stopped All Monitor Broken!"), true);
       wbc.reset();
 
     }
