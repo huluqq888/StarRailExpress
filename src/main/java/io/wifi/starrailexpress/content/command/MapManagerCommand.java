@@ -10,6 +10,7 @@ import io.wifi.starrailexpress.cca.AreasWorldComponent.PosWithOrientation;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.content.block_entity.SecurityMonitorBlockEntity;
 import io.wifi.starrailexpress.content.command.argument.MapLoadArgumentType;
+import io.wifi.starrailexpress.content.item.BindingToolItem;
 import io.wifi.starrailexpress.game.MapManager;
 import io.wifi.starrailexpress.index.TMMBlocks;
 import net.minecraft.ChatFormatting;
@@ -54,7 +55,8 @@ public class MapManagerCommand {
                             for (int y = trainBox.minY(); y <= trainBox.maxY(); y++) {
                               for (int z = trainBox.minX(); z <= trainBox.maxX(); z++) {
                                 if (level.getBlockState(new BlockPos(x, y, z)).is(TMMBlocks.CAMERA)) {
-                                  smbe.addCameraPosition(new BlockPos(x, y, z));
+                                  smbe.addCameraPosition(
+                                      BindingToolItem.CalcRelativePosition(blockPos, new BlockPos(x, y, z)));
                                   source.sendSystemMessage(
                                       Component.translatable("- Found camera at [%s, %s, %s]", x, y, z)
                                           .withStyle(ChatFormatting.GRAY));
@@ -63,6 +65,7 @@ public class MapManagerCommand {
                               }
                             }
                           }
+                          smbe.setChanged();
                           final int ccount = count;
                           source.sendSuccess(
                               () -> Component.translatable("Successfully added %s cameras to security monitor %s",
@@ -90,7 +93,8 @@ public class MapManagerCommand {
                             for (int y = miny; y <= maxy; y++) {
                               for (int z = blockPos.getZ() - range; z <= blockPos.getZ() + range; z++) {
                                 if (level.getBlockState(new BlockPos(x, y, z)).is(TMMBlocks.CAMERA)) {
-                                  smbe.addCameraPosition(new BlockPos(x, y, z));
+                                  smbe.addCameraPosition(
+                                      BindingToolItem.CalcRelativePosition(blockPos, new BlockPos(x, y, z)));
                                   source.sendSystemMessage(
                                       Component.translatable("- Found camera at [%s, %s, %s]", x, y, z)
                                           .withStyle(ChatFormatting.GRAY));
@@ -99,6 +103,7 @@ public class MapManagerCommand {
                               }
                             }
                           }
+                          smbe.setChanged();
                           final int ccount = count;
                           source.sendSuccess(
                               () -> Component.translatable("Successfully added %s cameras to security monitor %s",
