@@ -50,6 +50,7 @@
   "item.noellesroles.diving_boots.desc": "潛水靴子，穿戴時獲得深海探索者3。",
   "item.noellesroles.fake_knife.desc": "假刀，外觀像真刀，可以舉起，但無法造成擊殺。",
   "item.noellesroles.sp_knife.desc": "退伍軍人職業的專屬匕首。",
+  "item.noellesroles.yinyang_sword.desc": "黑白的武器。左鍵：黑白粒子突進6格擊殺。右鍵：前搖1秒釋放4格AOE擊殺。",
   "item.noellesroles.fake_revolver.desc": "假槍，外觀像真槍，只能射擊五次，且無法造成任何擊殺。",
   "item.noellesroles.fake_bat.desc": "假球棒，外觀像真球棒但無法造成傷害。",
   "item.noellesroles.fake_psycho_mode.desc": "假瘋狂模式，用於迷惑他人，魔術師職業專屬。",
@@ -111,7 +112,15 @@
   "item.starrailexpress.dark_toilet.desc": "深色馬桶，任務方塊，右鍵坐馬桶上可以完成上廁所任務。",
   "item.starrailexpress.light_toilet.desc": "潛色馬桶，任務方塊，右鍵坐馬桶上可以完成上廁所任務。。",
   "item.starrailexpress.security_monitor.desc": "安全監控，用於觀察監控攝像頭的視角。",
+  "item.noellesroles.monitoring_terminal.desc": "遠程監控終端。先右鍵安全監控器進行綁定，再右鍵即可遠程查看已綁定監控器。",
   "item.noellesroles.ninja_knife.desc": "一次性用品，忍者的近戰武器，右鍵立即刺殺目標，無聲。",
   "item.noellesroles.ninja_shuriken.desc": "一次性用品，忍者的遠程武器，長按右鍵發射，無聲。",
-  "item.noellesroles.mercenary_contract.desc": "雇傭兵職業專屬道具，其他人可以右鍵簽訂雇傭契約，選擇目標並支付175金幣，雇傭兵右鍵已簽訂的契約能夠獲得雇傭金並為雇傭兵提供通緝目標。契約可以按Q鍵丟出。"
+  "item.noellesroles.mercenary_contract.desc": "雇傭兵職業專屬道具，其他人可以右鍵簽訂雇傭契約，選擇目標並支付175金幣，雇傭兵右鍵已簽訂的契約能夠獲得雇傭金並為雇傭兵提供通緝目標。契約可以按Q鍵丟出。",
+  "item.noellesroles.riot_shield.desc": "保安職業專屬物品。裝備在主手/副手舉盾時可以抵擋一次正面的攻擊並提供保護。",
+  "item.noellesroles.baton.desc": "保安職業專屬物品。近戰武器，擁有4點耐久。左鍵攻擊，可以使目標眩暈，若目標在4秒內受到兩次棍擊則造成一次擊殺。",
+  "item.noellesroles.radio.desc": "右鍵使用，可以與其他玩家進行遠程通訊。",
+  "item.noellesroles.short_shotgun.desc": "一次性用品，可以擊殺2格扇形範圍內的所有人。",
+  "item.noellesroles.executioner_gun.desc": "愚者專屬武器，只能對擁有“異端”效果的玩家造成傷害（一擊必殺）。初始子彈數1，只能通過塔羅會補充子彈。",
+  "item.noellesroles.honored_note.desc": "愚者商店購買。右鍵牆壁/地面貼附，生成不可破壞的文本實體。玩家對著紙條按J鍵禱告，加入“塔羅會成員”。",
+  "item.noellesroles.spirit_cloak.desc": "愚者商店購買。右鍵使用後獲得5秒無敵、無法攻擊、移動速度不變。冷卻90秒。"
 }
