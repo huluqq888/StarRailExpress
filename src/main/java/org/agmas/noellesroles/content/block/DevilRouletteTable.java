@@ -1,12 +1,11 @@
 package org.agmas.noellesroles.content.block;
 
-import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.GameMode;
-import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.content.block.api.AutoResetBlockInterface;
 import io.wifi.starrailexpress.content.block.entity.SeatEntity;
 import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.game.GameUtils.BlockEntityInfo;
 import io.wifi.starrailexpress.game.modes.funny.SREDevilRouletteGameMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -66,6 +65,7 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
             return name().toLowerCase();
         }
     }
+
     public DevilRouletteTable() {
         super(BlockBehaviour.Properties.of()
                 .strength(2.0F)
@@ -73,11 +73,13 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
         registerDefaultState(stateDefinition.any()
                 .setValue(FACING, Direction.NORTH).setValue(PART, TablePart.CENTER));
     }
+
     /** 定义方块状态属性 */
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, PART);
     }
+
     /** 检查方块放置条件 */
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -93,6 +95,7 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
         }
         return defaultBlockState().setValue(FACING, facing).setValue(PART, TablePart.CENTER);
     }
+
     public static void placeStructure(LevelAccessor level, BlockPos corePos, Direction facing) {
         BlockState centerState = level.getBlockState(corePos);
         if (!(centerState.getBlock() instanceof DevilRouletteTable block)) {
@@ -105,15 +108,16 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
                     Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
         }
     }
+
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @org.jetbrains.annotations.Nullable LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state,
+            @org.jetbrains.annotations.Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide) {
             // 放置完成后，在服务端生成结构
             placeStructure(level, pos, state.getValue(FACING));
         }
     }
-
 
     /** 移除结构 */
     private static void removeStructure(Level level, BlockPos corePos) {
@@ -123,6 +127,7 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
                     Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_CLIENTS | Block.UPDATE_NEIGHBORS);
         }
     }
+
     @Override
     public @NotNull BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         if (!level.isClientSide) {
@@ -131,6 +136,7 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
         }
         return super.playerWillDestroy(level, pos, state, player);
     }
+
     /** 获取结构核心位置 */
     public static BlockPos getCore(BlockState state, BlockPos pos) {
         if (!(state.getBlock() instanceof DevilRouletteTable)) {
@@ -139,19 +145,20 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
         TablePart part = state.getValue(PART);
         return pos.offset(-part.xOffset, 0, -part.zOffset);
     }
+
     @Override
     protected @NotNull VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos,
-                                           CollisionContext context) {
+            CollisionContext context) {
         return SHAPE;
     }
 
     /**
      * 检测结构是否完整:
-     *  - 当中心附近有缺损时，替换为空气
+     * - 当中心附近有缺损时，替换为空气
      */
     @Override
     protected @NotNull BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
-                                              LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
+            LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
         BlockPos corePos = getCore(state, pos);
         for (TablePart part : TablePart.values()) {
             if (!level.getBlockState(corePos.offset(part.xOffset, 0, part.zOffset)).is(this)) {
@@ -160,6 +167,7 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
         }
         return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
+
     /** 仅中心位置可创建方块实体 */
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
@@ -168,21 +176,23 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
         }
         return new DevilRouletteTableEntity(pos, state);
     }
+
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
+            BlockEntityType<T> type) {
         // 客户端调用 方块实体 tick ： 刷新动画
-//        if (level.isClientSide) {
-//            return (lvl, pos, st, be) -> {
-//                if (be instanceof DevilRouletteTableEntity table) {
-//                    table.clientTick();
-//                }
-//            };
-//        }
+        // if (level.isClientSide) {
+        // return (lvl, pos, st, be) -> {
+        // if (be instanceof DevilRouletteTableEntity table) {
+        // table.clientTick();
+        // }
+        // };
+        // }
         if (state.getValue(PART) == TablePart.CENTER && !level.isClientSide) {
             return (lvl, pos, st, be) -> {
                 if (be instanceof DevilRouletteTableEntity table) {
-                    table.serverTick (lvl, pos, st);
+                    table.serverTick(lvl, pos, st);
                 }
             };
         }
@@ -192,7 +202,8 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
     // 交互逻辑
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+            BlockHitResult hitResult) {
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
@@ -202,15 +213,16 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
     /**
      * 点击方块时
      * <p>
-     *     如果游戏未开始：
-     *     - 检查状态：仅坐在正确位置的椅子上才可请求
-     *          如果点击位置是中心，则检查座位上的玩家是否正确，如果正确检查游戏开始条件
-     *          如果是其他位置或游戏开始条件不满足，向方块实体请求占位：结果成功/失败
+     * 如果游戏未开始：
+     * - 检查状态：仅坐在正确位置的椅子上才可请求
+     * 如果点击位置是中心，则检查座位上的玩家是否正确，如果正确检查游戏开始条件
+     * 如果是其他位置或游戏开始条件不满足，向方块实体请求占位：结果成功/失败
      * </p>
      */
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
-                                              InteractionHand hand, BlockHitResult hit) {
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+            Player player,
+            InteractionHand hand, BlockHitResult hit) {
         if (level.isClientSide) {
             return ItemInteractionResult.SUCCESS;
         }
@@ -220,8 +232,7 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
             // 只有玩家坐在座位上才能继续操作
             if (player.getVehicle() instanceof SeatEntity seatEntity) {
                 var seatPos = seatEntity.getSeatPos();
-                if (seatPos != null && table.isSeatAvailable(seatPos))
-                {
+                if (seatPos != null && table.isSeatAvailable(seatPos)) {
                     boolean isFront = table.isFrontSeat(seatPos);
                     // 游戏未开始时，如果游戏模式是轮盘赌模式，则不允许自动开启
                     if (!table.isGameActive() && table.getGameMode() != DevilRouletteGame.GameMode.Roulette) {
@@ -232,13 +243,12 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
                         }
                         // 进行占位操作，再次点击取消
                         else {
-                            if (isFront){
-                                if(!table.removePlayerIfSame(player, true) && table.addPlayer(player, true)) {
+                            if (isFront) {
+                                if (!table.removePlayerIfSame(player, true) && table.addPlayer(player, true)) {
                                     return ItemInteractionResult.CONSUME;
                                 }
-                            }
-                            else {
-                                if(!table.removePlayerIfSame(player, false) && table.addPlayer(player, false)) {
+                            } else {
+                                if (!table.removePlayerIfSame(player, false) && table.addPlayer(player, false)) {
                                     return ItemInteractionResult.CONSUME;
                                 }
                             }
@@ -257,7 +267,6 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
     // 游戏模式内重置逻辑
     @Override
     public BlockState onResetBlockState(ServerLevel level, BlockState state, BlockPos pos) {
-        SRE.LOGGER.info("[table] on reset");
         if (state.getValue(PART) == TablePart.CENTER) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof DevilRouletteTableEntity table) {
@@ -275,13 +284,16 @@ public class DevilRouletteTable extends Block implements EntityBlock, AutoResetB
     }
 
     @Override
-    public GameUtils.BlockEntityInfo onResetBlockEntity(ServerLevel level, BlockState state, BlockEntity blockEntity, BlockPos pos) {
+    public GameUtils.BlockEntityInfo onResetBlockEntity(ServerLevel level, BlockState state, BlockEntity blockEntity,
+            BlockPos pos) {
+        if (blockEntity instanceof DevilRouletteTableEntity drte) {
+            drte.init();
+            return new BlockEntityInfo(drte.saveCustomOnly(level.registryAccess()), drte.components());
+        }
         return null;
     }
 
-
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final EnumProperty<TablePart> PART =
-            EnumProperty.create("part", TablePart.class);
+    public static final EnumProperty<TablePart> PART = EnumProperty.create("part", TablePart.class);
     public static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 2, 16);
 }

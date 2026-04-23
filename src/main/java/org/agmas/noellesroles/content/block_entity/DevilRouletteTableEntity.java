@@ -85,7 +85,7 @@ public class DevilRouletteTableEntity extends BlockEntity {
         }
     }
     /** 初始化成员 */
-    protected void init() {
+    public void init() {
         game = null;
         frontPlayerUUID = null;
         backPlayerUUID = null;
