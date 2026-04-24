@@ -35,7 +35,7 @@ import java.util.function.Supplier;
 /**
  * 邪恶战局
  * <p>
- *  - 模式特性：每 7 狼（开局 1000 金币）对战 1 超级亡命徒（无友军透视，但是必定矮小）
+ * - 模式特性：每 7 狼（开局 1000 金币）对战 1 超级亡命徒（无友军透视，但是必定矮小）
  * </p>
  */
 public class SREEvilWarGameMode extends WTLooseEndsGameMode {
@@ -65,6 +65,7 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
     public boolean isLooseEndMode() {
         return false;
     }
+
     @Override
     protected void initItemList() {
         super.initItemList();
@@ -108,8 +109,7 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                     if (role == SpecialGameModeRoles.SUPER_LOOSE_END)
                         --superLooseEndCount;
                     gameWorldComponent.addRole(forcePlayer, role);
-                }
-                else
+                } else
                     playersWithoutForcedRoles.add(forcePlayer);
             }
         }
@@ -126,6 +126,7 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                         !role.isInnocent() &&
                         role != TMMRoles.CIVILIAN &&
                         // 禁用角色
+                        role.canBeRandomed() &&
                         !BANED_ROLES.contains(role));
         List<SRERole> assignedKillers = killerPool.selectRoles(playersWithoutForcedRoles.size() - superLooseEndCount);
         // 如果狼池不够，生成普通杀手池索引, 同时生成超级亡命徒所在索引
@@ -152,7 +153,7 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                 } else if (curKillerIdx < assignedKillers.size()) {
                     SRERole role = assignedKillers.get(curKillerIdx++);
                     // 操纵师只会在有2个亡命徒以上时出现
-                    if(role == ModRoles.MANIPULATOR &&
+                    if (role == ModRoles.MANIPULATOR &&
                             (players.size() / (SREConfig.instance().evilWarKillGroupNumber + 1) < 2)) {
                         role = TMMRoles.KILLER;
                     }
@@ -180,7 +181,7 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                 }
             }
             // 刽子手自带德林加
-            else if (role == ModRoles.EXECUTIONER){
+            else if (role == ModRoles.EXECUTIONER) {
                 player.addItem(new ItemStack(TMMItems.DERRINGER));
             }
             // 清道夫拥有各种枪和几把飞刀
@@ -198,7 +199,8 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
 
     /** 发送欢迎包，根据特定角色发送 */
     @Override
-    protected void sendWelcomePackets(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent, SRERole role1) {
+    protected void sendWelcomePackets(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent,
+            SRERole role1) {
         int looseEndCount = players.size() / (SREConfig.instance().evilWarKillGroupNumber + 1);
         looseEndCount = Math.max(looseEndCount, 1);
         int killerCount = players.size() - looseEndCount;
@@ -217,7 +219,8 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
         for (ServerPlayer player : players) {
             if (gameWorldComponent.isRole(player, SpecialGameModeRoles.SUPER_LOOSE_END)) {
                 worldModifierComponent.addModifier(player.getUUID(), SEModifiers.TINY, false);
-//                worldModifierComponent.addModifier(player.getUUID(), SEModifiers.FEATHER, false);
+                // worldModifierComponent.addModifier(player.getUUID(), SEModifiers.FEATHER,
+                // false);
                 // 使玩家缩小
                 Objects.requireNonNull(player.getAttribute(Attributes.SCALE)).removeModifier(tinyModifier);
                 Objects.requireNonNull(player.getAttribute(Attributes.SCALE)).addPermanentModifier(tinyModifier);
@@ -249,10 +252,9 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                 playerShopComponent.setBalance(0);
             }
             // 超级亡命徒开局 0 块
-            else if (role == SpecialGameModeRoles.SUPER_LOOSE_END){
+            else if (role == SpecialGameModeRoles.SUPER_LOOSE_END) {
                 playerShopComponent.setBalance(0);
-            }
-            else if (role == ModRoles.CLEANER) {
+            } else if (role == ModRoles.CLEANER) {
                 playerShopComponent.setBalance(700);
             }
             // 默认安全时间结束后有700（一般杀手狂暴400，手雷330，手枪285)，需要斟酌启动配置
@@ -260,10 +262,10 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                 playerShopComponent.setBalance(200);
 
             // 组件等数据初始化
-//            if (role == ModRoles.IMITATOR) {
-//                // 模仿者初始化：随机3个技能，目前没有合适的公有修改方法
-//
-//            }
+            // if (role == ModRoles.IMITATOR) {
+            // // 模仿者初始化：随机3个技能，目前没有合适的公有修改方法
+            //
+            // }
         }
         curBalanceTick = 0;
         curReviveTick = 0;
@@ -275,20 +277,20 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
         GameUtils.WinStatus winStatus = GameUtils.WinStatus.NONE;
 
         // tick计数
-//        if (curOneSecondTick++ >= 20) {
-//            for (ServerPlayer player : serverWorld.players()) {
-//                if (GameUtils.isPlayerEliminated(player))
-//                    continue;
-//
-//                SRERole role = gameWorldComponent.getRole(player);
-//                // 刽子手强盗手枪cd减为1s
-//                if(role == ModRoles.EXECUTIONER) {
-//                    ItemCooldowns itemCooldownManager = player.getCooldowns();
-//                    itemCooldownManager.removeCooldown(ModItems.BANDIT_REVOLVER);
-//                }
-//            }
-//            curOneSecondTick = 0;
-//        }
+        // if (curOneSecondTick++ >= 20) {
+        // for (ServerPlayer player : serverWorld.players()) {
+        // if (GameUtils.isPlayerEliminated(player))
+        // continue;
+        //
+        // SRERole role = gameWorldComponent.getRole(player);
+        // // 刽子手强盗手枪cd减为1s
+        // if(role == ModRoles.EXECUTIONER) {
+        // ItemCooldowns itemCooldownManager = player.getCooldowns();
+        // itemCooldownManager.removeCooldown(ModItems.BANDIT_REVOLVER);
+        // }
+        // }
+        // curOneSecondTick = 0;
+        // }
         if (curReviveTick++ >= REVIVE_TIME) {
             for (ServerPlayer player : serverWorld.players()) {
                 if (GameUtils.isPlayerEliminated(player))
@@ -296,13 +298,14 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
 
                 SRERole role = gameWorldComponent.getRole(player);
                 // 死灵可以复活cd降至10s
-                if(role == SERoles.NECROMANCER || role == ModRoles.CAT_NECROMANCER) {
+                if (role == SERoles.NECROMANCER || role == ModRoles.CAT_NECROMANCER) {
                     SREAbilityPlayerComponent abilityPlayerComponent = SREAbilityPlayerComponent.KEY.get(player);
                     abilityPlayerComponent.setCooldown(0);
                 }
                 // 仇杀客每10s涨一个误杀数
                 else if (role == ModRoles.BLOOD_FEUDIST) {
-                    BloodFeudistPlayerComponent bloodFeudistPlayerComponent = BloodFeudistPlayerComponent.KEY.get(player);
+                    BloodFeudistPlayerComponent bloodFeudistPlayerComponent = BloodFeudistPlayerComponent.KEY
+                            .get(player);
                     bloodFeudistPlayerComponent.onAccidentalKill();
                 }
             }
@@ -317,17 +320,15 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                 SRERole role = gameWorldComponent.getRole(player);
                 if (role == ModRoles.DIO) {
                     SREPlayerShopComponent.KEY.get(player).addToBalance(200);
-                }
-                else if(role == ModRoles.CONSPIRATOR) {
+                } else if (role == ModRoles.CONSPIRATOR) {
                     SREPlayerShopComponent.KEY.get(player).addToBalance(200);
-                }
-                else if(role != SpecialGameModeRoles.SUPER_LOOSE_END)
+                } else if (role != SpecialGameModeRoles.SUPER_LOOSE_END)
                     // 默认获取500金币
                     SREPlayerShopComponent.KEY.get(player).addToBalance(500);
 
                 // 角色相关数据修改
                 // 苦力怕每30s获得 2 颗雷
-                if(role == ModRoles.CREEPER) {
+                if (role == ModRoles.CREEPER) {
                     ItemStack creeperItem = TMMItems.GRENADE.getDefaultInstance();
                     creeperItem.setCount(2);
                     player.addItem(creeperItem);
@@ -345,7 +346,8 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                 else if (role == ModRoles.EXECUTIONER) {
                     ExecutionerPlayerComponent executionerPlayerComponent = ExecutionerPlayerComponent.KEY.get(player);
                     for (ServerPlayer target : serverWorld.players())
-                        if (!GameUtils.isPlayerEliminated(target) && gameWorldComponent.isRole(target, SpecialGameModeRoles.SUPER_LOOSE_END)) {
+                        if (!GameUtils.isPlayerEliminated(target)
+                                && gameWorldComponent.isRole(target, SpecialGameModeRoles.SUPER_LOOSE_END)) {
                             executionerPlayerComponent.target = target.getUUID();
                             executionerPlayerComponent.sync();
                         }
