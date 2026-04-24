@@ -189,7 +189,6 @@ public class LimitedInventoryScreen extends LimitedHandledScreen<InventoryMenu> 
 
     private void refreshShopLayout() {
         SHOP_MAX_ROWS_PER_PAGE = Math.max(1, Math.min((this.y - SHOP_TOP_SAFE_Y - 24) / SHOP_ITEM_SPACING_Y, 4));
-        SRE.LOGGER.info("super.y:" + super.y);
         int count = shopWidgets.size();
         if (count <= 0) {
             shopTotalPages = 1;
