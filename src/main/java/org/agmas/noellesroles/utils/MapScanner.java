@@ -3,6 +3,7 @@ package org.agmas.noellesroles.utils;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerTaskComponent.Task;
 import io.wifi.starrailexpress.content.block.*;
 import io.wifi.starrailexpress.content.block.api.TaskInstinctShowableInterface;
 import io.wifi.starrailexpress.content.block_entity.BeveragePlateBlockEntity;
@@ -13,6 +14,9 @@ import io.wifi.starrailexpress.game.GameUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.food.FoodProperties;
@@ -122,6 +126,11 @@ public class MapScanner {
                         GameUtils.taskBlocks.put(blockPos6, 3);
                     } else if (blockState.getBlock() instanceof TaskInstinctShowableInterface it) {
                         GameUtils.taskBlocks.put(blockPos6, it.taskInstinctId());
+                    } else if (blockState.getBlock() == BuiltInRegistries.BLOCK
+                            .get((ResourceLocation.fromNamespaceAndPath("yuushya", "black_cat")))
+                            || blockState.getBlock() == BuiltInRegistries.BLOCK
+                                    .get((ResourceLocation.fromNamespaceAndPath("yuushya", "white_cat")))) {
+                        GameUtils.taskBlocks.put(blockPos6, Task.CAT.ordinal()); // 13
                     }
                 }
             }

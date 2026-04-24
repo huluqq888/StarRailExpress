@@ -1564,6 +1564,7 @@
   "hud.noellesroles.task_instinct.render.task.note_block": "音符盒",
   "hud.noellesroles.task_instinct.render.door": "你的房间门",
   "hud.noellesroles.task_instinct.render.vending_machine": "售货机",
+  "hud.noellesroles.task_instinct.render.task.cat": "猫猫",
   "msg.noellesroles.taskpoint.available": "任务点透视已可用。按下 %s 开启或关闭。",
   "message.tip.for_taskpoint": "按下 %s 可切换任务点透视",
   "message.tip.is_taskpoint_able": "任务点透视已启用",

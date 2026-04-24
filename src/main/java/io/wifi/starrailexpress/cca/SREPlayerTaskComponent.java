@@ -12,14 +12,20 @@ import io.wifi.starrailexpress.index.tag.TMMBlockTags;
 import io.wifi.starrailexpress.network.original.TaskCompletePayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.LecternMenu;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.noellesroles.role.TraitorAndModifiers;
 import org.jetbrains.annotations.NotNull;
@@ -394,6 +400,7 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
         CHAIR(nbt -> new ChairTask(nbt.getInt("timer"))), // 添加座椅休息任务
         NOTE_BLOCK(nbt -> new NoteBlockTask(nbt.getInt("timer"))), // 添加音符盒任务
         BREATHE(nbt -> new BreatheTask(nbt.getInt("timer"))), // 呼吸新鲜空气任务
+        CAT(nbt -> new CatTask(nbt.getInt("timer"))), // 摸猫任务
         DNF_MEAL(nbt -> new PassiveTask("dnf_meal", nbt.getInt("type"))),
         DNF_TOILET(nbt -> new PassiveTask("dnf_toilet", nbt.getInt("type"))),
         DNF_LECTURE(nbt -> new PassiveTask("dnf_lecture", nbt.getInt("type"))),
@@ -409,7 +416,7 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
 
         private static List<Task> availableTasksList = List.of(SLEEP, RAED_BOOK, EAT, DRINK, EXERCISE, MEDITATE, BATHE,
                 CHAIR,
-                NOTE_BLOCK, TOILET, BREATHE);
+                NOTE_BLOCK, TOILET, BREATHE, CAT);
         public final @NotNull Function<CompoundTag, TrainTask> setFunction;
 
         Task(@NotNull Function<CompoundTag, TrainTask> function) {
@@ -1017,6 +1024,63 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
         public CompoundTag toNbt() {
             CompoundTag nbt = new CompoundTag();
             nbt.putInt("type", Task.MANIC.ordinal());
+            return nbt;
+        }
+    }
+
+    public static class CatTask implements TrainTask {
+        private int timer;
+        public static final List<Block> CAT_BLOCKS = List.of(
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "british_shorthair")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "orange_cat")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "black_cat")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "white_cat")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "ragdoll")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "calico")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "jellie")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "siamese")),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("yuushya", "tabby"))
+        );
+
+        public CatTask(int time) {
+            this.timer = time;
+        }
+
+        @Override
+        public void tick(@NotNull Player player) {
+            // Get Looking at block
+            HitResult hit = player.pick(5.0, 0.0F, false);
+            if (!(hit instanceof BlockHitResult))
+                return;
+
+            BlockHitResult hitResult = (BlockHitResult) hit;
+            BlockState blockState = player.level().getBlockState(hitResult.getBlockPos());
+            // Check if looking at any cat block
+            if (CAT_BLOCKS.contains(blockState.getBlock())) {
+                this.timer--;
+            }
+        }
+
+        @Override
+        public boolean isFulfilled(@NotNull Player player) {
+            return this.timer <= 0;
+        }
+
+        @Override
+        public String getName() {
+            return "cat";
+        }
+
+        @Override
+        public Task getType() {
+            return Task.CAT;
+        }
+
+        @Override
+        public CompoundTag toNbt() {
+            CompoundTag nbt = new CompoundTag();
+            nbt.putInt("type", Task.CAT.ordinal());
+            nbt.putInt("timer", this.timer);
             return nbt;
         }
     }

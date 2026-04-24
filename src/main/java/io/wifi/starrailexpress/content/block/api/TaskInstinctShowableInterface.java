@@ -26,11 +26,12 @@ public interface TaskInstinctShowableInterface {
     java.awt.Color taskInstinctRenderColor(BlockState state, BlockPos pos, Player player);
 
     /**
-     * 需要12+。可不改
+     * 需要13+。可不改
+     * 因为fork新增的猫咪任务占用了12，所以13开始
      * 
      * @return
      */
     public default int taskInstinctId(){
-        return 12;
+        return 13;
     }
 }

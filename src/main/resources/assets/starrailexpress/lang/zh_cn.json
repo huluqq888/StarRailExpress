@@ -716,6 +716,7 @@
   "task.sleep": "睡一觉",
   "task.read_book": "读书",
   "task.random": "随机任务",
+  "task.cat": "摸摸猫猫 - 盯着猫猫 4 秒",
   "tip.cooldown": "冷却中：%s",
   "tip.derringer.used": "已使用：无法再射击，击杀一名目标可获得另一次机会！",
   "tip.door.jammed": "这扇门被卡住了，暂时无法打开！",

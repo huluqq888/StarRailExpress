@@ -301,6 +301,9 @@ public class TaskBlockOverlayRenderer {
                     case BREATHE:
                         // 呼吸任务无需特殊方块高亮
                         break;
+                    case CAT:
+                        shouldDisplay[12] = true;
+                        break;
                     default:
                         break;
 
@@ -371,7 +374,15 @@ public class TaskBlockOverlayRenderer {
                                 true, 0f,
                                 Component.translatable("hud.noellesroles.task_instinct.render.vending_machine"));
                     }
+                case 12:
+                    if (shouldDisplay[type]) {
+                        TaskBlockOverlayRenderer.renderBlockOverlay(renderContext, pos,
+                                new Color(255, 200, 0), 1f,
+                                true, 0f,
+                                Component.translatable("hud.noellesroles.task_instinct.render.task.cat"));
+                    }
                     break;
+                
                 default:
                     BlockState block = renderContext.world().getBlockState(pos);
                     if (block.getBlock() instanceof TaskInstinctShowableInterface it) {
