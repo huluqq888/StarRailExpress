@@ -3,6 +3,7 @@ package io.wifi.starrailexpress.content.block.api;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 
 public interface TaskInstinctShowableInterface {
@@ -13,7 +14,7 @@ public interface TaskInstinctShowableInterface {
      * 
      * @return
      */
-    boolean shouldRender(BlockState state, BlockPos pos);
+    boolean shouldRenderTaskInstinct(BlockState state, BlockPos pos, Player player);
 
     @Environment(EnvType.CLIENT)
 
@@ -22,14 +23,14 @@ public interface TaskInstinctShowableInterface {
      * 
      * @return
      */
-    int renderColor(BlockState state, BlockPos pos);
+    java.awt.Color taskInstinctRenderColor(BlockState state, BlockPos pos, Player player);
 
     /**
      * 需要12+。可不改
      * 
      * @return
      */
-    public default int instinct_id(){
+    public default int taskInstinctId(){
         return 12;
     }
 }

@@ -29,7 +29,6 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.agmas.noellesroles.init.ModItems;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -82,24 +81,24 @@ public class TaskBlockOverlayRenderer {
         LevelRenderer.renderLineBox(matrices, vertexConsumer, localAABB, red, green, blue, alpha);
 
         // if (text != null) {
-        //     if (textScale <= 0) {
-        //         double blockWidthX = localAABB.maxX - localAABB.minX;
-        //         double blockWidthZ = localAABB.maxZ - localAABB.minZ;
-        //         double blockWidth = Math.max(blockWidthX, blockWidthZ);
-        //         if (blockWidth <= 0 || blockWidth > 1)
-        //             blockWidth = 1.0;
-        //         int textPixelWidth = client.font.width(text);
-        //         if (textPixelWidth > 0)
-        //             textScale = (float) blockWidth * 0.75f / textPixelWidth;
-        //     }
+        // if (textScale <= 0) {
+        // double blockWidthX = localAABB.maxX - localAABB.minX;
+        // double blockWidthZ = localAABB.maxZ - localAABB.minZ;
+        // double blockWidth = Math.max(blockWidthX, blockWidthZ);
+        // if (blockWidth <= 0 || blockWidth > 1)
+        // blockWidth = 1.0;
+        // int textPixelWidth = client.font.width(text);
+        // if (textPixelWidth > 0)
+        // textScale = (float) blockWidth * 0.75f / textPixelWidth;
+        // }
 
-        //     double centerX = (localAABB.minX + localAABB.maxX) / 2.0;
-        //     double centerY = (localAABB.minY + localAABB.maxY) / 2.0;
-        //     double centerZ = (localAABB.minZ + localAABB.maxZ) / 2.0;
-        //     if (cameraPos.distanceTo(blockPos.getCenter()) <= 3)
-        //         renderTextAtAABBCenter(context, blockPos, centerX, centerY, centerZ, text,
-        //                 textScale, color.getRGB(),
-        //                 true);
+        // double centerX = (localAABB.minX + localAABB.maxX) / 2.0;
+        // double centerY = (localAABB.minY + localAABB.maxY) / 2.0;
+        // double centerZ = (localAABB.minZ + localAABB.maxZ) / 2.0;
+        // if (cameraPos.distanceTo(blockPos.getCenter()) <= 3)
+        // renderTextAtAABBCenter(context, blockPos, centerX, centerY, centerZ, text,
+        // textScale, color.getRGB(),
+        // true);
         // }
 
         matrices.popPose();
@@ -220,9 +219,10 @@ public class TaskBlockOverlayRenderer {
                 shouldDisplay[i] = true;
             }
         }
+        Minecraft client = Minecraft.getInstance();
+        var player = client.player;
+        var world = client.level;
         if (SREClient.isPlayerAliveAndInSurvival()) {
-            var player = Minecraft.getInstance().player;
-            var world = Minecraft.getInstance().level;
             var item = player.getMainHandItem();
             if (item.is(TMMItems.KEY)) {
                 ItemLore lore = item.get(DataComponents.LORE);
@@ -240,7 +240,8 @@ public class TaskBlockOverlayRenderer {
 
                     }
                 }
-            } else if (item.is(TMMItems.LETTER) || item.is(ModItems.LETTER_ITEM)) {
+            }
+            {
                 shouldDisplay[11] = true;
             }
 
@@ -260,8 +261,7 @@ public class TaskBlockOverlayRenderer {
          * 10: 音符盒
          * 11: 售货机
          */
-
-        var playerMood = SREPlayerMoodComponent.KEY.get(Minecraft.getInstance().player);
+        var playerMood = SREPlayerMoodComponent.KEY.get(client.player);
         if (playerMood != null) {
             for (var task : playerMood.getTasks().values()) {
                 switch (task.getType()) {
@@ -373,12 +373,14 @@ public class TaskBlockOverlayRenderer {
                     }
                 default:
                     BlockState block = renderContext.world().getBlockState(pos);
-                    if(block.getBlock() instanceof TaskInstinctShowableInterface it){
-                        if(it.shouldRender(block,pos)){
+                    if (block.getBlock() instanceof TaskInstinctShowableInterface it) {
+                        if (it.shouldRenderTaskInstinct(block, pos, player)) {
+                            java.awt.Color c = it.taskInstinctRenderColor(block, pos, player);
+                            float alpha = c.getAlpha() / 255f;
                             TaskBlockOverlayRenderer.renderBlockOverlay(renderContext, pos,
-                                new Color(255, 174, 201), 1f,
-                                true, 0f,
-                                null);
+                                    c, alpha,
+                                    true, 0f,
+                                    null);
                         }
                     }
                     break;

@@ -10,6 +10,33 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class CameraBlockEntity extends BlockEntity {
     private Direction facing = Direction.NORTH;
+    private int broken = 0;
+
+    public boolean isBroken() {
+        return broken > 0;
+    }
+
+    public int getBrokenTime() {
+        return broken;
+    }
+
+    public void setBroken(int time) {
+        this.broken = time;
+        this.setChanged();
+    }
+
+    public void reset() {
+        this.broken = 0;
+    }
+
+    public void tick() {
+        if (this.broken > 0) {
+            this.broken--;
+            if (this.broken == 0) {
+                this.setChanged();
+            }
+        }
+    }
 
     public CameraBlockEntity(BlockPos pos, BlockState state) {
         super(TMMBlockEntities.CAMERA, pos, state);
@@ -31,11 +58,15 @@ public class CameraBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.saveAdditional(tag, provider);
         tag.putString("facing", facing.getName());
+        tag.putInt("broken", broken);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.loadAdditional(tag, provider);
+        if (tag.contains("broken")) {
+            this.broken = tag.getInt("broken");
+        }
         if (tag.contains("facing")) {
             this.facing = Direction.valueOf(tag.getString("facing").toUpperCase());
         } else {

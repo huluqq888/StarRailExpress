@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.content.block;
 
 import com.mojang.serialization.MapCodec;
 
+import io.wifi.starrailexpress.content.block.api.TaskInstinctShowableInterface;
 import io.wifi.starrailexpress.content.block_entity.SecurityMonitorBlockEntity;
 import io.wifi.starrailexpress.network.PacketTracker;
 import io.wifi.starrailexpress.network.SecurityCameraExitRequestPayload;
@@ -43,9 +44,10 @@ import org.agmas.noellesroles.init.ModItems;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.awt.Color;
 import java.util.List;
 
-public class SecurityMonitorBlock extends BaseEntityBlock {
+public class SecurityMonitorBlock extends BaseEntityBlock implements TaskInstinctShowableInterface {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
@@ -399,5 +401,15 @@ public class SecurityMonitorBlock extends BaseEntityBlock {
 
     public static void setSecurityMode(boolean mode) {
         isInSecurityMode = mode;
+    }
+
+    @Override
+    public boolean shouldRenderTaskInstinct(BlockState state, BlockPos pos, Player player) {
+        return true;
+    }
+
+    @Override
+    public Color taskInstinctRenderColor(BlockState state, BlockPos pos, Player player) {
+        return java.awt.Color.WHITE;
     }
 }

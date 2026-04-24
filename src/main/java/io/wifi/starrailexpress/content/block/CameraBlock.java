@@ -2,11 +2,17 @@ package io.wifi.starrailexpress.content.block;
 
 import com.mojang.serialization.MapCodec;
 
+import io.wifi.starrailexpress.cca.SRERoleWorldComponent;
+import io.wifi.starrailexpress.content.block.api.AutoResetBlockInterface;
+import io.wifi.starrailexpress.content.block.api.TaskInstinctShowableInterface;
 import io.wifi.starrailexpress.content.block_entity.CameraBlockEntity;
+import io.wifi.starrailexpress.game.GameUtils.BlockEntityInfo;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -26,10 +32,13 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.awt.Color;
+
+import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.Nullable;
 
-
-public class CameraBlock extends BaseEntityBlock {
+public class CameraBlock extends BaseEntityBlock implements TaskInstinctShowableInterface, AutoResetBlockInterface {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     protected static final VoxelShape SHAPE = Block.box(5.0D, 0.0D, 5.0D, 11.0D, 10.0D, 11.0D);
 
@@ -37,7 +46,9 @@ public class CameraBlock extends BaseEntityBlock {
         super(settings);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
+
     private static final MapCodec<CameraBlock> CODEC = simpleCodec(CameraBlock::new);
+
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
@@ -70,16 +81,54 @@ public class CameraBlock extends BaseEntityBlock {
     }
 
     @Override
-    public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+    public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player,
+            BlockHitResult hit) {
         if (!world.isClientSide) {
-            player.displayClientMessage(Component.literal("摄像头位置: X=" + pos.getX() + ", Y=" + pos.getY() + ", Z=" + pos.getZ()).withStyle(ChatFormatting.YELLOW), true);
+            player.displayClientMessage(
+                    Component.literal("摄像头位置: X=" + pos.getX() + ", Y=" + pos.getY() + ", Z=" + pos.getZ())
+                            .withStyle(ChatFormatting.YELLOW),
+                    true);
         }
         return InteractionResult.SUCCESS;
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
+            BlockEntityType<T> type) {
         return null;
+    }
+
+    @Override
+    public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
+        if (serverLevel.getBlockEntity(blockPos) instanceof CameraBlockEntity cbe) {
+            cbe.tick();
+        }
+    }
+
+    @Override
+    public BlockState onResetBlockState(ServerLevel level, BlockState state, BlockPos pos) {
+        return state;
+    }
+
+    @Override
+    public BlockEntityInfo onResetBlockEntity(ServerLevel level, BlockState state, BlockEntity blockEntity,
+            BlockPos pos) {
+        if (blockEntity instanceof CameraBlockEntity cbe) {
+            cbe.reset();
+        }
+        return new BlockEntityInfo(blockEntity.saveCustomOnly(level.registryAccess()), blockEntity.components());
+    }
+
+    @Override
+    public boolean shouldRenderTaskInstinct(BlockState state, BlockPos pos, Player player) {
+        Level level = player.level();
+        var roleCCA = SRERoleWorldComponent.KEY.get(level);
+        return roleCCA.isRole(player, ModRoles.DELAYER);
+    }
+
+    @Override
+    public Color taskInstinctRenderColor(BlockState state, BlockPos pos, Player player) {
+        return java.awt.Color.MAGENTA;
     }
 }

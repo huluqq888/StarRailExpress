@@ -28,6 +28,7 @@ import java.util.List;
  */
 public class CameraShearsItem extends Item implements AdventureUsable {
     private static final int USE_COOLDOWN = 30 * 20; // 成功且非创造模式5秒
+    private static final int BROKEN_TIME = 90 * 20;
 
     public CameraShearsItem(Properties settings) {
         super(settings);
@@ -45,7 +46,7 @@ public class CameraShearsItem extends Item implements AdventureUsable {
             return InteractionResult.PASS;
         BlockPos clickedPos = context.getClickedPos();
         BlockEntity be = level.getBlockEntity(clickedPos);
-        if (!(be instanceof CameraBlockEntity)) {
+        if (!(be instanceof CameraBlockEntity cbe)) {
             return InteractionResult.PASS;
         }
 
@@ -53,13 +54,20 @@ public class CameraShearsItem extends Item implements AdventureUsable {
             return InteractionResult.SUCCESS;
         }
 
+        if (cbe.isBroken()) {
+            player.displayClientMessage(Component.translatable("item.noellesroles.camera_shears.use_failed_broken"),
+                    true);
+            return InteractionResult.FAIL;
+        }
         ItemStack stack = context.getItemInHand();
-        stack.hurtAndBreak(1, player, context.getHand().equals(InteractionHand.MAIN_HAND)?EquipmentSlot.MAINHAND:EquipmentSlot.OFFHAND);
-        if(stack.getDamageValue()<stack.getMaxDamage()){
-            if(!player.isCreative()){
+        stack.hurtAndBreak(1, player,
+                context.getHand().equals(InteractionHand.MAIN_HAND) ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        if (stack.getDamageValue() < stack.getMaxDamage()) {
+            if (!player.isCreative()) {
                 player.getCooldowns().addCooldown(this, USE_COOLDOWN);
             }
         }
+        cbe.setBroken(BROKEN_TIME);
         return InteractionResult.SUCCESS;
     }
 

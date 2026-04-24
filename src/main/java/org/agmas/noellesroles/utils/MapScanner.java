@@ -119,7 +119,7 @@ public class MapScanner {
                     } else if (blockState.getBlock() instanceof SprinklerBlock) {
                         GameUtils.taskBlocks.put(blockPos6, 3);
                     } else if (blockState.getBlock() instanceof TaskInstinctShowableInterface it) {
-                        GameUtils.taskBlocks.put(blockPos6, it.instinct_id());
+                        GameUtils.taskBlocks.put(blockPos6, it.taskInstinctId());
                     }
                 }
             }
