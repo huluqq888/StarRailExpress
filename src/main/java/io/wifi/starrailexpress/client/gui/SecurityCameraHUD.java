@@ -3,6 +3,7 @@ package io.wifi.starrailexpress.client.gui;
 import io.wifi.starrailexpress.SREClientConfig;
 import io.wifi.starrailexpress.cca.SREMonitorWorldComponent;
 import io.wifi.starrailexpress.content.block.SecurityMonitorBlock;
+import io.wifi.starrailexpress.content.block_entity.CameraBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -30,9 +31,24 @@ public class SecurityCameraHUD {
         if (player == null) {
             return;
         }
+        BlockPos cameraPos = SecurityMonitorBlock.getCurrentCameraPos();
 
         if (SREMonitorWorldComponent.KEY.get(minecraft.level).isBroken()) {
-            renderBlackBackground(guiGraphics, screenWidth, screenHeight);
+            renderRawColorBackground(guiGraphics, screenWidth, screenHeight, java.awt.Color.BLACK.getRGB());
+        } else {
+            boolean flag = false;
+            if (cameraPos == null)
+                flag = true;
+            if (!flag) {
+                if (minecraft.level.getBlockEntity(cameraPos) instanceof CameraBlockEntity cbe) {
+                    if (cbe.isBroken()) {
+                        flag = true;
+                    }
+                }
+            }
+            if (flag) {
+                renderRawColorBackground(guiGraphics, screenWidth, screenHeight, java.awt.Color.GRAY.getRGB());
+            }
         }
         // 更新闪烁效果
         updateBlinkEffect();
@@ -47,8 +63,9 @@ public class SecurityCameraHUD {
         renderStatusIndicator(guiGraphics, screenWidth, screenHeight);
     }
 
-    private static void renderBlackBackground(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
-        guiGraphics.fill(0, 0, screenWidth, screenHeight, java.awt.Color.BLACK.getRGB());
+    private static void renderRawColorBackground(GuiGraphics guiGraphics, int screenWidth, int screenHeight,
+            int color) {
+        guiGraphics.fill(0, 0, screenWidth, screenHeight, color);
     }
 
     private static void renderCameraInfo(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
