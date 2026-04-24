@@ -70,7 +70,7 @@ public class SwitchMapCommand {
                 return -1;
             }
             ServerLevel serverLevel = context.getSource().getLevel();
-            List<String> availableMaps = MapManager.getAvailableMaps(serverLevel, true);
+            List<String> availableMaps = MapManager.getAvailableMaps(serverLevel, false);
             int idx = 0;
             final int total = availableMaps.size();
             final AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
@@ -165,7 +165,7 @@ public class SwitchMapCommand {
                 return -1;
             }
             ServerLevel serverLevel = context.getSource().getLevel();
-            List<String> availableMaps = MapManager.getAvailableMaps(serverLevel, true);
+            List<String> availableMaps = MapManager.getAvailableMaps(serverLevel, false);
             int idx = 0;
             final int total = availableMaps.size();
             final AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
