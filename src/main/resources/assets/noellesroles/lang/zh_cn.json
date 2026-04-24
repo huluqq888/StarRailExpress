@@ -1671,7 +1671,7 @@
   "item.noellesroles.fire_axe.target_dead": "目标已经死亡！",
   "death_reason.noellesroles.fire_axe": "消防斧劈砍",
   "death_reason.starrailexpress.hot_potato": "烫手的山芋",
-  "item.noellesroles.camera_shears": "绳索",
+  "item.noellesroles.camera_shears": "钳子",
   "item.noellesroles.camera_shears.tooltip": "右键点击摄像头将其破坏！",
   "item.noellesroles.rope": "绳索",
   "item.noellesroles.rope.tooltip.durability": "耐久度: %s/%s",
