@@ -1,5 +1,6 @@
 package org.agmas.noellesroles.content.item;
 
+import io.wifi.starrailexpress.content.block.CameraBlock;
 import io.wifi.starrailexpress.content.block_entity.CameraBlockEntity;
 import io.wifi.starrailexpress.util.AdventureUsable;
 import net.minecraft.ChatFormatting;
@@ -68,6 +69,7 @@ public class CameraShearsItem extends Item implements AdventureUsable {
             }
         }
         cbe.setBroken(BROKEN_TIME);
+        CameraBlock.sendTip(player, level, clickedPos);
         return InteractionResult.SUCCESS;
     }
 

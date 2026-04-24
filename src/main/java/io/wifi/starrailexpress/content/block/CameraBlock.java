@@ -85,18 +85,22 @@ public class CameraBlock extends BaseEntityBlock implements TaskInstinctShowable
             BlockHitResult hit) {
         if (player.isCreative()) {
             if (!world.isClientSide) {
-                if (world.getBlockEntity(pos) instanceof CameraBlockEntity cbe) {
-                    player.displayClientMessage(
-                            Component
-                                    .translatable("摄像头位置: %s | 破坏恢复时间剩余: %ss", pos.toShortString(),
-                                            cbe.getBrokenTime() / 20)
-                                    .withStyle(ChatFormatting.YELLOW),
-                            true);
-                }
+                sendTip(player, world, pos);
             }
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;
+    }
+
+    public static void sendTip(Player player, Level world, BlockPos pos) {
+        if (world.getBlockEntity(pos) instanceof CameraBlockEntity cbe) {
+            player.displayClientMessage(
+                    Component
+                            .translatable("block.trainmurdermystery.camera.click_tip", pos.toShortString(),
+                                    cbe.getBrokenTime() / 20)
+                            .withStyle(ChatFormatting.YELLOW),
+                    true);
+        }
     }
 
     @Nullable

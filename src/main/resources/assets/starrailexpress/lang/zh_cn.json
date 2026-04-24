@@ -749,6 +749,7 @@
   "announcement.star.win.hot_potato": "烫手的山芋",
   "game.win.star.hot_potato": "一人存活并夺得了胜利！",
   "block.trainmurdermystery.camera": "监控摄像头",
+  "block.trainmurdermystery.camera.click_tip":"摄像头位置: %s | 破坏恢复时间剩余: %ss",
   "screen.starrailexpress.security_monitor.exit": "按下 %s 或 ESC 退出监控",
   "block.trainmurdermystery.security_monitor": "安全监控器",
   "key.starrailexpress.stats": "统计面板",
