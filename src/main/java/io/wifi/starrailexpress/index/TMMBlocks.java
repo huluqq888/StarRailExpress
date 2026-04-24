@@ -590,7 +590,7 @@ public interface TMMBlocks {
   Block ELEVATOR_BUTTON = registrar.createWithItem("elevator_button",
       new ElevatorButtonBlock(BlockBehaviour.Properties.ofFullCopy(SMALL_BUTTON)), TMMItems.DECORATION_GROUP);
   Block STAINLESS_STEEL_SPRINKLER = registrar.createWithItem("stainless_steel_sprinkler",
-      new SprinklerBlock(BlockBehaviour.Properties.of().strength(0.5f).noOcclusion().sound(SoundType.LANTERN)),
+      new SprinklerBlock(BlockBehaviour.Properties.of().forceSolidOn().strength(0.5f).noOcclusion().sound(SoundType.LANTERN)),
       TMMItems.DECORATION_GROUP);
   Block GOLD_SPRINKLER = registrar.createWithItem("gold_sprinkler",
       new SprinklerBlock(BlockBehaviour.Properties.ofFullCopy(STAINLESS_STEEL_SPRINKLER)),
