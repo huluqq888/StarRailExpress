@@ -5,6 +5,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -24,19 +27,28 @@ public class CameraBlockEntity extends BlockEntity {
 
     public void setBroken(int time) {
         this.broken = time;
-        this.setChanged();
         syncToClient();
     }
 
     public void reset() {
         this.broken = 0;
+        syncToClient();
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registryLookup) {
+        return this.saveWithoutMetadata(registryLookup);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     public static void tick(Level world, BlockPos pos, BlockState state, CameraBlockEntity cameraBlockEntity) {
         if (cameraBlockEntity.broken > 0) {
             cameraBlockEntity.broken--;
             if (cameraBlockEntity.broken == 0) {
-                cameraBlockEntity.setChanged();
                 cameraBlockEntity.syncToClient();
             }
         }
@@ -84,6 +96,7 @@ public class CameraBlockEntity extends BlockEntity {
     // 简洁的同步方法
     private void syncToClient() {
         if (level != null && !level.isClientSide) {
+            this.setChanged();
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
         }
     }

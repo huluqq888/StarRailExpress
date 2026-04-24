@@ -32,23 +32,23 @@ public class SecurityCameraHUD {
             return;
         }
         BlockPos cameraPos = SecurityMonitorBlock.getCurrentCameraPos();
+        boolean isBroken = false;
 
         if (SREMonitorWorldComponent.KEY.get(minecraft.level).isBroken()) {
             renderRawColorBackground(guiGraphics, screenWidth, screenHeight, java.awt.Color.BLACK.getRGB());
         } else {
-            boolean flag = false;
             if (cameraPos == null)
-                flag = true;
-            if (!flag) {
+                isBroken = true;
+            if (!isBroken) {
                 if (minecraft.level.getBlockEntity(cameraPos) instanceof CameraBlockEntity cbe) {
                     // SRE.LOGGER.info("brokenTime: "+cbe.getBrokenTime());
                     if (cbe.isBroken()) {
-                        flag = true;
+                        isBroken = true;
                     }
                 }
             }
-            if (flag) {
-                renderRawColorBackground(guiGraphics, screenWidth, screenHeight, java.awt.Color.GRAY.getRGB());
+            if (isBroken) {
+                renderRawColorBackground(guiGraphics, screenWidth, screenHeight, java.awt.Color.DARK_GRAY.getRGB());
             }
         }
         // 更新闪烁效果
@@ -61,7 +61,7 @@ public class SecurityCameraHUD {
         renderExitHint(guiGraphics, screenWidth, screenHeight);
 
         // 渲染状态指示器
-        renderStatusIndicator(guiGraphics, screenWidth, screenHeight);
+        renderStatusIndicator(guiGraphics, screenWidth, screenHeight, isBroken);
     }
 
     private static void renderRawColorBackground(GuiGraphics guiGraphics, int screenWidth, int screenHeight,
@@ -83,7 +83,7 @@ public class SecurityCameraHUD {
         int x = (screenWidth - textWidth) / 2;
         int y = 18; // 在HUD下方显示信息
 
-        guiGraphics.drawString(font, Component.literal(cameraInfo).withStyle(ChatFormatting.GREEN), x, y, 0xFFFFFFFF,
+        guiGraphics.drawString(font, Component.literal(cameraInfo).withStyle(ChatFormatting.GOLD), x, y, 0xFFFFFFFF,
                 false);
 
         // 绘制一个简单的摄像头图标
@@ -161,18 +161,20 @@ public class SecurityCameraHUD {
                 0xFFFFFFFF, false);
     }
 
-    private static void renderStatusIndicator(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
+    private static void renderStatusIndicator(GuiGraphics guiGraphics, int screenWidth, int screenHeight,
+            boolean isBroken) {
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
 
-        String status = "STREAMING";
-        int textWidth = font.width(status);
-        int x = (screenWidth - textWidth) / 2;
+        String status = isBroken ? "BROKEN" : "STREAMING";
         int y = 35; // 在摄像头信息下方
-
+        Component indicatorTag = Component.literal(status)
+                .withStyle(isBroken ? ChatFormatting.RED : ChatFormatting.GREEN);
+        int textWidth = font.width(indicatorTag);
+        int x = (screenWidth - textWidth) / 2;
         // 绘制状态背景
         guiGraphics.fill(x - 5, y - 2, x + textWidth + 5, y + font.lineHeight + 2, 0x88000000); // 半透明黑色背景
-        guiGraphics.drawString(font, Component.literal(status).withStyle(ChatFormatting.RED), x, y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(font, indicatorTag, x, y, 0xFFFFFFFF, false);
     }
 
     private static String getCurrentTimeString() {
