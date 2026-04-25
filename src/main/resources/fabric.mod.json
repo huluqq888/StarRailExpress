@@ -235,8 +235,5 @@
   },
   "recommends": {
     "sodium": "*"
-  },
-  "conflicts": {
-    "customskinloader": "*"
   }
 }
