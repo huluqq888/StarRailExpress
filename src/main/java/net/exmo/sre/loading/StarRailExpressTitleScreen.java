@@ -8,7 +8,6 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import io.wifi.ConfigCompact.ui.SettingMenuScreen;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREClientConfig;
-import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.index.TMMSounds;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -60,6 +59,9 @@ public class StarRailExpressTitleScreen extends Screen {
     private static final String QQ_GROUP_URL = "https://qm.qq.com/q/8XXqKRjT7q";
     private static final String DISCORD_URL = "https://discord.gg/T7R5NkMHt3";
     private static final String FEEDBACK_URL = "https://github.com/catmoon-train/StarRailExpress/issues";
+    private static final String BUILD_VERSION = FabricLoader.getInstance().getModContainer(SRE.MOD_ID)
+            .map(container -> container.getMetadata().getVersion().getFriendlyString())
+            .orElse("unknown");
 
     /** 菜单项纵向间距 */
     private static final int MENU_SPACING = 26;
@@ -359,7 +361,7 @@ public class StarRailExpressTitleScreen extends Screen {
         renderModernOverlay(g);
 
         // 版本号（左下角）
-        String version = "StarRailExpress 3.4.0.1";
+        String version = "StarRailExpress - 咔群特供版 " + BUILD_VERSION;
         if (Minecraft.checkModStatus().shouldReportAsModified())
             version += I18n.get("menu.modded");
         g.drawString(this.font, version, 8, this.height - 14, 0xB8C0CC, false);

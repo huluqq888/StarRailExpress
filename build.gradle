@@ -3,7 +3,68 @@ plugins {
     id 'maven-publish'
 }
 
-version = project.mod_version
+def resolveGitShortHash = {
+    try {
+        File gitDirEntry = new File(rootDir, '.git')
+        if (!gitDirEntry.exists()) {
+            return 'nogit'
+        }
+
+        File gitDir = gitDirEntry
+        if (gitDirEntry.isFile()) {
+            def gitDirLine = gitDirEntry.readLines().find { it.startsWith('gitdir:') }
+            if (!gitDirLine) {
+                return 'nogit'
+            }
+            String gitDirPath = gitDirLine.substring('gitdir:'.length()).trim()
+            gitDir = new File(gitDirPath)
+            if (!gitDir.isAbsolute()) {
+                gitDir = new File(rootDir, gitDirPath)
+            }
+        }
+
+        File headFile = new File(gitDir, 'HEAD')
+        if (!headFile.exists()) {
+            return 'nogit'
+        }
+
+        String head = headFile.text.trim()
+        String fullHash = null
+
+        if (head.startsWith('ref: ')) {
+            String refPath = head.substring(5).trim()
+            File refFile = new File(gitDir, refPath)
+
+            if (refFile.exists()) {
+                fullHash = refFile.text.trim()
+            } else {
+                File packedRefs = new File(gitDir, 'packed-refs')
+                if (packedRefs.exists()) {
+                    fullHash = packedRefs.readLines().findResult { line ->
+                        String trimmed = line.trim()
+                        if (trimmed.isEmpty() || trimmed.startsWith('#') || trimmed.startsWith('^')) {
+                            return null
+                        }
+                        def parts = trimmed.split('\\s+')
+                        return (parts.length >= 2 && parts[1] == refPath) ? parts[0] : null
+                    }
+                }
+            }
+        } else {
+            fullHash = head
+        }
+
+        return fullHash ? fullHash.take(7) : 'nogit'
+    } catch (Exception ignored) {
+        return 'nogit'
+    }
+}
+
+def buildDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern('yy.MM.dd'))
+def gitShortHash = resolveGitShortHash()
+def buildVersion = "${buildDate}-${gitShortHash}"
+
+version = buildVersion
 group = project.maven_group
 
 base {
