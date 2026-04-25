@@ -386,6 +386,8 @@ public class RoleShopHandler {
       });
       SHOP.add(new ShopEntry(ModItems.CAMERA_SHEARS.getDefaultInstance(), 50, ShopEntry.Type.TOOL));
       SHOP.add(new ShopEntry(TMMItems.FIRECRACKER.getDefaultInstance(), 15, ShopEntry.Type.TOOL));
+      SHOP.add(new ShopEntry(TMMItems.CROWBAR.getDefaultInstance(), 35, ShopEntry.Type.TOOL));
+      SHOP.add(new ShopEntry(TMMItems.LOCKPICK.getDefaultInstance(), 80, ShopEntry.Type.TOOL));
 
       ShopContent.customEntries.put(ModRoles.DELAYER.getIdentifier(), SHOP);
     }
