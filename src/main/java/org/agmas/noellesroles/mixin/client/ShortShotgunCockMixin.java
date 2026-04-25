@@ -31,7 +31,7 @@ public class ShortShotgunCockMixin {
         if (isHoldingShotgun) {
             if (!hasPlayedCockSound && (lastHeldShotgun.isEmpty() || !lastHeldShotgun.is(ModItems.SHORT_SHOTGUN))) {
                 // 拿出手枪时播放上膛音效
-                player.playSound(NRSounds.SHOTGUNU_COCK, 1.0F, 1.0F);
+                player.playSound(NRSounds.SHOTGUNU_COCK, 2.0F, 5.0F);
                 hasPlayedCockSound = true;
             }
         } else {
