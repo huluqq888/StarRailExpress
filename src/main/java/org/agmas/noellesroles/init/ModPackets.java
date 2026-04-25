@@ -94,6 +94,9 @@ public class ModPackets {
         // 派对狂网络包
         PayloadTypeRegistry.playC2S().register(PartyKillerC2SPacket.TYPE, PartyKillerC2SPacket.CODEC);
 
+        // 注册短管霰弹枪装备音效网络包
+        PayloadTypeRegistry.playC2S().register(ShortShotgunEquipPayload.ID, ShortShotgunEquipPayload.CODEC);
+
         // 注册抽奖网络包
         PayloadTypeRegistry.playS2C().register(LootResultS2CPacket.ID, LootResultS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(LootMultiResultS2CPacket.ID, LootMultiResultS2CPacket.CODEC);

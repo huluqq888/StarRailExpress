@@ -47,6 +47,7 @@ import org.agmas.noellesroles.content.item.ChefFoodItem;
 import org.agmas.noellesroles.content.item.StalkerKnifeItem;
 import org.agmas.noellesroles.content.item.ThrowingKnife;
 import org.agmas.noellesroles.events.OnVendingMachinesBuyItems;
+import org.agmas.noellesroles.packet.ShortShotgunEquipPayload;
 import org.agmas.noellesroles.game.roles.Innocent.broadcaster.BroadcasterPlayerComponent;
 import org.agmas.noellesroles.game.roles.Innocent.coroner.BodyDeathReasonComponent;
 import org.agmas.noellesroles.game.roles.Innocent.monitor.MonitorPlayerComponent;
@@ -840,6 +841,14 @@ public class ModPacketsReciever {
           ServerPlayer player = context.player();
           org.agmas.noellesroles.game.roles.Innocent.fool.TarotAssemblyManager.submitVote(player, payload.votedFor());
         });
+
+    // 短管霰弹枪装备音效包处理
+    ServerPlayNetworking.registerGlobalReceiver(ShortShotgunEquipPayload.ID, (payload, context) -> {
+      ServerPlayer player = context.player();
+      if (player.level().isClientSide) return;
+      // 播放上膛音效，让附近所有玩家都能听到
+      player.level().playSound(null, player.blockPosition(), NRSounds.SHOTGUNU_COCK, SoundSource.PLAYERS, 2.0F, 5.0F);
+    });
   }
 
 }
