@@ -1962,7 +1962,7 @@
   "hud.noellesroles.fool.heretic": "异端: %s",
   "hud.noellesroles.fool.meeting_active": "§6塔罗会进行中: %ds (按G结束，按J投票)",
   "hud.noellesroles.fool.member_meeting_active": "§6塔罗会进行中: %ds",
-  "hud.noellesroles.fool.member_vote_hint": "§e按 J 打开投票页面，右键离开会议",
+  "hud.noellesroles.fool.member_vote_hint": "§e按 J 打开投票页面，按下ESC离开会议",
   "hud.noellesroles.fool.vote_active": "§6投票阶段剩余: %ds",
   "hud.noellesroles.fool.cooldown": "塔罗会冷却: %ds",
   "hud.noellesroles.fool.protection": "§a庇护效果: 免疫来自 %s 的下一次伤害",
