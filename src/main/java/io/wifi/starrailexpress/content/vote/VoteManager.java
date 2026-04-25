@@ -1,5 +1,6 @@
 package io.wifi.starrailexpress.content.vote;
 
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.content.vote.network.VoteSyncS2CPacket;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -23,9 +24,6 @@ import java.util.stream.Collectors;
  * <h3>快速使用</h3>
  * 
  * <pre>{@code
- * // 初始化（服务器启动时）
- * VoteManager.init(server);
- * VoteManager.registerEvents();
  *
  * // 创建投票
  * VoteSession session = VoteManager.builder(Component.literal("标题"))
@@ -37,15 +35,11 @@ import java.util.stream.Collectors;
  *         .allowReVote(true)
  *         .showResults(true)
  *         .syncInterval(20 * 5)
+ *         .callback(s -> {
+ *             System.out.println("投票结束！获胜选项：" + s.getResults());
+ *         })
  *         .start();
  *
- * // 注册结束回调
- * VoteManager.addEndCallback(s -> {
- *     System.out.println("投票结束！获胜选项：" + s.getResults());
- * });
- *
- * // 每个 tick 调用
- * VoteManager.onServerTick();
  * }</pre>
  *
  * @author wifi-left
@@ -139,7 +133,9 @@ public class VoteManager {
         if (currentSession != null && !currentSession.isEnded()) {
             return null;
         }
-        addEndCallback(callback);
+        endCallbacks.clear();
+        if (callback != null)
+            addEndCallback(callback);
         return startVote(title, options, durationTicks, allowReVote, showResults, syncIntervalTicks, customEnd,
                 targetPlayers);
     }
@@ -253,6 +249,7 @@ public class VoteManager {
             currentSession = null;
             optionsSent = false;
         }
+        endCallbacks.clear();
     }
 
     /**
@@ -326,10 +323,12 @@ public class VoteManager {
 
     private static void fireEndCallbacks(VoteSession session) {
         for (Consumer<VoteSession> c : endCallbacks) {
+            if (c == null)
+                continue;
             try {
                 c.accept(session);
             } catch (Exception e) {
-                e.printStackTrace();
+                SRE.LOGGER.error("Error while fire end callbacks.", e);
             }
         }
     }
@@ -371,6 +370,25 @@ public class VoteManager {
 
     /**
      * 投票构建器，通过 {@link VoteManager#builder(Component)} 创建。
+     * 
+     * <pre>{@code
+     *
+     * // 创建投票
+     * VoteSession session = VoteManager.builder(Component.literal("标题"))
+     *         .addOption(VoteOption.text("选项 A"))
+     *         .addOption(VoteOption.text("选项 B"))
+     *         .addOption(VoteOption.player(player))
+     *         .addOption(VoteOption.item(itemStack))
+     *         .duration(20 * 30) // 30 秒
+     *         .allowReVote(true)
+     *         .showResults(true)
+     *         .syncInterval(20 * 5)
+     *         .callback(s -> {
+     *             System.out.println("投票结束！获胜选项：" + s.getResults());
+     *         })
+     *         .start();
+     *
+     * }</pre>
      */
     public static class VoteBuilder {
         private final Component title;
@@ -378,11 +396,17 @@ public class VoteManager {
         private int durationTicks = 20 * 30; // 默认 30 秒
         private boolean allowReVote = false;
         private boolean showResults = false;
+        private Consumer<VoteSession> callbackConsumer = null;
         private int syncIntervalTicks = 20 * 10; // 默认 10 秒
         private Predicate<VoteSession> customEnd = null;
 
         VoteBuilder(Component title) {
             this.title = title;
+        }
+
+        public VoteBuilder callback(Consumer<VoteSession> consumer) {
+            this.callbackConsumer = consumer;
+            return this;
         }
 
         /** 添加一个投票选项 */
@@ -432,7 +456,7 @@ public class VoteManager {
         @Nullable
         public VoteSession start() {
             return VoteManager.startVote(title, options, durationTicks,
-                    allowReVote, showResults, syncIntervalTicks, customEnd, targetPlayers);
+                    allowReVote, showResults, syncIntervalTicks, customEnd, targetPlayers, callbackConsumer);
         }
     }
 
