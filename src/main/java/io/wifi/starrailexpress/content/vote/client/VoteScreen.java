@@ -274,8 +274,9 @@ public class VoteScreen extends Screen {
                 if (opt.description() != null) {
                     if (mouseX >= contentX && mouseX < contentX + BUTTON_WIDTH &&
                             mouseY >= drawY && mouseY < drawY + BUTTON_HEIGHT) {
-                        if (!opt.description().getString().isBlank())
-                            g.renderTooltip(font, opt.description(), mouseX, mouseY);
+                        if (!opt.description().getString().isBlank()){
+                            g.renderTooltip(font, font.split(opt.description(), 300), mouseX, mouseY);
+                        }
                         break;
                     }
                 }
