@@ -88,7 +88,8 @@ public class SREVoteCommand {
           }
           Component msg = Component.literal("=== Pending Vote Options ===");
           for (int i = 0; i < pendingOptions.size(); i++) {
-            msg = msg.copy().append("\n[" + i + "] ").append(pendingOptions.get(i).display());
+            msg = msg.copy().append("\n[" + i + "] ").append(pendingOptions.get(i).display())
+                .append(" (" + pendingOptions.get(i).resultId() + ")");
           }
           Component finalMsg = msg;
           ctx.getSource().sendSuccess(() -> finalMsg, false);

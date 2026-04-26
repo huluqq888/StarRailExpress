@@ -68,6 +68,10 @@ public class CommonClientHudRenderer {
   public static MessageDetail foldHelpDisplayTip = new MessageDetail(Component
       .translatable("noellesroles.hud.fold_help_display_tip", Component.keybind("key.noellesroles.show_help_display"))
       .withStyle(ChatFormatting.GRAY), false);
+  public static MessageDetail creditText = new MessageDetail(Component
+      .translatableWithFallback("noellesroles.hud.credit", "Modded Version Author: ")
+      .append(Component.literal("残月列车团队"))
+      .withStyle(ChatFormatting.AQUA), true);
   public static MessageDetail showHelpDisplayTip = new MessageDetail(Component
       .translatable("noellesroles.hud.show_help_display_tip", Component.keybind("key.noellesroles.show_help_display"))
       .withStyle(ChatFormatting.GRAY), true);
@@ -131,6 +135,7 @@ public class CommonClientHudRenderer {
           } else {
             if (SREClient.gameComponent != null) {
               if (SREClient.gameComponent.isRunning()) {
+                infoLines.add(creditText);
                 infoLines.add(showHelpDisplayTip);
               }
             }
