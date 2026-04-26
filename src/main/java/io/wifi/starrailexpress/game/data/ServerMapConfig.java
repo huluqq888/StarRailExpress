@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.game.data;
 
 import com.google.gson.Gson;
+import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.game.data.MapConfig.MapEntry;
 import net.minecraft.server.MinecraftServer;
@@ -20,6 +21,8 @@ import java.util.List;
 
 public class ServerMapConfig {
     private static final Gson gson = new Gson();
+    private static final String MAP_CONFIG_DIR = "tmmh_config";
+    private static final String MAP_CONFIG_FILE = "train_vote_maps.json";
     private static ServerMapConfig instance;
 
     private List<MapConfig.MapEntry> maps;
@@ -65,21 +68,23 @@ public class ServerMapConfig {
 
     private static ServerMapConfig loadOrCreateConfig(MinecraftServer sl) {
         ServerMapConfig config = new ServerMapConfig();
-        Path configPath = Paths.get(sl.getWorldPath(LevelResource.ROOT).toString(), "train_vote_maps.json");
+        Path configPath = Paths.get(sl.getWorldPath(LevelResource.ROOT).toString(), MAP_CONFIG_DIR, MAP_CONFIG_FILE);
         // 尝试从服务器配置目录加载配置
         if (Files.exists(configPath)) {
             try (BufferedReader reader = Files.newBufferedReader(configPath, StandardCharsets.UTF_8)) {
                 MapConfig loadedConfig = gson.fromJson(reader, MapConfig.class);
                 if (loadedConfig != null && loadedConfig.getMaps() != null) {
                     config.maps = loadedConfig.getMaps();
+                    SRE.LOGGER.info("Loaded vote map config from {}", configPath);
                     return config;
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                SRE.LOGGER.error("Failed to read vote map config from {}", configPath, e);
             }
         }
 
         // 如果配置文件不存在或加载失败，使用默认配置并保存
+        SRE.LOGGER.warn("Vote map config not found or invalid at {}. Using built-in defaults.", configPath);
         MapConfig defaultConfig = MapConfig.createDefaultConfig();
         config.maps = defaultConfig.getMaps();
         config.saveConfig(sl);
@@ -90,7 +95,8 @@ public class ServerMapConfig {
         try {
             // 确保配置目录存在
             Path configPath = Paths.get(sl.getWorldPath(LevelResource.ROOT).toString(),
-                    "train_vote_maps.json");
+                    MAP_CONFIG_DIR,
+                    MAP_CONFIG_FILE);
 
             Files.createDirectories(configPath.getParent());
 
@@ -101,7 +107,7 @@ public class ServerMapConfig {
                 gson.toJson(tempConfig, writer);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            SRE.LOGGER.error("Failed to save vote map config.", e);
         }
     }
 

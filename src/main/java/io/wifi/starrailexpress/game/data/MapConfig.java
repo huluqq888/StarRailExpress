@@ -3,17 +3,24 @@ package io.wifi.starrailexpress.game.data;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.storage.LevelResource;
+import io.wifi.starrailexpress.SRE;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MapConfig {
     public static final Gson gson = new Gson();
+    private static final String MAP_CONFIG_DIR = "tmmh_config";
+    private static final String MAP_CONFIG_FILE = "train_vote_maps.json";
     public static MapConfig instance;
     
     @SerializedName("maps")
@@ -207,20 +214,45 @@ public class MapConfig {
     }
     
     public static MapConfig loadConfig() {
-        // 首先尝试从资源目录加载默认配置
+        // 优先从当前存档目录加载投票地图配置
+        if (SRE.SERVER != null) {
+            Path saveConfigPath = Paths.get(
+                    SRE.SERVER.getWorldPath(LevelResource.ROOT).toString(),
+                MAP_CONFIG_DIR,
+                MAP_CONFIG_FILE);
+
+            if (Files.exists(saveConfigPath)) {
+                try (BufferedReader reader = Files.newBufferedReader(saveConfigPath, StandardCharsets.UTF_8)) {
+                    MapConfig loadedConfig = gson.fromJson(reader, MapConfig.class);
+                    if (loadedConfig != null && loadedConfig.getMaps() != null) {
+                        SRE.LOGGER.info("Loaded vote map config from save path: {}", saveConfigPath);
+                        return loadedConfig;
+                    }
+                } catch (IOException e) {
+                    SRE.LOGGER.error("Failed to read vote map config from save path: {}", saveConfigPath, e);
+                }
+            }
+        }
+
+        SRE.LOGGER.warn("Vote map config not found in save path. Falling back to bundled resource config.");
+
+        // 回退到资源目录中的默认配置
         InputStream inputStream = MapConfig.class.getClassLoader()
                 .getResourceAsStream("assets/starrailexpress/config/maps.json");
         
         if (inputStream == null) {
             // 如果资源目录中没有配置文件，创建默认配置
+            SRE.LOGGER.warn("Bundled vote map config not found. Using built-in defaults.");
             return createDefaultConfig();
         }
+
         
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            SRE.LOGGER.info("Loaded vote map config from bundled resource.");
             return gson.fromJson(reader, MapConfig.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            SRE.LOGGER.error("Failed to read bundled vote map config.", e);
             return createDefaultConfig();
         }
     }
