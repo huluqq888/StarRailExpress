@@ -447,8 +447,13 @@ public abstract class SRERole {
         return SREAbilityPlayerComponent.KEY.get(player);
     }
 
-    public void onAbilityUse(Player player) {
-
+    /**
+     * 玩家按下技能键时触发（服务端）
+     * @param player
+     * @return 是否成功触发，返回true取消后续逻辑。
+     */
+    public boolean onAbilityUse(ServerPlayer player) {
+        return false;
     }
 
     /**

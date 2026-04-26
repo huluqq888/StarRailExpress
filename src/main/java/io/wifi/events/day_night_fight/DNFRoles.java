@@ -67,10 +67,11 @@ public class DNFRoles {
                 }
 
                 @Override
-                public void onAbilityUse(Player player) {
+                public boolean onAbilityUse(ServerPlayer player) {
                     if (player instanceof ServerPlayer serverPlayer) {
                         DNF.exchangeBlood(serverPlayer, serverPlayer.isShiftKeyDown());
                     }
+                    return true;
                 }
 
                 @Override
@@ -127,10 +128,11 @@ public class DNFRoles {
         }
 
         @Override
-        public void onAbilityUse(Player player) {
+        public boolean onAbilityUse(ServerPlayer player) {
             if (player instanceof ServerPlayer serverPlayer) {
                 DNFItems.tryChefWork(serverPlayer, serverPlayer.isShiftKeyDown());
             }
+            return true;
         }
 
         @Override
