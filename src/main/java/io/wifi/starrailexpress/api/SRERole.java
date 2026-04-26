@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
 public abstract class SRERole {
-    private final Random random = new Random();
+    protected final Random random = new Random();
     private ResourceLocation identifier;
     private boolean canSeeCoin = true;
     private boolean canBeRandomed = true;
@@ -52,6 +52,9 @@ public abstract class SRERole {
     public BiConsumer<ServerPlayer, SREGameWorldComponent> serverTickEvent = null;
     public BiConsumer<Player, SREGameWorldComponent> clientTickEvent = null;
 
+    public Random getRandom(){
+        return random;
+    }
     public SRERole setClientGameTickEvent(BiConsumer<Player, SREGameWorldComponent> event) {
         this.clientTickEvent = event;
         return this;

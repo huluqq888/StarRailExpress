@@ -7,7 +7,6 @@ import org.agmas.noellesroles.utils.RoleUtils;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.CustomWinnerRole;
-import io.wifi.starrailexpress.api.NormalRole;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
@@ -117,10 +116,10 @@ public class DNFRoles {
             }.setComponentKey(DNFPlayerComponent.KEY).setCanSeeCoin(false).setCanUseInstinct(true).setMax(4)
                     .setCanSeeTeammateKiller(false));
 
-    public static final SRERole SOLDIER = TMMRoles.registerRole(new NormalRole(SOLDIER_ID, 0x496D89, true, false,
+    public static final SRERole SOLDIER = TMMRoles.registerRole(new DNFNormalRole(SOLDIER_ID, 0x496D89, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false).setVigilanteTeam(true).setMax(2))
             .setCanBeRandomedByOtherRoles(false);
-    public static final SRERole CHEF = TMMRoles.registerRole(new NormalRole(CHEF_ID, 0x8C6A2D, true, false,
+    public static final SRERole CHEF = TMMRoles.registerRole(new DNFNormalRole(CHEF_ID, 0x8C6A2D, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
         public void onInit(net.minecraft.server.MinecraftServer server, ServerPlayer serverPlayer) {
@@ -145,10 +144,10 @@ public class DNFRoles {
             return DNFItems.cookBodyAsChef(serverPlayer, body);
         }
     }.setMax(1)).setCanBeRandomedByOtherRoles(false);
-    public static final SRERole PSYCHOLOGIST = TMMRoles.registerRole(new NormalRole(PSYCHOLOGIST_ID, 0x8E6BC6, true,
+    public static final SRERole PSYCHOLOGIST = TMMRoles.registerRole(new DNFNormalRole(PSYCHOLOGIST_ID, 0x8E6BC6, true,
             false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false).setMax(2))
             .setCanBeRandomedByOtherRoles(false);
-    public static final SRERole LOCKSMITH = TMMRoles.registerRole(new NormalRole(LOCKSMITH_ID, 0xD1A448, true, false,
+    public static final SRERole LOCKSMITH = TMMRoles.registerRole(new DNFNormalRole(LOCKSMITH_ID, 0xD1A448, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
         public InteractionResult onUseBlock(Player player, net.minecraft.world.level.Level world,
@@ -156,7 +155,7 @@ public class DNFRoles {
             return DNFItems.tryRepairLockpickedDoor(player, world, hitResult.getBlockPos());
         }
     }.setMax(4)).setCanBeRandomedByOtherRoles(false);
-    public static final SRERole CIVILIAN = TMMRoles.registerRole(new NormalRole(CIVILIAN_ID, 0x719E5B, true, false,
+    public static final SRERole CIVILIAN = TMMRoles.registerRole(new DNFNormalRole(CIVILIAN_ID, 0x719E5B, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanBeRandomedByOtherRoles(false);
 
 }
