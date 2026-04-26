@@ -57,7 +57,7 @@ public interface VoteOption {
         }
 
         public PlayerOption(Player player) {
-            this(player.getDisplayName(), player.getUUID());
+            this(player.getDisplayName(), player.getUUID(), player.getGameProfile().getName());
         }
 
         public UUID uuid() {
