@@ -309,9 +309,10 @@ public class SREVoteCommand {
         tag.put("tops", tag_top_results);
       }
       source.getServer().getCommandStorage().set(DATA_STORAGE_ID, tag);
-      source.sendSystemMessage(
-          Component.translatable("Vote data have been saved to DataStorage[%s]", DATA_STORAGE_ID.toString())
-              .withStyle(ChatFormatting.GREEN));
+      source.sendSuccess(
+          () -> Component.translatable("Vote data have been saved to DataStorage[%s]", DATA_STORAGE_ID.toString())
+              .withStyle(ChatFormatting.GREEN),
+          false);
       if (func != null)
         GameUtils.executeFunction(source, func.getFirst().toString());
     });
