@@ -123,6 +123,7 @@ public class CommonClientHudRenderer {
           if (NoellesrolesClient.isShowHelpDisplay) {
             if (SREClient.gameComponent != null) {
               if (SREClient.gameComponent.isRunning()) {
+                infoLines.add(creditText);
                 infoLines.add(foldHelpDisplayTip);
               }
             }
