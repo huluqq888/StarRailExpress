@@ -3,6 +3,7 @@ package io.wifi.starrailexpress.cca;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeWorldComponent;
 import io.wifi.starrailexpress.content.mail.MailboxComponent;
+import io.wifi.events.day_night_fight.DNFPlayerComponent;
 import net.exmo.sre.nametag.NameTagInventoryComponent;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
@@ -66,5 +67,7 @@ public class SREComponents
                 .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(MailboxComponent::new);
         registry.beginRegistration(Player.class, CustomRoleGameModeTeamsPlayerComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY).end(CustomRoleGameModeTeamsPlayerComponent::new);
+        registry.beginRegistration(Player.class, DNFPlayerComponent.KEY)
+                .respawnStrategy(RespawnCopyStrategy.NEVER_COPY).end(DNFPlayerComponent::new);
     }
 }

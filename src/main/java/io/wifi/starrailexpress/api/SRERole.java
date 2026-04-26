@@ -27,6 +27,7 @@ import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -55,6 +56,15 @@ public abstract class SRERole {
         this.clientTickEvent = event;
         return this;
     };
+    public int getMoodColor(){
+        if (moodType == MoodType.FAKE){
+            return Color.red.getRGB();
+        }
+        if (moodType == MoodType.REAL){
+            return Color.green.getRGB();
+        }
+        else return Color.PINK.getRGB();
+    }
 
     public boolean canBeRandomed() {
         return this.canBeRandomed;

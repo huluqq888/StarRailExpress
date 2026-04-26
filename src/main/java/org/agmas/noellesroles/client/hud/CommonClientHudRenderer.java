@@ -64,6 +64,9 @@ public class CommonClientHudRenderer {
   static ArrayList<BiConsumer<FakeGuiGraphics, DeltaTracker>> roleRenderConsumers = null;
   static SRERole lastRenderRole = null;
   public static int effectStartY = 0;
+  public static record MessageDetail(MutableComponent mutableComponent, boolean briefly){}
+  public static MessageDetail foldHelpDisplayTip = new MessageDetail(Component.translatable("noellesroles.hud.fold_help_display_tip",Component.keybind("key.noellesroles.show_help_display")).withStyle(ChatFormatting.GRAY), false);
+  public static MessageDetail showHelpDisplayTip = new MessageDetail(Component.translatable("noellesroles.hud.show_help_display_tip",Component.keybind("key.noellesroles.show_help_display")).withStyle(ChatFormatting.GRAY), true);
   public static void registerFather() {
     // Use FakeHudRenderCallback instead of Fabric's HudRenderCallback
     // This ensures rendering happens INSIDE the frame lifecycle
@@ -104,14 +107,33 @@ public class CommonClientHudRenderer {
           MutableComponentResult texts = OnMessageBelowMoneyRenderer.EVENT.invoker().onRenderer(
               client, guiGraphics,
               deltaTracker);
-          java.util.List<MutableComponent> infoLines = texts.mutipleContent;
+          java.util.List<MessageDetail> infoLines = texts.mutipleContent;
           int y = 20;
           int width = guiGraphics.guiWidth();
           int lineHeight = client.font.lineHeight + 4;
-          for (var line : infoLines) {
-            guiGraphics.drawString(client.font, line, width - 10 - client.font.width(line), y,
-                java.awt.Color.WHITE.getRGB());
-            y += lineHeight;
+          if (NoellesrolesClient.isShowHelpDisplay) {
+            if (SREClient.gameComponent != null ) {
+              if (SREClient.gameComponent.isRunning()) {
+            infoLines.add(foldHelpDisplayTip);
+          }
+         }
+            for (var line : infoLines) {
+              guiGraphics.drawString(client.font, line.mutableComponent, width - 10 - client.font.width(line.mutableComponent), y,
+                      java.awt.Color.WHITE.getRGB());
+              y += lineHeight;
+            }
+          }else {
+            if (SREClient.gameComponent != null ) {
+              if (SREClient.gameComponent.isRunning()) {
+                infoLines.add(showHelpDisplayTip);
+              }
+            }
+            for (var line : infoLines) {
+              if (!line.briefly)continue;
+              guiGraphics.drawString(client.font, line.mutableComponent, width - 10 - client.font.width(line.mutableComponent), y,
+                      java.awt.Color.WHITE.getRGB());
+              y += lineHeight;
+            }
           }
           effectStartY = y;
         }

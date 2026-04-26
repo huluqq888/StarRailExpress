@@ -106,6 +106,7 @@ public class NoellesrolesClient implements ClientModInitializer {
     public static int insanityTime = 0;
     public static KeyMapping roleGuessNoteClientBind;
     public static KeyMapping abilityBind;
+    public static KeyMapping showHelpDisplay;
     public static KeyMapping taskInstinctBind;
     public static KeyMapping roleIntroClientBind;
     public static KeyMapping foolPrayerBind;
@@ -114,6 +115,7 @@ public class NoellesrolesClient implements ClientModInitializer {
     public static Player targetFakeBody;
     public static Player hudTarget;
     public static boolean isTaskInstinctEnabled = false;
+    public static boolean isShowHelpDisplay = true;
     private static boolean foolMeetingPauseHandled = false;
     public static Map<UUID, UUID> SHUFFLED_PLAYER_ENTRIES_CACHE = Maps.newHashMap();
     public static Map<UUID, UUID> JEB_SHUFFLED_PLAYER_ENTRIES_CACHE = Maps.newHashMap();
@@ -242,6 +244,8 @@ public class NoellesrolesClient implements ClientModInitializer {
                 InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.starrailexpress.keybinds"));
         taskInstinctBind = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.noellesroles.taskinstinct",
                 InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, "category.starrailexpress.keybinds"));
+        showHelpDisplay = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.noellesroles.show_help_display",
+                InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H, "category.starrailexpress.keybinds"));
         foolPrayerBind = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.noellesroles.fool_prayer",
                 InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "category.starrailexpress.keybinds"));
         ClientPlayNetworking.registerGlobalReceiver(CreateClientSmokeAreaPacket.ID, (payload, context) -> {
@@ -802,6 +806,16 @@ public class NoellesrolesClient implements ClientModInitializer {
                             .withStyle(ChatFormatting.GREEN), true);
                 } else {
                     client.player.displayClientMessage(Component.translatable("message.tip.taskpoint_instinct_disable")
+                            .withStyle(ChatFormatting.RED), true);
+                }
+            }
+            if (showHelpDisplay.consumeClick()) {
+                isShowHelpDisplay = !isShowHelpDisplay;
+                if (isShowHelpDisplay) {
+                    client.player.displayClientMessage(Component.translatable("message.tip.show_help_display_enable")
+                            .withStyle(ChatFormatting.GREEN), true);
+                } else {
+                    client.player.displayClientMessage(Component.translatable("message.tip.show_help_display_disable")
                             .withStyle(ChatFormatting.RED), true);
                 }
             }

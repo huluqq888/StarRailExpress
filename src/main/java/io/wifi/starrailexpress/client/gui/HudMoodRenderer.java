@@ -115,15 +115,15 @@ public class HudMoodRenderer {
         SRERole role = gameWorldComponent.getRole(player);
         if (role != null) {
             if (role.getMoodType() == SRERole.MoodType.FAKE) {
-                renderKiller(textRenderer, context);
+                renderKiller(textRenderer, context, role.getMoodColor());
             } else if (role.getMoodType() == SRERole.MoodType.REAL) {
-                renderCivilian(textRenderer, context, oldMood);
+                renderCivilian(textRenderer, context, oldMood,role.getMoodColor());
             }
         }
         arrowProgress = Mth.lerp(delta / 8, arrowProgress, 0f);
     }
 
-    private static void renderCivilian(@NotNull Font textRenderer, @NotNull FakeGuiGraphics context, float prevMood) {
+    private static void renderCivilian(@NotNull Font textRenderer, @NotNull FakeGuiGraphics context, float prevMood, int color) {
         context.pose().pushPose();
         context.pose().translate(0, 3 * moodOffset, 0);
         ResourceLocation mood = MOOD_HAPPY;
@@ -159,11 +159,13 @@ public class HudMoodRenderer {
         context.pose().translate(0, 10 * moodOffset, 0);
         context.pose().translate(26, 8 + textRenderer.lineHeight, 0);
         context.pose().scale((moodTextWidth - 8) * moodRender, 1, 1);
-        context.fill(0, 0, 1, 1, Mth.hsvToRgb(moodRender / 3.0F, 1.0F, 1.0F) | ((int) (moodAlpha * 255) << 24));
+        // 使用传入的 color 参数，保留原有的 alpha 计算逻辑
+        int finalColor = (color & 0x00FFFFFF) | ((int) (moodAlpha * 255) << 24);
+        context.fill(0, 0, 1, 1, finalColor);
         context.pose().popPose();
     }
 
-    private static void renderKiller(@NotNull Font textRenderer, @NotNull FakeGuiGraphics context) {
+    private static void renderKiller(@NotNull Font textRenderer, @NotNull FakeGuiGraphics context, int color) {
         if (moodRender < 0)
             moodRender = 0;
         context.pose().pushPose();
@@ -174,7 +176,10 @@ public class HudMoodRenderer {
         context.pose().translate(0, 10 * moodOffset, 0);
         context.pose().translate(26, 8 + textRenderer.lineHeight, 0);
         context.pose().scale((moodTextWidth - 8) * moodRender, 1, 1);
-        context.fill(0, 0, 1, 1, KILLER_BAR_COLOR | ((int) (moodAlpha * 255) << 24));
+        // 使用传入的 color 参数，如果 color 为 0 或默认值则回退到 KILLER_BAR_COLOR，保留原有的 alpha 计算逻辑
+        int baseColor = color != 0 ? color : KILLER_BAR_COLOR;
+        int finalColor = (baseColor & 0x00FFFFFF) | ((int) (moodAlpha * 255) << 24);
+        context.fill(0, 0, 1, 1, finalColor);
         context.pose().popPose();
     }
 

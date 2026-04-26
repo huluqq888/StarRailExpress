@@ -40,7 +40,7 @@ public class GlitchRobotMoodMixin {
             "hud/mood_jester");
 
     @Inject(method = "renderKiller", at = @At("HEAD"), cancellable = true)
-    private static void glitchRobotMood(Font textRenderer, FakeGuiGraphics context, CallbackInfo ci) {
+    private static void glitchRobotMood(Font textRenderer, FakeGuiGraphics context, int color, CallbackInfo ci) {
         SREGameWorldComponent gameWorldComponent = (SREGameWorldComponent) SREGameWorldComponent.KEY
                 .get(Minecraft.getInstance().player.level());
         if (gameWorldComponent.isRole(Minecraft.getInstance().player, ModRoles.GLITCH_ROBOT)) {

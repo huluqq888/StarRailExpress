@@ -74,6 +74,7 @@ import org.agmas.noellesroles.game.roles.neutral.thief.ThiefPlayerComponent;
 import org.agmas.noellesroles.game.roles.neutral.vulture.VulturePlayerComponent;
 import org.agmas.noellesroles.game.roles.special.better_vigilante.BetterVigilantePlayerComponent;
 import org.agmas.noellesroles.game.roles.vigilante.patroller.PatrollerPlayerComponent;
+import org.agmas.noellesroles.utils.RandomColorUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -520,7 +521,12 @@ public class ModRoles {
             SRERole.MoodType.FAKE, // 假心情
             -1, // 无限冲刺时间
             false // 显示计分板
-    )).setComponentKey(ModComponents.CREEPER).setEnableChance(10).setCanBeRandomedByOtherRoles(false);
+    ){
+        @Override
+        public int getMoodColor() {
+            return PUPPETEER_COLOR.getOrRandomColor();
+        }
+    }).setComponentKey(ModComponents.CREEPER).setEnableChance(10).setCanBeRandomedByOtherRoles(false);
 
     /**
      * 作家角色
@@ -1274,6 +1280,7 @@ public class ModRoles {
      * - 操控限时1分钟，技能冷却3分钟
      * - 本体状态无法购买商店
      */
+    public static RandomColorUtil PUPPETEER_COLOR = new RandomColorUtil(50,true);
     public static SRERole PUPPETEER = TMMRoles.registerRole(new NormalRole(
             PUPPETEER_ID, // 角色 ID
             new Color(138, 43, 226).getRGB(), // 深紫罗兰色 - 代表操控与神秘
@@ -1282,7 +1289,12 @@ public class ModRoles {
             SRERole.MoodType.FAKE, // 假心情
             TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
             true // 隐藏计分板
-    )).setComponentKey(PuppeteerPlayerComponent.KEY).setAutoReset(false).setNeutralForKiller(true)
+    ){
+                @Override
+                public int getMoodColor() {
+                    return PUPPETEER_COLOR.getOrRandomColor();
+                }
+            }).setComponentKey(PuppeteerPlayerComponent.KEY).setAutoReset(false).setNeutralForKiller(true)
             .setCanUseInstinct(true);
 
     /**
