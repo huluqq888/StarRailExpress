@@ -7,6 +7,8 @@ import io.wifi.starrailexpress.client.gui.ScopeOverlayRenderer;
 import io.wifi.starrailexpress.client.gui.screen.MapSelectorScreen;
 import io.wifi.starrailexpress.client.gui.screen.ingame.FourthRoomBattleScreen;
 import io.wifi.starrailexpress.client.gui.screen.ingame.FourthRoomPeekDeckScreen;
+import io.wifi.starrailexpress.content.vote.client.ClientVoteCache;
+import io.wifi.starrailexpress.content.vote.client.VoteScreen;
 import io.wifi.starrailexpress.index.TMMItems;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -17,24 +19,20 @@ import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 public class InputHandler {
-    private static KeyMapping openVotingScreenKeybind;
-    private static KeyMapping openFourthRoomScreenKeybind;
-    private static KeyMapping openFourthRoomPeekScreenKeybind;
+    public static KeyMapping openVotingScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+            "key.starrailexpress.open_voting_screen",
+            GLFW.GLFW_KEY_M,
+            "category.starrailexpress.general"));
+    public static KeyMapping openFourthRoomScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+            "key.starrailexpress.open_fourth_room_screen",
+            GLFW.GLFW_KEY_UNKNOWN,
+            "category.starrailexpress.general"));
+    public static KeyMapping openFourthRoomPeekScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+            "key.starrailexpress.open_fourth_room_peek_screen",
+            GLFW.GLFW_KEY_UNKNOWN,
+            "category.starrailexpress.general"));
 
     public static void initialize() {
-        openVotingScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.starrailexpress.open_voting_screen",
-                GLFW.GLFW_KEY_M,
-                "category.starrailexpress.general"));
-
-        openFourthRoomScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.starrailexpress.open_fourth_room_screen",
-                GLFW.GLFW_KEY_H,
-                "category.starrailexpress.general"));
-        openFourthRoomPeekScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.starrailexpress.open_fourth_room_peek_screen",
-                GLFW.GLFW_KEY_Z,
-                "category.starrailexpress.general"));
 
         ClientTickEvents.END_CLIENT_TICK.register(InputHandler::onClientTick);
     }
@@ -68,6 +66,8 @@ public class InputHandler {
             if (mapVotingComponent.isVotingActive()) {
                 // 打开投票界面
                 client.setScreen(new MapSelectorScreen());
+            } else if (ClientVoteCache.canReOpen() && !(client.screen instanceof VoteScreen)) {
+                client.setScreen(new VoteScreen());
             }
         }
 

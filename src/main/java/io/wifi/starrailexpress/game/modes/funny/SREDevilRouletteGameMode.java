@@ -67,10 +67,8 @@ public class SREDevilRouletteGameMode extends GameMode {
         sendWelcomePackets(players, gameWorldComponent, SpecialGameModeRoles.DIRT);
 
         addAllPlayers(players);
-        assignMatch(serverWorld);
-        convenePlayers(serverWorld);
 
-        curAssignTick = 0;
+        curAssignTick = Math.max(100, ASSIGN_INTERVAL - START_DELAY_TIME);
     }
 
     protected void initRoles(List<ServerPlayer> players, SREGameWorldComponent gameWorldComponent) {

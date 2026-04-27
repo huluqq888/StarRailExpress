@@ -1,18 +1,23 @@
 package org.agmas.noellesroles.client.event;
 
 import net.minecraft.network.chat.MutableComponent;
+import org.agmas.noellesroles.utils.MessageDetail;
 
 import java.util.ArrayList;
 
 public class MutableComponentResult {
-    public MutableComponent singleContent = null;
-    public ArrayList<MutableComponent> mutipleContent = new ArrayList<>();
+    public MessageDetail singleContent = null;
+    public ArrayList<MessageDetail> mutipleContent = new ArrayList<>();
 
     public MutableComponentResult() {
 
     }
 
-    public MutableComponentResult(MutableComponent content) {
+    public MutableComponentResult(MessageDetail content) {
         this.singleContent = content;
+    }
+
+    public MutableComponentResult(MutableComponent content) {
+        this.singleContent = new MessageDetail(content, false);
     }
 }

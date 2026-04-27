@@ -16,6 +16,7 @@ import io.wifi.starrailexpress.client.gui.RoleNameRenderer;
 import io.wifi.starrailexpress.client.gui.screen.ingame.LimitedInventoryScreen;
 import io.wifi.starrailexpress.client.util.TMMItemTooltips;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
+import io.wifi.starrailexpress.content.vote.client.ClientVoteCache;
 import io.wifi.starrailexpress.event.AllowNameRender;
 import io.wifi.starrailexpress.event.OnKillerCohortDisplay;
 import io.wifi.starrailexpress.event.OnRoundStartWelcomeTimmer;
@@ -29,6 +30,7 @@ import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -103,16 +105,30 @@ import static org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKille
 public class NoellesrolesClient implements ClientModInitializer {
     public static boolean hasInitStatusBar = false;
     public static int insanityTime = 0;
-    public static KeyMapping roleGuessNoteClientBind;
-    public static KeyMapping abilityBind;
-    public static KeyMapping taskInstinctBind;
-    public static KeyMapping roleIntroClientBind;
-    public static KeyMapping foolPrayerBind;
+    public static KeyMapping roleIntroClientBind = KeyBindingHelper
+            .registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".role_intro",
+                    InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.starrailexpress.keybinds"));
+    public static KeyMapping roleGuessNoteClientBind = KeyBindingHelper
+            .registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".guess_role_note",
+                    InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.starrailexpress.keybinds"));
+    public static KeyMapping abilityBind = KeyBindingHelper
+            .registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".ability",
+                    InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.starrailexpress.keybinds"));
+    public static KeyMapping taskInstinctBind = KeyBindingHelper
+            .registerKeyBinding(new KeyMapping("key.noellesroles.taskinstinct",
+                    InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, "category.starrailexpress.keybinds"));
+    public static KeyMapping showHelpDisplay = KeyBindingHelper
+            .registerKeyBinding(new KeyMapping("key.noellesroles.show_help_display",
+                    InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H, "category.starrailexpress.keybinds"));
+    public static KeyMapping foolPrayerBind = KeyBindingHelper
+            .registerKeyBinding(new KeyMapping("key.noellesroles.fool_prayer",
+                    InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "category.starrailexpress.keybinds"));
     public static Player target;
     public static PlayerBodyEntity targetBody;
     public static Player targetFakeBody;
     public static Player hudTarget;
     public static boolean isTaskInstinctEnabled = false;
+    public static boolean isShowHelpDisplay = true;
     private static boolean foolMeetingPauseHandled = false;
     public static Map<UUID, UUID> SHUFFLED_PLAYER_ENTRIES_CACHE = Maps.newHashMap();
     public static Map<UUID, UUID> JEB_SHUFFLED_PLAYER_ENTRIES_CACHE = Maps.newHashMap();
@@ -231,18 +247,6 @@ public class NoellesrolesClient implements ClientModInitializer {
             TaskBlockOverlayRenderer.render(renderContext);
         });
         InstinctRenderer.registerInstinctEvents();
-        roleIntroClientBind = KeyBindingHelper
-                .registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".role_intro",
-                        InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.starrailexpress.keybinds"));
-        roleGuessNoteClientBind = KeyBindingHelper
-                .registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".guess_role_note",
-                        InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.starrailexpress.keybinds"));
-        abilityBind = KeyBindingHelper.registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".ability",
-                InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.starrailexpress.keybinds"));
-        taskInstinctBind = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.noellesroles.taskinstinct",
-                InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, "category.starrailexpress.keybinds"));
-        foolPrayerBind = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.noellesroles.fool_prayer",
-                InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "category.starrailexpress.keybinds"));
         ClientPlayNetworking.registerGlobalReceiver(CreateClientSmokeAreaPacket.ID, (payload, context) -> {
             ClientSmokeAreaManager.createSmokeArea(context.client().level, payload.position(), payload.radius(),
                     payload.durationTicks());
@@ -756,7 +760,21 @@ public class NoellesrolesClient implements ClientModInitializer {
             }
             return null;
         });
+        ClientPlayConnectionEvents.JOIN.register((a, b, c) -> {
+            // 加入游戏清空信息
+            currentBroadcastMessage.clear();
+            ClientVoteCache.clear();
+        });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((a, b) -> {
+            // 加入游戏清空信息
+            currentBroadcastMessage.clear();
+            ClientVoteCache.clear();
+            SREClient.PLAYER_ENTRIES_CACHE.clear();
+        });
+        //
         ClientTickEvents.END_WORLD_TICK.register((client) -> {
+            ClientVoteCache.clientTick();
             if (!hasInitStatusBar) {
                 hasInitStatusBar = true;
                 StatusInit.statusBars.put("Time_Stop", new StatusInit.StatusBar("Time_Stop",
@@ -797,6 +815,16 @@ public class NoellesrolesClient implements ClientModInitializer {
                             .withStyle(ChatFormatting.GREEN), true);
                 } else {
                     client.player.displayClientMessage(Component.translatable("message.tip.taskpoint_instinct_disable")
+                            .withStyle(ChatFormatting.RED), true);
+                }
+            }
+            if (showHelpDisplay.consumeClick()) {
+                isShowHelpDisplay = !isShowHelpDisplay;
+                if (isShowHelpDisplay) {
+                    client.player.displayClientMessage(Component.translatable("message.tip.show_help_display_enable")
+                            .withStyle(ChatFormatting.GREEN), true);
+                } else {
+                    client.player.displayClientMessage(Component.translatable("message.tip.show_help_display_disable")
                             .withStyle(ChatFormatting.RED), true);
                 }
             }

@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.cca;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
+import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.content.block.ToiletBlock;
 import io.wifi.starrailexpress.content.block.entity.SeatEntity;
@@ -101,6 +102,8 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
         }
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
         if (!gameWorldComponent.isRunning() || !GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(this.player))
+            return;
+        if (gameWorldComponent.getGameMode().identifier.equals(SREGameModes.DAY_NIGHT_FIGHT_ID))
             return;
         boolean shouldSync = false;
         this.nextTaskTimer--;
@@ -362,7 +365,13 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
         TOILET(nbt -> new ToiletTask(nbt.getInt("timer"))), // 添加厕所任务
         CHAIR(nbt -> new ChairTask(nbt.getInt("timer"))), // 添加座椅休息任务
         NOTE_BLOCK(nbt -> new NoteBlockTask(nbt.getInt("timer"))), // 添加音符盒任务
-        BREATHE(nbt -> new BreatheTask(nbt.getInt("timer"))); // 呼吸新鲜空气任务
+        BREATHE(nbt -> new BreatheTask(nbt.getInt("timer"))), // 呼吸新鲜空气任务
+        DNF_MEAL(nbt -> new PassiveTask("dnf_meal", nbt.getInt("type"))),
+        DNF_TOILET(nbt -> new PassiveTask("dnf_toilet", nbt.getInt("type"))),
+        DNF_LECTURE(nbt -> new PassiveTask("dnf_lecture", nbt.getInt("type"))),
+        DNF_LIBRARY_WEB(nbt -> new PassiveTask("dnf_library_web", nbt.getInt("type"))),
+        DNF_PRISON_DUST(nbt -> new PassiveTask("dnf_prison_dust", nbt.getInt("type"))),
+        DNF_CHEF_WORK(nbt -> new PassiveTask("dnf_chef_work", nbt.getInt("type")));
 
         private static List<Task> availableTasksList = List.of(SLEEP, RAED_BOOK, EAT, DRINK, EXERCISE, MEDITATE, BATHE,
                 CHAIR,
@@ -411,6 +420,38 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
             CompoundTag nbt = new CompoundTag();
             nbt.putInt("type", Task.SLEEP.ordinal());
             nbt.putInt("timer", this.timer);
+            return nbt;
+        }
+    }
+
+    public static class PassiveTask implements TrainTask {
+        private final String name;
+        private final int typeOrdinal;
+
+        public PassiveTask(String name, int typeOrdinal) {
+            this.name = name;
+            this.typeOrdinal = typeOrdinal;
+        }
+
+        @Override
+        public boolean isFulfilled(Player player) {
+            return false;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public Task getType() {
+            return Task.values()[typeOrdinal];
+        }
+
+        @Override
+        public CompoundTag toNbt() {
+            CompoundTag nbt = new CompoundTag();
+            nbt.putInt("type", typeOrdinal);
             return nbt;
         }
     }

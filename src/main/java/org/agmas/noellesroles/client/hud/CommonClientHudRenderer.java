@@ -17,7 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemCooldowns.CooldownInstance;
@@ -56,6 +55,7 @@ import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.role.RedHouseRoles;
+import org.agmas.noellesroles.utils.MessageDetail;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -66,6 +66,18 @@ public class CommonClientHudRenderer {
   static ArrayList<BiConsumer<FakeGuiGraphics, DeltaTracker>> roleRenderConsumers = null;
   static SRERole lastRenderRole = null;
   public static int effectStartY = 0;
+
+  public static MessageDetail foldHelpDisplayTip = new MessageDetail(Component
+      .translatable("noellesroles.hud.fold_help_display_tip", Component.keybind("key.noellesroles.show_help_display"))
+      .withStyle(ChatFormatting.GRAY), false);
+  public static MessageDetail creditText = new MessageDetail(Component
+      .translatableWithFallback("noellesroles.hud.credit", "Modded Version Author: ")
+      .append(Component.literal("残月列车团队"))
+      .withStyle(ChatFormatting.AQUA), true);
+  public static MessageDetail showHelpDisplayTip = new MessageDetail(Component
+      .translatable("noellesroles.hud.show_help_display_tip", Component.keybind("key.noellesroles.show_help_display"))
+      .withStyle(ChatFormatting.GRAY), true);
+
   public static void registerFather() {
     // Use FakeHudRenderCallback instead of Fabric's HudRenderCallback
     // This ensures rendering happens INSIDE the frame lifecycle
@@ -106,14 +118,38 @@ public class CommonClientHudRenderer {
           MutableComponentResult texts = OnMessageBelowMoneyRenderer.EVENT.invoker().onRenderer(
               client, guiGraphics,
               deltaTracker);
-          java.util.List<MutableComponent> infoLines = texts.mutipleContent;
+          java.util.List<MessageDetail> infoLines = texts.mutipleContent;
           int y = 20;
           int width = guiGraphics.guiWidth();
           int lineHeight = client.font.lineHeight + 4;
-          for (var line : infoLines) {
-            guiGraphics.drawString(client.font, line, width - 10 - client.font.width(line), y,
-                java.awt.Color.WHITE.getRGB());
-            y += lineHeight;
+          if (NoellesrolesClient.isShowHelpDisplay) {
+            if (SREClient.gameComponent != null) {
+              if (SREClient.gameComponent.isRunning()) {
+                infoLines.add(creditText);
+                infoLines.add(foldHelpDisplayTip);
+              }
+            }
+            for (var line : infoLines) {
+              guiGraphics.drawString(client.font, line.mutableComponent(),
+                  width - 10 - client.font.width(line.mutableComponent()), y,
+                  java.awt.Color.WHITE.getRGB());
+              y += lineHeight;
+            }
+          } else {
+            if (SREClient.gameComponent != null) {
+              if (SREClient.gameComponent.isRunning()) {
+                infoLines.add(creditText);
+                infoLines.add(showHelpDisplayTip);
+              }
+            }
+            for (var line : infoLines) {
+              if (!line.briefly())
+                continue;
+              guiGraphics.drawString(client.font, line.mutableComponent(),
+                  width - 10 - client.font.width(line.mutableComponent()), y,
+                  java.awt.Color.WHITE.getRGB());
+              y += lineHeight;
+            }
           }
           effectStartY = y;
         }
@@ -136,18 +172,19 @@ public class CommonClientHudRenderer {
         BroadcasterHud.renderBroadcast(guiGraphics, deltaTracker);
       }
 
+      var consumer1 = CommonHudRenderCallback.EVENT.getConsumer();
+      if (consumer1 != null && !consumer1.isEmpty()) {
+        consumer1.forEach((c) -> {
+          c.accept(guiGraphics, deltaTracker);
+        });
+      }
+      
       SRERole role = SREClient.getCachedPlayerRole();
       if (role == null)
         return;
       if (role != lastRenderRole) {
         roleRenderConsumers = RoleHudRenderCallback.EVENT.getConsumer(role.identifier());
         lastRenderRole = role;
-      }
-      var consumer1 = CommonHudRenderCallback.EVENT.getConsumer();
-      if (consumer1 != null && !consumer1.isEmpty()) {
-        consumer1.forEach((c) -> {
-          c.accept(guiGraphics, deltaTracker);
-        });
       }
       if (roleRenderConsumers != null) {
         try {

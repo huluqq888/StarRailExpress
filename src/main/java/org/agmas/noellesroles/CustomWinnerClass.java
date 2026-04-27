@@ -7,6 +7,8 @@ import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.event.AllowGameEnd;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.GameUtils.WinStatus;
+import pro.fazeclan.river.stupid_express.modifier.refugee.cca.RefugeeComponent;
+
 import org.agmas.noellesroles.game.roles.neutral.candlebearer.CandleBearerPlayerComponent;
 import org.agmas.noellesroles.game.roles.neutral.cuckoo.CuckooPlayerComponent;
 import org.agmas.noellesroles.game.roles.neutral.thief.ThiefPlayerComponent;
@@ -21,7 +23,10 @@ public class CustomWinnerClass {
             if (isLooseEnd) {
                 return WinStatus.NOT_MODIFY;
             }
-
+            var refugeeCCA = RefugeeComponent.KEY.get(serverLevel);
+            if(refugeeCCA.isPendingRestore){
+                return WinStatus.NONE;
+            }
             var gameComponent = SREGameWorldComponent.KEY.get(serverLevel);
 
             // 检查是否有小偷存活

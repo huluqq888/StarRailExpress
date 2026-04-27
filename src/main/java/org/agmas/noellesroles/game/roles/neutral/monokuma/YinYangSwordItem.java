@@ -143,7 +143,7 @@ public class YinYangSwordItem extends Item {
                 if (!player.getCooldowns().isOnCooldown(itemStack.getItem())) {
                     player.displayClientMessage(Component
                             .translatable("message.noellesroles.yinyang_dash_tip",
-                                    Component.keybind("key.drop").withStyle(ChatFormatting.GREEN))
+                                    Component.keybind("key.drop").withStyle(ChatFormatting.GREEN),Component.keybind("key.use").withStyle(ChatFormatting.GREEN))
                             .withStyle(ChatFormatting.GOLD), true);
                 }
             }

@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.init;
 
 import io.github.mortuusars.exposure_polaroid.ExposurePolaroid;
+import io.wifi.events.day_night_fight.DNF;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.SRERole;
@@ -271,6 +272,7 @@ public class RoleShopHandler {
     initializeBloodFeudistShop();
 
     ShopContent.register();
+    DNF.registerShops();
     {
       // 布袋鬼商店（诡舍·缚灵）
       // 设计要求：无法购买刀、枪、狂暴模式，只能购买强化领域的道具
@@ -390,6 +392,8 @@ public class RoleShopHandler {
       });
       SHOP.add(new ShopEntry(ModItems.CAMERA_SHEARS.getDefaultInstance(), 50, ShopEntry.Type.TOOL));
       SHOP.add(new ShopEntry(TMMItems.FIRECRACKER.getDefaultInstance(), 15, ShopEntry.Type.TOOL));
+      SHOP.add(new ShopEntry(TMMItems.CROWBAR.getDefaultInstance(), 35, ShopEntry.Type.TOOL));
+      SHOP.add(new ShopEntry(TMMItems.LOCKPICK.getDefaultInstance(), 80, ShopEntry.Type.TOOL));
 
       ShopContent.customEntries.put(ModRoles.DELAYER.getIdentifier(), SHOP);
     }
@@ -1288,7 +1292,14 @@ public class RoleShopHandler {
               return !WatcherPlayerComponent.KEY.get(player).isInCalmStance();
             }
           });
-      // 没有枪
+      // 左轮手枪 - 285金币（愤怒姿态）
+      shop.add(new ShopEntry(TMMItems.REVOLVER.getDefaultInstance(), 285, ShopEntry.Type.WEAPON) {
+        @Override
+        public boolean canDisplay(Player player) {
+          return !WatcherPlayerComponent.KEY.get(player).isInCalmStance();
+        }
+      });
+      // 手榴弹
       shop.add(new ShopEntry(TMMItems.GRENADE.getDefaultInstance(), SREConfig.instance().grenadePrice,
           ShopEntry.Type.WEAPON) {
         @Override

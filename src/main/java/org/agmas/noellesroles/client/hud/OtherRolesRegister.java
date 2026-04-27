@@ -4,9 +4,13 @@ import org.agmas.noellesroles.client.hud.modifiers.LoversHud;
 import org.agmas.noellesroles.client.hud.modifiers.RefugeeHud;
 import org.agmas.noellesroles.client.hud.roles.*;
 
+import io.wifi.events.day_night_fight.client.DNFHud;
+
 public class OtherRolesRegister {
 
     public static void registerSons() {
+        VoteHud.register();
+        DNFHud.register();
         CustomPendingHud.register();
         AdmirerHud.register();
         AvengerHud.register();
