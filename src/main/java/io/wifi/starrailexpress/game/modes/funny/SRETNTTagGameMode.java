@@ -100,8 +100,7 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
         }
 
         if (_killer != null) {
-            if (transformTNTTag(_killer, victim))
-                return;
+            transformTNTTag(_killer, victim);
         }
         GameUtils.teleportBackToRoom(victim);
         return;
