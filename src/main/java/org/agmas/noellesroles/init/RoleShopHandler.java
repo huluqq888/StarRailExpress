@@ -2009,9 +2009,20 @@ public class RoleShopHandler {
         ShopEntry.Type.TOOL));
 
     // 飞行员商店
+    // 喷气背包 - 150金币
     PILOT_SHOP.add(new ShopEntry(
         ModItems.JETPACK.getDefaultInstance(),
-        175,
+        150,
+        ShopEntry.Type.TOOL));
+    // 鞘翅 - 300金币
+    PILOT_SHOP.add(new ShopEntry(
+        Items.ELYTRA.getDefaultInstance(),
+        300,
+        ShopEntry.Type.TOOL));
+    // 烟花火箭 - 50金币
+    PILOT_SHOP.add(new ShopEntry(
+        new ItemStack(Items.FIREWORK_ROCKET, 1),
+        50,
         ShopEntry.Type.TOOL));
 
     // 影隼商店
@@ -2059,6 +2070,28 @@ public class RoleShopHandler {
               true, // showParticles
               true // showIcon
           ));
+          return true;
+        }
+      });
+    }
+    // 鞘翅 - 250金币，购买时额外给予10个烟花火箭
+    {
+      SHADOW_FALCON_SHOP.add(new ShopEntry(Items.ELYTRA.getDefaultInstance(), 250, ShopEntry.Type.TOOL) {
+        @Override
+        public boolean onBuy(@NotNull Player player) {
+          // 给予鞘翅
+          if (!RoleUtils.insertStackInFreeSlot(player, Items.ELYTRA.getDefaultInstance().copy())) {
+            player.displayClientMessage(
+                Component.translatable("message.noellesroles.shadow_falcon.elytra_inventory_full"),
+                true);
+            return false;
+          }
+          // 额外给予10个烟花火箭
+          ItemStack fireworks = new ItemStack(Items.FIREWORK_ROCKET, 10);
+          if (!player.getInventory().add(fireworks)) {
+            // 背包满了就丢在地上
+            player.drop(fireworks, true);
+          }
           return true;
         }
       });

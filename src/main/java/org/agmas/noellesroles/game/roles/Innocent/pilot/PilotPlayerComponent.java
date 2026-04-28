@@ -52,7 +52,7 @@ public class PilotPlayerComponent implements RoleComponent, ServerTickingCompone
     }
 
     /**
-     * 脱下喷气背包
+     * 脱下喷气背包和鞘翅
      * 
      * @return 是否成功脱下
      */
@@ -68,9 +68,57 @@ public class PilotPlayerComponent implements RoleComponent, ServerTickingCompone
             return false;
         }
 
+        boolean removedSomething = false;
+        StringBuilder messageBuilder = new StringBuilder();
+
         // 检查身上是否有喷气背包
         ItemStack chestplate = player.getInventory().getArmor(2); // 胸甲槽位
-        if (!chestplate.is(ModItems.JETPACK)) {
+        if (chestplate.is(ModItems.JETPACK)) {
+            // 尝试将喷气背包放入背包
+            ItemStack jetpack = chestplate.copy();
+            player.getInventory().armor.set(2, ItemStack.EMPTY);
+            
+            if (!player.getInventory().add(jetpack)) {
+                // 背包满了，恢复装备并提示
+                player.getInventory().armor.set(2, jetpack);
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.displayClientMessage(
+                            Component.translatable("message.noellesroles.pilot.inventory_full"),
+                            true);
+                }
+                return false;
+            }
+            
+            removedSomething = true;
+            messageBuilder.append(Component.translatable("message.noellesroles.pilot.jetpack_removed").getString());
+        }
+
+        // 检查身上是否有鞘翅（胸甲位置）
+        ItemStack currentChest = player.getInventory().getArmor(2);
+        if (currentChest.is(net.minecraft.world.item.Items.ELYTRA)) {
+            // 尝试将鞘翅放入背包
+            ItemStack elytra = currentChest.copy();
+            player.getInventory().armor.set(2, ItemStack.EMPTY);
+            
+            if (!player.getInventory().add(elytra)) {
+                // 背包满了，恢复装备并提示
+                player.getInventory().armor.set(2, elytra);
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.displayClientMessage(
+                            Component.translatable("message.noellesroles.pilot.inventory_full"),
+                            true);
+                }
+                return false;
+            }
+            
+            if (removedSomething) {
+                messageBuilder.append(", ");
+            }
+            messageBuilder.append(Component.translatable("message.noellesroles.pilot.elytra_removed").getString());
+            removedSomething = true;
+        }
+
+        if (!removedSomething) {
             if (player instanceof ServerPlayer serverPlayer) {
                 serverPlayer.displayClientMessage(
                         Component.translatable("message.noellesroles.pilot.no_jetpack"),
@@ -79,19 +127,9 @@ public class PilotPlayerComponent implements RoleComponent, ServerTickingCompone
             return false;
         }
 
-        // 脱下喷气背包并丢出
-        ItemStack jetpack = chestplate.copy();
-        player.getInventory().armor.set(2, ItemStack.EMPTY);
-        
-        // 将喷气背包放入玩家背包或丢到地上
-        if (!player.getInventory().add(jetpack)) {
-            // 背包满了就丢在地上
-            player.drop(jetpack, true);
-        }
-
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.displayClientMessage(
-                    Component.translatable("message.noellesroles.pilot.jetpack_removed"),
+                    Component.literal(messageBuilder.toString()),
                     true);
         }
 

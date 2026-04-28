@@ -767,7 +767,7 @@ public class ModPacketsReciever {
 
           if (gameWorldComponent.isRole(player, ModRoles.SHADOW_FALCON)) {
             ShadowFalconPlayerComponent shadowFalconComponent = ShadowFalconPlayerComponent.KEY.get(player);
-            // 蹲下优先脱下喷气背包，无条件优先执行
+            // 蹲下优先脱下喷气背包和鞘翅，无条件优先执行
             if (player.isShiftKeyDown()) {
               shadowFalconComponent.removeJetpack();
               return;
