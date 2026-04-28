@@ -336,7 +336,7 @@ public class DevilRouletteTableEntity extends BlockEntity {
         if (player.getUUID() != frontPlayerUUID) {
             idxOffset = playerOperateArea.size() / 2;
         }
-        for (int i = 0; i + idxOffset < playerOperateArea.size(); ++i) {
+        for (int i = 0; i < playerOperateArea.size() / 2 && i + idxOffset < playerOperateArea.size(); ++i) {
             if (playerOperateArea.get(i + idxOffset).equals(pos)) {
                 switch (i) {
                     // 点击左侧
