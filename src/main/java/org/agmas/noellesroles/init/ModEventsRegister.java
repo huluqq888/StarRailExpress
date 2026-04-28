@@ -1436,6 +1436,7 @@ public class ModEventsRegister {
             // 年兽除岁效果：给所有玩家分发4个鞭炮
             boolean hasNianShou = false;
             boolean hasArsonist = false;
+            boolean hasCuckoo = false;
             final var all_players = serverLevel.players();
             for (var p : all_players) {
                 if (!gameWorldComponent.isJumpAvailable() && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p)) {
@@ -1460,6 +1461,8 @@ public class ModEventsRegister {
                     hasNianShou = true;
                 } else if (gameWorldComponent.isRole(p, SERoles.ARSONIST)) {
                     hasArsonist = true;
+                } else if (gameWorldComponent.isRole(p, ModRoles.CUCKOO)) {
+                    hasCuckoo = true;
                 }
                 if (worldModifierComponent.isModifier(p, NRModifiers.EXPEDITION)) {
                     SRERole role = gameWorldComponent.getRole(p);
@@ -1514,6 +1517,14 @@ public class ModEventsRegister {
                     if (p != null) {
                         BroadcastCommand.BroadcastMessage(p, Component
                                 .translatable("message.noellesroles.arsonist.entry").withStyle(ChatFormatting.YELLOW));
+                    }
+                });
+            }
+            if (hasCuckoo) {
+                all_players.forEach((p) -> {
+                    if (p != null) {
+                        BroadcastCommand.BroadcastMessage(p, Component
+                                .translatable("message.noellesroles.cuckoo.entry").withStyle(ChatFormatting.YELLOW));
                     }
                 });
             }
