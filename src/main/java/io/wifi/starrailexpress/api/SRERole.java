@@ -111,6 +111,7 @@ public abstract class SRERole {
 
     public SRERole setCanGetBodyItems(boolean flag) {
         canGetBodyItems = flag;
+        canSeeBodyItems = flag;
         return this;
     }
 

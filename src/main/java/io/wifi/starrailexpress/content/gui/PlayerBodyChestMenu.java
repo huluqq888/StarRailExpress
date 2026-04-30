@@ -4,6 +4,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -48,13 +49,14 @@ public class PlayerBodyChestMenu extends AbstractContainerMenu implements Custom
     // 完全禁止 Shift+点击移动物品（即使有权限也可在此统一拦截）
     // @Override
     // public ItemStack quickMoveStack(Player player, int index) {
-    //     return ItemStack.EMPTY; // 禁止任何快速移动
+    // return ItemStack.EMPTY; // 禁止任何快速移动
     // }
 
     // 可选：如果还想保留部分 Shift 功能（仅对有权限玩家开放），可以写：
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (!container.canGetBodyContent(player)) return ItemStack.EMPTY;
+        if (!container.canGetBodyContent(player))
+            return ItemStack.EMPTY;
         // 实现正常快速移动逻辑（复制自 ChestMenu），但通常没必要
         if (!container.canGetBodyContent(player)) {
             return ItemStack.EMPTY;
@@ -97,4 +99,27 @@ public class PlayerBodyChestMenu extends AbstractContainerMenu implements Custom
     public Container getContainer() {
         return container;
     }
+
+    // 核心拦截：彻底禁止没有权限的玩家通过数字键（SWAP）取出或交换物品
+    // 拦截全部点击事件，精确控制允许的操作
+    @Override
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+
+        if (!container.canGetBodyContent(player))
+            return;
+        // 如果操作涉及容器槽位（索引 0 ~ rows*9-1）
+        if (slotId >= 0 && slotId < this.rows * 9) {
+            switch (clickType) {
+                case THROW: // 丢出（Q键）
+                    return; // 直接禁止
+                default:
+                    // 允许，交给父类逻辑
+                    super.clicked(slotId, button, clickType, player);
+                    return;
+            }
+        }
+        // 非容器槽位的操作正常放行
+        super.clicked(slotId, button, clickType, player);
+    }
+
 }

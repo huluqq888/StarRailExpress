@@ -28,7 +28,7 @@ public class SREGameModes {
     public static final ResourceLocation REFUGEE_LOVER_MODE_ID = SRE.wifiId("refugee_lover");
     public static final ResourceLocation HIDE_AND_SEEK_MODE_ID = SRE.wifiId("hide_and_seek");
     public static final ResourceLocation TNT_TAG_MODE_ID = SRE.wifiId("tnt_tag");
-    public static final ResourceLocation DAY_NIGHT_FIGHT_ID = SRE.wifiId("day_night_fight");
+    public static final ResourceLocation DAY_NIGHT_FIGHT_ID = SRE.shortId("day_night_fight");
 
     // Author: canyuesama (catmoon233)
     public static final ResourceLocation FOURTH_ROOM_ID = SRE.canyueId("fourth_room");

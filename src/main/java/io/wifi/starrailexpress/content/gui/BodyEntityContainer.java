@@ -40,6 +40,8 @@ public class BodyEntityContainer extends SimpleContainer {
     public boolean canGetBodyContent(Player player) {
         if (player.isSpectator())
             return false;
+        if (player.isCreative())
+            return true;
         var cca = SREGameWorldComponent.KEY.get(player.level());
         if (cca.gameMode.canPickBodyContent()) {
             return true;
@@ -47,6 +49,6 @@ public class BodyEntityContainer extends SimpleContainer {
         SRERole role = cca.getRole(player);
         if (role == null)
             return false;
-        return role.canSeeBodyItems();
+        return role.canGetBodyItems();
     }
 }
