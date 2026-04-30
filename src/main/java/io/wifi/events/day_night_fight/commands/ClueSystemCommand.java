@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public class ClueSystemCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("clue")
+        dispatcher.register(Commands.literal("dnf:clue")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("spawn")
                         .then(Commands.argument("title", StringArgumentType.string())
