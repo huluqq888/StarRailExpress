@@ -236,6 +236,11 @@ public class RoleInitialItems {
         List<Supplier<ItemStack>> shadowFalconItems = new ArrayList<>();
         shadowFalconItems.add(() -> ModItems.JETPACK.getDefaultInstance());
         INITIAL_ITEMS_MAP.put(ModRoles.SHADOW_FALCON, shadowFalconItems);
+
+        // 大嗓门初始物品 - 对讲机
+        List<Supplier<ItemStack>> noiseMakerItems = new ArrayList<>();
+        noiseMakerItems.add(() -> ModItems.RADIO.getDefaultInstance());
+        INITIAL_ITEMS_MAP.put(ModRoles.NOISEMAKER, noiseMakerItems);
     }
 
 }

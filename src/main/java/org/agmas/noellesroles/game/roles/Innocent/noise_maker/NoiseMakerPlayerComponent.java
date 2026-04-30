@@ -109,7 +109,7 @@ public class NoiseMakerPlayerComponent implements RoleComponent, ServerTickingCo
                 if (p.getUUID().equals(player.getUUID())) {
 
                 } else {
-                    if (p.distanceTo(player) <= 5) {
+                    if (p.distanceTo(player) <= 15) {
                         if (gameWorldComponent.isRole(p, ModRoles.WIND_YAOSE))
                             continue;
                         p.addEffect(new MobEffectInstance(MobEffects.GLOWING, 120, 0, false, false, false));
