@@ -265,6 +265,8 @@ public class GhostPlayerComponent implements RoleComponent, ServerTickingCompone
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return;
         }
+        if (!gameWorld.isSkillAvailable)
+            return;
         if (player.isSpectator())
             return;
         if (player.isCreative())
