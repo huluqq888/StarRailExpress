@@ -6,6 +6,7 @@ import io.wifi.events.day_night_fight.DNFItems;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
 import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
+import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.cca.SREPlayerTaskComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
@@ -110,8 +111,12 @@ public class DNFPlayerComponent implements RoleComponent {
         daily.setDustCleanedToday(false);
         daily.setToiletToday(false);
         daily.setLectureToday(false);
+        daily.setCleaningTasksToday(0);
+        daily.setCleaningInProgress(false);
         daily.setChefFoodWorkToday(0);
         daily.setChefWaterCheckedToday(false);
+
+        SREPlayerMoodComponent.KEY.get(serverPlayer).setMood(day == 0 ? DNF.INITIAL_SAN : DNF.MORNING_SAN);
 
         setupHudTasks(serverPlayer, isChef);
         if (isChef) {
@@ -122,44 +127,79 @@ public class DNFPlayerComponent implements RoleComponent {
 
     public void markAteFood(ServerPlayer serverPlayer) {
         DNFDailyTaskComponent daily = daily();
+        if (daily.isAteToday()) {
+            return;
+        }
         daily.setAteToday(true);
+        recoverSan(serverPlayer, DNF.SAN_FOOD_GAIN, "message.dnf.task.food");
         tryCompleteMealTask(serverPlayer, daily);
         daily.sync();
     }
 
     public void markDrankWater(ServerPlayer serverPlayer) {
         DNFDailyTaskComponent daily = daily();
+        if (daily.isDrankToday()) {
+            return;
+        }
         daily.setDrankToday(true);
+        recoverSan(serverPlayer, DNF.SAN_WATER_GAIN, "message.dnf.task.water");
         tryCompleteMealTask(serverPlayer, daily);
         daily.sync();
     }
 
     public boolean cleanLibraryWeb(ServerPlayer serverPlayer) {
+        return beginCleaningTask(serverPlayer);
+    }
+
+    public boolean cleanPrisonDust(ServerPlayer serverPlayer) {
+        return beginCleaningTask(serverPlayer);
+    }
+
+    public boolean beginCleaningTask(ServerPlayer serverPlayer) {
         DNFDailyTaskComponent daily = daily();
-        if (daily.isWebCleanedToday()) {
+        if (daily.getCleaningTasksToday() >= DNF.MAX_DAILY_CLEANING_TASKS) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.cleaning_exhausted")
+                    .withStyle(ChatFormatting.YELLOW), true);
+            removeHudTask(SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB);
+            removeHudTask(SREPlayerTaskComponent.Task.DNF_PRISON_DUST);
             return false;
         }
-        if (!completeSanTask(serverPlayer, daily, "message.dnf.task.library_web")) {
+        if (daily.isCleaningInProgress()) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.cleaning_busy")
+                    .withStyle(ChatFormatting.GRAY), true);
             return false;
         }
-        daily.setWebCleanedToday(true);
-        removeHudTask(SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB);
+        daily.setCleaningInProgress(true);
+        daily.setCleaningTasksToday(daily.getCleaningTasksToday() + 1);
+        serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.cleaning_started",
+                DNF.CLEANING_TICKS / 20, daily.getCleaningTasksToday(), DNF.MAX_DAILY_CLEANING_TASKS)
+                .withStyle(ChatFormatting.GREEN), true);
         daily.sync();
         return true;
     }
 
-    public boolean cleanPrisonDust(ServerPlayer serverPlayer) {
+    public void finishCleaningTask(ServerPlayer serverPlayer, SREPlayerTaskComponent.Task taskType, String messageKey) {
         DNFDailyTaskComponent daily = daily();
-        if (daily.isDustCleanedToday()) {
-            return false;
+        if (!daily.isCleaningInProgress()) {
+            return;
         }
-        if (!completeSanTask(serverPlayer, daily, "message.dnf.task.prison_dust")) {
-            return false;
+        daily.setCleaningInProgress(false);
+        if (taskType == SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB) {
+            daily.setWebCleanedToday(true);
+        } else if (taskType == SREPlayerTaskComponent.Task.DNF_PRISON_DUST) {
+            daily.setDustCleanedToday(true);
         }
-        daily.setDustCleanedToday(true);
-        removeHudTask(SREPlayerTaskComponent.Task.DNF_PRISON_DUST);
+        recoverSan(serverPlayer, DNF.SAN_CLEANING_GAIN, messageKey);
+        SREPlayerShopComponent.KEY.get(serverPlayer).addToBalance(1);
+        serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.cleaning_reward", 1)
+                .withStyle(ChatFormatting.GREEN), true);
+        if (daily.getCleaningTasksToday() >= DNF.MAX_DAILY_CLEANING_TASKS) {
+            removeHudTask(SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB);
+            removeHudTask(SREPlayerTaskComponent.Task.DNF_PRISON_DUST);
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.cleaning_exhausted")
+                    .withStyle(ChatFormatting.YELLOW), true);
+        }
         daily.sync();
-        return true;
     }
 
     public boolean completeToilet(ServerPlayer serverPlayer) {
@@ -167,7 +207,7 @@ public class DNFPlayerComponent implements RoleComponent {
         if (daily.isToiletToday()) {
             return false;
         }
-        if (!completeSanTask(serverPlayer, daily, "message.dnf.task.toilet")) {
+        if (!completeSanTask(serverPlayer, daily, "message.dnf.task.toilet", DNF.SAN_CLEANING_GAIN)) {
             return false;
         }
         daily.setToiletToday(true);
@@ -181,7 +221,7 @@ public class DNFPlayerComponent implements RoleComponent {
         if (daily.isLectureToday()) {
             return false;
         }
-        if (!completeSanTask(serverPlayer, daily, "message.dnf.task.lecture")) {
+        if (!completeSanTask(serverPlayer, daily, "message.dnf.task.lecture", DNF.SAN_CHAT_GAIN)) {
             return false;
         }
         daily.setLectureToday(true);
@@ -198,7 +238,7 @@ public class DNFPlayerComponent implements RoleComponent {
             return false;
         }
         daily.setChefFoodWorkToday(daily.getChefFoodWorkToday() + amount);
-        if (completeSanTask(serverPlayer, daily, "message.dnf.task.chef_work")) {
+        if (completeSanTask(serverPlayer, daily, "message.dnf.task.chef_work", DNF.SAN_CLEANING_GAIN)) {
             removeHudTask(SREPlayerTaskComponent.Task.DNF_CHEF_WORK);
         }
         daily.sync();
@@ -246,22 +286,24 @@ public class DNFPlayerComponent implements RoleComponent {
     private void tryCompleteMealTask(ServerPlayer serverPlayer, DNFDailyTaskComponent daily) {
         if (!daily.isMealTaskCompleted() && daily.isAteToday() && daily.isDrankToday()) {
             daily.setMealTaskCompleted(true);
-            completeSanTask(serverPlayer, daily, "message.dnf.task.meal");
+            ServerPlayNetworking.send(serverPlayer, new TaskCompletePayload());
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.meal")
+                    .withStyle(ChatFormatting.GREEN), true);
             removeHudTask(SREPlayerTaskComponent.Task.DNF_MEAL);
         }
     }
 
-    private boolean completeSanTask(ServerPlayer serverPlayer, DNFDailyTaskComponent daily, String messageKey) {
-        if (!messageKey.equals("message.dnf.task.meal") && !daily.isAteToday()) {
-            serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.need_food")
-                    .withStyle(ChatFormatting.YELLOW), true);
-            return false;
-        }
-        SREPlayerMoodComponent.KEY.get(serverPlayer).addMood(DNF.SAN_TASK_MOOD_GAIN);
+    private boolean completeSanTask(ServerPlayer serverPlayer, DNFDailyTaskComponent daily, String messageKey,
+            float sanGain) {
+        recoverSan(serverPlayer, sanGain, messageKey);
+        return true;
+    }
+
+    private void recoverSan(ServerPlayer serverPlayer, float sanGain, String messageKey) {
+        SREPlayerMoodComponent.KEY.get(serverPlayer).addMood(sanGain);
         ServerPlayNetworking.send(serverPlayer, new TaskCompletePayload());
         serverPlayer.displayClientMessage(Component.translatable(messageKey,
-                (int) (DNF.SAN_TASK_MOOD_GAIN * 100)).withStyle(ChatFormatting.GREEN), true);
-        return true;
+                (int) (sanGain * 100)).withStyle(ChatFormatting.GREEN), true);
     }
 
     private void setupHudTasks(ServerPlayer serverPlayer, boolean isChef) {

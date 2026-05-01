@@ -124,7 +124,13 @@ public class DNFDebugCommand {
 
     private static int completeWeb(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        return DNFPlayerComponent.KEY.get(player).cleanLibraryWeb(player) ? 1 : 0;
+        DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+        if (!component.beginCleaningTask(player)) {
+            return 0;
+        }
+        component.finishCleaningTask(player, io.wifi.starrailexpress.cca.SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB,
+                "message.dnf.task.library_web");
+        return 1;
     }
 
     private static int completeToilet(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
@@ -139,7 +145,13 @@ public class DNFDebugCommand {
 
     private static int completeDust(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        return DNFPlayerComponent.KEY.get(player).cleanPrisonDust(player) ? 1 : 0;
+        DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+        if (!component.beginCleaningTask(player)) {
+            return 0;
+        }
+        component.finishCleaningTask(player, io.wifi.starrailexpress.cca.SREPlayerTaskComponent.Task.DNF_PRISON_DUST,
+                "message.dnf.task.prison_dust");
+        return 1;
     }
 
     private static int completeChefWork(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

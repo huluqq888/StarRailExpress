@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.mixin.server;
 
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.api.replay.GameReplayManager;
 import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
@@ -39,11 +40,13 @@ public class DecServerJoinPlayer {
         // }
         if (gameWorldComponent.getGameStatus() == GameStatus.ACTIVE) {
             if (serverPlayer.level() instanceof ServerLevel serverWorld) {
-                AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
-                AreasWorldComponent.PosWithOrientation spectatorSpawnPos = areas.getSpectatorSpawnPos();
-                serverPlayer.teleportTo(serverWorld, spectatorSpawnPos.pos.x(), spectatorSpawnPos.pos.y(),
-                        spectatorSpawnPos.pos.z(), spectatorSpawnPos.yaw, spectatorSpawnPos.pitch);
-                serverPlayer.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+                if (gameWorldComponent.gameMode != SREGameModes.DAY_NIGHT_FIGHT) {
+                    AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
+                    AreasWorldComponent.PosWithOrientation spectatorSpawnPos = areas.getSpectatorSpawnPos();
+                    serverPlayer.teleportTo(serverWorld, spectatorSpawnPos.pos.x(), spectatorSpawnPos.pos.y(),
+                            spectatorSpawnPos.pos.z(), spectatorSpawnPos.yaw, spectatorSpawnPos.pitch);
+                    serverPlayer.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+                }
             }
         } else {
             if (serverPlayer.level() instanceof ServerLevel serverWorld) {

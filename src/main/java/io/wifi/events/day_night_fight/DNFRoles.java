@@ -1,16 +1,21 @@
 package io.wifi.events.day_night_fight;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.wifi.starrailexpress.api.*;
+import io.wifi.starrailexpress.util.ShopEntry;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.utils.RoleUtils;
 
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
 import io.wifi.starrailexpress.SRE;
-import io.wifi.starrailexpress.api.CustomWinnerRole;
-import io.wifi.starrailexpress.api.SREGameModes;
-import io.wifi.starrailexpress.api.SRERole;
-import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.game.GameUtils;
@@ -33,6 +38,87 @@ public class DNFRoles {
     public static final ResourceLocation LOCKSMITH_ID = SRE.id("dnf_locksmith");
     public static final ResourceLocation CIVILIAN_ID = SRE.id("dnf_civilian");
     public static final ResourceLocation FLYING_KNIFE_DEATH = SRE.id("dnf_flying_knife");
+
+    private static final java.util.Map<java.util.UUID, Integer> DNF_CHARGING_TICKS = new java.util.HashMap<>();
+    private static final java.util.Map<java.util.UUID, Long> DNF_TRAIL_EXPIRE = new java.util.HashMap<>();
+    public static final ResourceLocation DNF_ABYSS_ID = SRE.id("dnf_abyss");
+
+    public static SRERole DNF_ABYSS = TMMRoles.registerRole(new NormalRole(
+            DNF_ABYSS_ID,
+            new Color(120, 0, 0).getRGB(),
+            false,
+            true,
+            SRERole.MoodType.FAKE,
+            Integer.MAX_VALUE,
+            true) {
+        @Override
+        public InteractionResult leftClickEntity(Player player, Entity target) {
+            if (!(player instanceof ServerPlayer serverPlayer) || !(target instanceof Player victim)) {
+                return InteractionResult.PASS;
+            }
+            if (!serverPlayer.getMainHandItem().is(DNFItems.ABYSS_TENTACLE)) {
+                return InteractionResult.PASS;
+            }
+
+            serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+            if (serverPlayer.isAlive() && victim.isAlive() && serverPlayer.distanceTo(victim) <= 4.0) {
+                GameUtils.killPlayer(victim, true, serverPlayer, Noellesroles.id("dnf_tentacle"));
+            }
+            if (serverPlayer.isAlive()) {
+                serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+            }
+            serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition().above(1), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.0f, 1.0f);
+
+            // 添加少量粒子效果
+            if (serverPlayer.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIMSON_SPORE,
+                        serverPlayer.getX(), serverPlayer.getY() + 1, serverPlayer.getZ(),
+                        5, 0.3, 0.5, 0.3, 0.05);
+            }
+
+            return InteractionResult.CONSUME;
+        }
+        @Override
+        public net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> onItemUse(Player player, net.minecraft.world.level.Level world, InteractionHand hand) {
+            player.startUsingItem(hand);
+            return net.minecraft.world.InteractionResultHolder.success(player.getItemInHand(hand));
+        }
+
+        @Override
+        public List<ItemStack> getDefaultItems() {
+            return List.of(DNFItems.ABYSS_TENTACLE.getDefaultInstance());
+        }
+
+        @Override
+        public void serverTick(ServerPlayer player) {
+            player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, false));
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, false));
+            if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIMSON_SPORE, player.getX(), player.getY() + 1, player.getZ(), 3, 0.4, 0.8, 0.4, 0.01);
+            }
+            java.util.UUID id = player.getUUID();
+            if (player.isUsingItem()) {
+                DNF_CHARGING_TICKS.put(id, DNF_CHARGING_TICKS.getOrDefault(id, 0) + 1);
+                player.setDeltaMovement(0, player.getDeltaMovement().y, 0);
+                if (DNF_CHARGING_TICKS.get(id) >= 10) {
+                    DNF_CHARGING_TICKS.put(id, 0);
+                    player.stopUsingItem();
+                    var hitBox = player.getBoundingBox().inflate(2.5).move(player.getLookAngle().scale(2.0));
+                    for (Player p2 : player.level().getEntitiesOfClass(Player.class, hitBox, p -> p != player && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p))) {
+                        GameUtils.killPlayer((ServerPlayer) p2, true, player, Noellesroles.id("dnf_tentacle"));
+                    }
+                }
+            } else {
+                DNF_CHARGING_TICKS.remove(id);
+            }
+            DNF_TRAIL_EXPIRE.put(id, player.level().getGameTime() + 60);
+        }
+
+        @Override
+        public List<ShopEntry> getShopEntries() {
+            return new ArrayList<>();
+        }
+    }).setCanSeeCoin(false).setCanUseInstinct(false).setCanSeeTime(false).setCanGetBodyItems(true);
     public static final SRERole KILLER = TMMRoles.registerRole(
             new CustomWinnerRole(KILLER_ID, 0x7A1414, false, true, SRERole.MoodType.FAKE, -1, true) {
                 @Override
@@ -117,21 +203,21 @@ public class DNFRoles {
                         return InteractionResult.PASS;
                     }
                     serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
-                    io.wifi.starrailexpress.util.Scheduler.schedule(() -> {
-                        if (serverPlayer.isAlive() && victim.isAlive()) {
-                            victim.hurt(serverPlayer.damageSources().playerAttack(serverPlayer), 1000f);
-                        }
-                    }, 5);
-                    io.wifi.starrailexpress.util.Scheduler.schedule(() -> {
-                        if (serverPlayer.isAlive()) {
-                            serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
-                        }
-                    }, 0);
-                    io.wifi.starrailexpress.util.Scheduler.schedule(() -> {
-                        if (serverPlayer.isAlive()) {
-                            serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
-                        }
-                    }, 25);
+                    if (serverPlayer.isAlive() && victim.isAlive() && serverPlayer.distanceTo(victim) <= 4.0) {
+                        GameUtils.killPlayer(victim, true, serverPlayer, Noellesroles.id("dnf_tentacle"));
+                    }
+                    if (serverPlayer.isAlive()) {
+                        serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+                    }
+                    serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition().above(1), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.0f, 1.0f);
+                    
+                    // 添加少量粒子效果
+                    if (serverPlayer.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                        sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIMSON_SPORE, 
+                                serverPlayer.getX(), serverPlayer.getY() + 1, serverPlayer.getZ(), 
+                                5, 0.3, 0.5, 0.3, 0.05);
+                    }
+                    
                     return InteractionResult.CONSUME;
                 }
 
@@ -174,11 +260,11 @@ public class DNFRoles {
                     return original;
                 }
             }.setComponentKey(DNFPlayerComponent.KEY).setCanSeeCoin(false).setCanUseInstinct(true).setMax(4)
-                    .setCanSeeTeammateKiller(false)).setCanBeRandomedByOtherRoles(false);
+                    .setCanSeeTeammateKiller(false)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(false);
 
     public static final SRERole SOLDIER = TMMRoles.registerRole(new DNFNormalRole(SOLDIER_ID, 0x496D89, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false).setVigilanteTeam(true).setMax(2))
-            .setCanBeRandomedByOtherRoles(false);
+            .setCanBeRandomedByOtherRoles(false).setCanGetBodyItems( true);
     public static final SRERole CHEF = TMMRoles.registerRole(new DNFNormalRole(CHEF_ID, 0x8C6A2D, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
@@ -204,10 +290,10 @@ public class DNFRoles {
             }
             return DNFItems.cookBodyAsChef(serverPlayer, body);
         }
-    }.setMax(1)).setCanBeRandomedByOtherRoles(false);
+    }.setMax(1)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
     public static final SRERole PSYCHOLOGIST = TMMRoles.registerRole(new DNFNormalRole(PSYCHOLOGIST_ID, 0x8E6BC6, true,
             false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false).setMax(2))
-            .setCanBeRandomedByOtherRoles(false);
+            .setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
     public static final SRERole LOCKSMITH = TMMRoles.registerRole(new DNFNormalRole(LOCKSMITH_ID, 0xD1A448, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
@@ -215,8 +301,8 @@ public class DNFRoles {
                 net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hitResult) {
             return DNFItems.tryRepairLockpickedDoor(player, world, hitResult.getBlockPos());
         }
-    }.setMax(4)).setCanBeRandomedByOtherRoles(false);
+    }.setMax(4)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
     public static final SRERole CIVILIAN = TMMRoles.registerRole(new DNFNormalRole(CIVILIAN_ID, 0x719E5B, true, false,
-            SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanBeRandomedByOtherRoles(false);
+            SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
 
 }

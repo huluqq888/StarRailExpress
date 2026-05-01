@@ -97,6 +97,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import static io.wifi.events.day_night_fight.DNFRoles.DNF_ABYSS;
 import static org.agmas.noellesroles.client.RicesRoleRhapsodyClient.*;
 import static org.agmas.noellesroles.content.effects.TimeStopEffect.clientPositions;
 import static org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent.isPlayerBodyEntity;
@@ -936,7 +937,7 @@ public class NoellesrolesClient implements ClientModInitializer {
 
             OtherworldSceneManager.INSTANCE.tick();
 
-            boolean dnfHellActive = SREClient.gameComponent.isRole(client.player, org.agmas.noellesroles.role.ModRoles.DNF_ABYSS);
+            boolean dnfHellActive = SREClient.gameComponent.isRole(client.player, DNF_ABYSS);
             DnfHellTrailSceneManager.INSTANCE.tick(dnfHellActive);
 
             // 鬼缚效果红色粒子渲染

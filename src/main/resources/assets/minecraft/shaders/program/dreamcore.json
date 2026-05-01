@@ -1,7 +1,7 @@
 {
   "blend": {"func": "add", "srcrgb": "one", "dstrgb": "zero"},
   "vertex": "sobel",
-  "fragment": "minecraft:shaders/program/dreamcore",
+  "fragment": "dreamcore",
   "attributes": ["Position"],
   "samplers": [{"name": "DiffuseSampler"}],
   "uniforms": [

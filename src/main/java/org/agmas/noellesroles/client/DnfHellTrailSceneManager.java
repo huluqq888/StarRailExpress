@@ -16,7 +16,7 @@ public class DnfHellTrailSceneManager {
 
     private static final BlockState[] HELL = new BlockState[]{
             Blocks.NETHERRACK.defaultBlockState(), Blocks.MAGMA_BLOCK.defaultBlockState(),
-            Blocks.SOUL_SAND.defaultBlockState(), Blocks.RED_NETHER_BRICKS.defaultBlockState()
+            Blocks.CRACKED_NETHER_BRICKS.defaultBlockState(), Blocks.RED_NETHER_BRICKS.defaultBlockState()
     };
 
     public void tick(boolean active) {
@@ -25,12 +25,21 @@ public class DnfHellTrailSceneManager {
         ClientLevel level = mc.level;
         if (active) {
             BlockPos c = mc.player.blockPosition();
-            for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) {
-                if (x * x + z * z > 10) continue;
+            for (int x = -5; x <= 5; x++) for (int z = -5; z <= 5; z++) {
+                if (x * x + z * z > 20) continue;
                 BlockPos p = c.offset(x, -1, z);
                 if (!level.isLoaded(p)) continue;
                 BlockState st = level.getBlockState(p);
                 if (st.isAir() || !st.isSolidRender(level, p)) continue;
+                // 只替换非HELL方块
+                boolean isHellBlock = false;
+                for (BlockState hell : HELL) {
+                    if (st.getBlock() == hell.getBlock()) {
+                        isHellBlock = true;
+                        break;
+                    }
+                }
+                if (isHellBlock) continue;
                 if (!original.containsKey(p)) original.put(p.immutable(), st);
                 level.setBlock(p, HELL[random.nextInt(HELL.length)], 3);
                 ttl.put(p.immutable(), 80);

@@ -2,7 +2,6 @@ package io.wifi.events.day_night_fight;
 
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
 import io.wifi.starrailexpress.api.SRERole;
-import io.wifi.starrailexpress.cca.SREGameTimeComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
@@ -27,9 +26,6 @@ import java.util.UUID;
 import java.util.HashMap;
 
 public class DNFGameMode extends SREMurderGameMode {
-    private static final int TICKS_PER_DNF_DAY = 24000;
-    private static final int DAYLIGHT_TICKS = 12000;
-
     @Override
     public boolean canPickBodyContent() {
         return true;
@@ -45,7 +41,9 @@ public class DNFGameMode extends SREMurderGameMode {
         return false;
     }
 
-    private int currentDay = -1;
+    private int currentDay = 0;
+    private Phase currentPhase = Phase.DAY;
+    private int phaseTicks = 0;
 
     public DNFGameMode(ResourceLocation identifier) {
         super(identifier, 140, 6);
@@ -88,6 +86,9 @@ public class DNFGameMode extends SREMurderGameMode {
             }
         }
         currentDay = 0;
+        currentPhase = Phase.DAY;
+        phaseTicks = 0;
+        updateWorldTime(serverWorld);
         Harpymodloader.FORCED_MODDED_ROLE.clear();
         Harpymodloader.FORCED_MODDED_ROLE_FLIP.clear();
         Harpymodloader.FORCED_MODDED_MODIFIER.clear();
@@ -103,11 +104,17 @@ public class DNFGameMode extends SREMurderGameMode {
     @Override
     public void writeToNbt(CompoundTag tag, HolderLookup.Provider wrapperLookup) {
         tag.putInt("CurrentDnfDay", currentDay);
+        tag.putString("CurrentDnfPhase", currentPhase.name());
+        tag.putInt("DnfPhaseTicks", phaseTicks);
     }
 
     @Override
     public void readFromNbt(CompoundTag tag, HolderLookup.Provider wrapperLookup) {
         currentDay = tag.getInt("CurrentDnfDay");
+        currentPhase = tag.contains("CurrentDnfPhase")
+                ? Phase.valueOf(tag.getString("CurrentDnfPhase"))
+                : Phase.DAY;
+        phaseTicks = tag.getInt("DnfPhaseTicks");
     }
 
     private Map<Player, SRERole> assignDnfRoles(ServerLevel serverWorld, List<ServerPlayer> players) {
@@ -180,30 +187,66 @@ public class DNFGameMode extends SREMurderGameMode {
     }
 
     private void tickDayNightCycle(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
-        SREGameTimeComponent time = SREGameTimeComponent.KEY.get(serverWorld);
-        int elapsed = Math.max(0, time.getResetTime() - time.getTime());
-        int day = elapsed / TICKS_PER_DNF_DAY;
-        int dayTick = elapsed % TICKS_PER_DNF_DAY;
-        SRETrainWorldComponent.KEY.get(serverWorld).setTimeOfDay(dayTick < DAYLIGHT_TICKS
-                ? SRETrainWorldComponent.TimeOfDay.DAY
-                : SRETrainWorldComponent.TimeOfDay.NIGHT);
-
-        if (day == currentDay) {
+        if (serverWorld.getServer().tickRateManager().isFrozen()) {
             return;
         }
-        currentDay = day;
+
+        phaseTicks++;
+        if (phaseTicks < getCurrentPhaseLength()) {
+            return;
+        }
+
+        phaseTicks = 0;
+        if (currentPhase == Phase.DAY) {
+            currentPhase = Phase.NIGHT;
+            updateWorldTime(serverWorld);
+            announcePhase(serverWorld, "message.dnf.phase.night", currentDay + 1);
+            for (ServerPlayer player : serverWorld.players()) {
+                DNF.updateNightTools(player);
+            }
+            return;
+        }
+
+        currentPhase = Phase.DAY;
+        currentDay++;
+        updateWorldTime(serverWorld);
+        announcePhase(serverWorld, "message.dnf.phase.day", currentDay + 1);
         for (ServerPlayer player : serverWorld.players()) {
             SRERole role = gameWorldComponent.getRole(player);
             if (role == null) {
                 continue;
             }
             DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
-            component.startDnfDay(player, day, role == DNFRoles.CHEF);
+            component.startDnfDay(player, currentDay, role == DNFRoles.CHEF);
             if (role == DNFRoles.CHEF) {
                 player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
-                        "message.dnf.chef.new_day", day + 1).withStyle(net.minecraft.ChatFormatting.DARK_GREEN),
+                        "message.dnf.chef.new_day", currentDay + 1).withStyle(net.minecraft.ChatFormatting.DARK_GREEN),
                         false);
             }
+            DNF.updateNightTools(player);
         }
+    }
+
+    private int getCurrentPhaseLength() {
+        if (currentPhase == Phase.NIGHT) {
+            return DNF.NIGHT_TICKS;
+        }
+        return currentDay == 0 ? DNF.FIRST_DAYLIGHT_TICKS : DNF.DAYLIGHT_TICKS;
+    }
+
+    private void updateWorldTime(ServerLevel serverWorld) {
+        SRETrainWorldComponent.KEY.get(serverWorld).setTimeOfDay(currentPhase == Phase.DAY
+                ? SRETrainWorldComponent.TimeOfDay.DAY
+                : SRETrainWorldComponent.TimeOfDay.NIGHT);
+    }
+
+    private void announcePhase(ServerLevel serverWorld, String key, int displayDay) {
+        serverWorld.getServer().getPlayerList().broadcastSystemMessage(
+                net.minecraft.network.chat.Component.translatable(key, displayDay), false);
+    }
+
+    private enum Phase {
+        DAY,
+        NIGHT
     }
 }

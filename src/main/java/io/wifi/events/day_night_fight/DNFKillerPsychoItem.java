@@ -27,6 +27,9 @@ public class DNFKillerPsychoItem extends Item {
         if (!(user instanceof ServerPlayer player)) {
             return InteractionResultHolder.success(user.getItemInHand(hand));
         }
+        if (!DNF.isNight(player)){
+            return InteractionResultHolder.fail(user.getItemInHand(hand));
+        }
         if (!DNF.isDNFKiller(player)) {
             player.displayClientMessage(Component.translatable("message.dnf.item.killer_only").withStyle(ChatFormatting.RED), true);
             return InteractionResultHolder.fail(user.getItemInHand(hand));
@@ -41,8 +44,16 @@ public class DNFKillerPsychoItem extends Item {
         player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 10, false, false, false));
         world.playSound(null, player.blockPosition(), SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.0f, 0.8f);
         if (world instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getY() + 1, player.getZ(), 120, 2.5, 1.2, 2.5, 0.05);
-            serverLevel.sendParticles(ParticleTypes.SMOKE, player.getX(), player.getY() + 1, player.getZ(), 200, 3.0, 1.5, 3.0, 0.03);
+            double x = player.getX();
+            double y = player.getY() + 1;
+            double z = player.getZ();
+            
+            // 大幅增加粒子数量并添加多种粒子效果以营造更强烈的视觉冲击
+            serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, x, y, z, 40, 3.0, 1.5, 3.0, 0.1);
+            serverLevel.sendParticles(ParticleTypes.SMOKE, x, y, z, 55, 3.5, 2.0, 3.5, 0.05);
+            serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y, z, 35, 2.5, 1.0, 2.5, 0.08);
+            serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y, z, 35, 2.0, 1.0, 2.0, 0.1);
+            serverLevel.sendParticles(ParticleTypes.SCULK_CHARGE_POP, x, y, z, 35, 2.0, 1.0, 2.0, 0.1);
         }
         return InteractionResultHolder.success(user.getItemInHand(hand));
     }

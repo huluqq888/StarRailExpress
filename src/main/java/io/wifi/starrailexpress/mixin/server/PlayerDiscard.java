@@ -1,5 +1,6 @@
 package io.wifi.starrailexpress.mixin.server;
 
+import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
@@ -15,7 +16,7 @@ public class PlayerDiscard {
     @Inject(method = "remove", at = @At("HEAD"))
     public void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
         final var gameWorldComponent = SREGameWorldComponent.KEY.get(serverPlayer.level());
-        if (gameWorldComponent != null && gameWorldComponent.isRunning()
+        if (gameWorldComponent != null && gameWorldComponent.isRunning() &&gameWorldComponent.gameMode!= SREGameModes.DAY_NIGHT_FIGHT
                 && GameUtils.isPlayerAliveAndSurvival(serverPlayer)) {
             {
                 GameUtils.forceKillPlayer(serverPlayer, true, null, GameConstants.DeathReasons.DISCONNECT);

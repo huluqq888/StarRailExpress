@@ -7,6 +7,7 @@ import io.wifi.starrailexpress.content.block.TrainDoorBlock;
 import io.wifi.starrailexpress.content.block_entity.SmallDoorBlockEntity;
 import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.index.TMMSounds;
+import io.wifi.starrailexpress.util.SREItemUtils;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -14,10 +15,14 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -27,6 +32,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import org.agmas.noellesroles.utils.RoleUtils;
 
 import java.util.List;
 
@@ -64,6 +70,8 @@ public class DNFItems {
             new DNFKillerPsychoItem(new Item.Properties().stacksTo(1)));
     public static final Item ABYSS_TENTACLE = register("dnf_abyss_tentacle",
             new DNFTentacleItem(new Item.Properties().stacksTo(1)));
+    public static final Item CHEF_HAT = register("dnf_chef_hat",
+            new DNFChefHatItem(new Item.Properties().stacksTo(1)));
 
     public static void init() {
         ItemGroupEvents.modifyEntriesEvent(TMMItems.EQUIPMENT_GROUP).register(entries -> {
@@ -81,6 +89,7 @@ public class DNFItems {
             entries.accept(BLOOD_BUY_LOCKPICK);
             entries.accept(ABYSS_VIAL);
             entries.accept(ABYSS_TENTACLE);
+            entries.accept(CHEF_HAT);
         });
     }
 

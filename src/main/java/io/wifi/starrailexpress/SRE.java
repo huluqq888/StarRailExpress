@@ -188,9 +188,6 @@ public class SRE extends StarRailExpressID implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(serv -> {
             VoteManager.onServerTick();
         });
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            MysqlPlayerDataStore.shutdown();
-        });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             SRE.isLobby = SREConfig.instance().isLobby;
             sender.sendPacket(new IsLobbyConfigPayload(SRE.isLobby));

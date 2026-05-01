@@ -6,12 +6,14 @@ import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.PlayerBodyEntityComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerTaskComponent;
 import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.content.block.ToiletBlock;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.ShopContent;
 import io.wifi.starrailexpress.index.TMMItems;
+import io.wifi.starrailexpress.util.SREItemUtils;
 import io.wifi.starrailexpress.util.ShopEntry;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.ChatFormatting;
@@ -40,9 +42,21 @@ public class DNF {
     public static final int BLOOD_PRICE = 10;
     public static final int KNIFE_COOLDOWN_TICKS = 50 * 20;
     public static final int CROWBAR_COOLDOWN_TICKS = 300 * 20;
-    public static final int TWO_DAYS_TICKS = 2 * 24000;
-    public static final float SAN_TASK_MOOD_GAIN = 0.4f;
-    public static final int CHEF_DAILY_FOOD_CAPACITY = 40;
+    public static final int FIRST_DAYLIGHT_TICKS = 2 * 60 * 20;
+    public static final int DAYLIGHT_TICKS = 5 * 60 * 20;
+    public static final int NIGHT_TICKS = 5 * 60 * 20;
+    public static final int TWO_DAYS_TICKS = 2 * (DAYLIGHT_TICKS + NIGHT_TICKS);
+    public static final int CLEANING_TICKS = 8 * 20;
+    public static final int MAX_DAILY_CLEANING_TASKS = 3;
+    public static final float INITIAL_SAN = 0.5f;
+    public static final float MORNING_SAN = 0.3f;
+    public static final float SAN_CLEANING_GAIN = 0.1f;
+    public static final float SAN_CHAT_GAIN = 0.2f;
+    public static final float SAN_FOOD_GAIN = 0.3f;
+    public static final float SAN_WATER_GAIN = 0.1f;
+    public static final float SAN_ROOM_INSPECT_THRESHOLD = 0.8f;
+    public static final float SAN_TASK_MOOD_GAIN = SAN_CLEANING_GAIN;
+    public static final int CHEF_DAILY_FOOD_CAPACITY = 50;
     public static final int CHEF_WATER_CHECK_COST = 10;
     public static final int CHEF_RECIPE_OUTPUT = 10;
     public static final int INITIAL_CAFETERIA_FOOD = 50;
@@ -154,7 +168,7 @@ public class DNF {
     }
 
     public static void ensureHas(ServerPlayer player, ItemStack stack) {
-        if (player.getInventory().contains(stack)) {
+        if (SREItemUtils.hasItem(player, stack.getItem())) {
             return;
         }
         if (!player.addItem(stack.copy())) {
@@ -186,8 +200,18 @@ public class DNF {
             BlockState state = world.getBlockState(hitResult.getBlockPos());
             DNFPlayerComponent component = DNFPlayerComponent.KEY.get(serverPlayer);
             if (state.is(Blocks.COBWEB)) {
-                if (component.cleanLibraryWeb(serverPlayer)) {
-                    world.destroyBlock(hitResult.getBlockPos(), false, serverPlayer);
+                if (component.beginCleaningTask(serverPlayer)) {
+                    BlockState originalState = state;
+                    net.minecraft.core.BlockPos pos = hitResult.getBlockPos().immutable();
+                    io.wifi.starrailexpress.util.Scheduler.schedule(() -> {
+                        if (!serverPlayer.hasDisconnected()
+                                && isDayNightFightMode(serverPlayer.level())
+                                && serverPlayer.level().getBlockState(pos).is(originalState.getBlock())) {
+                            serverPlayer.level().destroyBlock(pos, false, serverPlayer);
+                        }
+                        DNFPlayerComponent.KEY.get(serverPlayer).finishCleaningTask(serverPlayer,
+                                SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB, "message.dnf.task.library_web");
+                    }, CLEANING_TICKS);
                     return InteractionResult.SUCCESS;
                 }
                 return InteractionResult.PASS;
@@ -199,8 +223,18 @@ public class DNF {
                 return component.completeToilet(serverPlayer) ? InteractionResult.SUCCESS : InteractionResult.PASS;
             }
             if (isDustBlock(state)) {
-                if (component.cleanPrisonDust(serverPlayer)) {
-                    world.destroyBlock(hitResult.getBlockPos(), false, serverPlayer);
+                if (component.beginCleaningTask(serverPlayer)) {
+                    BlockState originalState = state;
+                    net.minecraft.core.BlockPos pos = hitResult.getBlockPos().immutable();
+                    io.wifi.starrailexpress.util.Scheduler.schedule(() -> {
+                        if (!serverPlayer.hasDisconnected()
+                                && isDayNightFightMode(serverPlayer.level())
+                                && serverPlayer.level().getBlockState(pos).is(originalState.getBlock())) {
+                            serverPlayer.level().destroyBlock(pos, false, serverPlayer);
+                        }
+                        DNFPlayerComponent.KEY.get(serverPlayer).finishCleaningTask(serverPlayer,
+                                SREPlayerTaskComponent.Task.DNF_PRISON_DUST, "message.dnf.task.prison_dust");
+                    }, CLEANING_TICKS);
                     return InteractionResult.SUCCESS;
                 }
             }
