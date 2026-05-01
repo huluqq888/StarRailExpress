@@ -1,12 +1,21 @@
 package io.wifi.events.day_night_fight;
 
+import io.wifi.events.day_night_fight.block.DNFBlocks;
+import io.wifi.events.day_night_fight.cca.DNFClothingComponent;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
+import io.wifi.events.day_night_fight.cca.DNFUnderworldComponent;
+import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
+import io.wifi.events.day_night_fight.entity.DNFEntities;
 import io.wifi.events.day_night_fight.commands.ClueSystemCommand;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
+import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.PlayerBodyEntityComponent;
+import io.wifi.starrailexpress.cca.SREGameRoundEndComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerTaskComponent;
+import io.wifi.starrailexpress.content.vote.VoteManager;
+import io.wifi.starrailexpress.content.vote.VoteOption;
 import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.content.block.ToiletBlock;
@@ -16,26 +25,41 @@ import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.util.SREItemUtils;
 import io.wifi.starrailexpress.util.ShopEntry;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands.CommandSelection;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.Container;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import org.agmas.noellesroles.utils.RoleUtils;
 
 import com.mojang.brigadier.CommandDispatcher;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class DNF {
     public static final int BLOOD_PER_CORPSE = 10;
@@ -50,25 +74,54 @@ public class DNF {
     public static final int MAX_DAILY_CLEANING_TASKS = 3;
     public static final float INITIAL_SAN = 0.5f;
     public static final float MORNING_SAN = 0.3f;
-    public static final float SAN_CLEANING_GAIN = 0.1f;
-    public static final float SAN_CHAT_GAIN = 0.2f;
-    public static final float SAN_FOOD_GAIN = 0.3f;
-    public static final float SAN_WATER_GAIN = 0.1f;
+    public static final float SAN_CLEANING_GAIN = 0.4f;
+    public static final float SAN_CHAT_GAIN = 0.4f;
+    public static final float SAN_FOOD_GAIN = 0.4f;
+    public static final float SAN_WATER_GAIN = 0.4f;
     public static final float SAN_ROOM_INSPECT_THRESHOLD = 0.8f;
     public static final float SAN_TASK_MOOD_GAIN = SAN_CLEANING_GAIN;
-    public static final int CHEF_DAILY_FOOD_CAPACITY = 50;
+    public static final int CHEF_DAILY_FOOD_CAPACITY = 40;
     public static final int CHEF_WATER_CHECK_COST = 10;
     public static final int CHEF_RECIPE_OUTPUT = 10;
     public static final int INITIAL_CAFETERIA_FOOD = 50;
+    public static final int CLOTHES_DAILY_DIRT_DAMAGE = 12;
+    public static final float CLOTHES_DIRTY_THRESHOLD = 0.6f;
+    public static final float SAN_NO_CLOTHES_PENALTY = 0.8f;
+    public static final float SAN_DIRTY_CLOTHES_PENALTY = 0.6f;
 
     private static boolean eventsRegistered;
+    private static boolean winnerPredicatesRegistered;
 
     public static void init() {
         DNFItems.init();
+        DNFEntities.initialize();
+        DNFBlocks.initialize();
         TMMRoles.addRoleComponents(DNFPlayerComponent.KEY);
+        TMMRoles.addRoleComponents(DNFClothingComponent.KEY);
+        TMMRoles.addRoleComponents(DNFUnderworldComponent.KEY);
         registerEvents();
         registerShops();
+        registerWinnerPredicates();
         DNFDebugCommand.register();
+    }
+
+    private static void registerWinnerPredicates() {
+        if (winnerPredicatesRegistered) {
+            return;
+        }
+        winnerPredicatesRegistered = true;
+        GameUtils.CustomWinnersPredicates.add(entry -> {
+            if (!(entry.getKey() instanceof ServerPlayer player) || entry.getValue() == null) {
+                return false;
+            }
+            SRERole role = SREGameWorldComponent.KEY.get(player.level()).getRole(player);
+            return switch (entry.getValue()) {
+                case "dnf_true" -> isDnfAlive(player) && !isDNFManiac(role);
+                case "dnf_survival" -> isDnfAlive(player) && !isDNFAntagonist(role);
+                case "dnf_wipeout" -> isDnfAlive(player) && isDNFAntagonist(role);
+                default -> false;
+            };
+        });
     }
 
     public static boolean isDNFKiller(SRERole role) {
@@ -85,6 +138,36 @@ public class DNF {
 
     public static boolean isDNFChef(Player player) {
         return player != null && SREGameWorldComponent.KEY.get(player.level()).isRole(player, DNFRoles.CHEF);
+    }
+
+    public static boolean isDNFManiac(SRERole role) {
+        return role != null && role.identifier().equals(DNFRoles.MANIAC_ID);
+    }
+
+    public static boolean isDNFManiac(Player player) {
+        return player != null && isDNFManiac(SREGameWorldComponent.KEY.get(player.level()).getRole(player));
+    }
+
+    public static boolean isDNFPoisoner(SRERole role) {
+        return role != null && role.identifier().equals(DNFRoles.POISONER_ID);
+    }
+
+    public static boolean isDNFPoisoner(Player player) {
+        return player != null && isDNFPoisoner(SREGameWorldComponent.KEY.get(player.level()).getRole(player));
+    }
+
+    public static boolean isDNFAntagonist(SRERole role) {
+        return isDNFKiller(role) || isDNFPoisoner(role) || isDNFManiac(role);
+    }
+
+    public static boolean isDnfAlive(ServerPlayer player) {
+        if (player == null || player.isCreative()) {
+            return false;
+        }
+        if (isDNFManiac(player)) {
+            return player.isAlive();
+        }
+        return GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(player);
     }
 
     public static boolean isDayNightFightMode(Level world) {
@@ -150,7 +233,7 @@ public class DNF {
     }
 
     public static void updateNightTools(ServerPlayer player) {
-        if (isNight(player)) {
+        if (isDNFKiller(player) && isNight(player)) {
             equipNightTools(player);
         } else {
             removeNightTools(player);
@@ -186,6 +269,210 @@ public class DNF {
         }
     }
 
+    public static void applyPhaseState(ServerPlayer player, boolean night) {
+        if (!isDayNightFightMode(player.level()) || !isDNFManiac(player)) {
+            return;
+        }
+        DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+        if (night && !component.isManiacStunned()) {
+            if (player.isSpectator()) {
+                player.setGameMode(GameType.ADVENTURE);
+            }
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 60, 1, false, false));
+            player.displayClientMessage(Component.translatable("message.dnf.maniac.night")
+                    .withStyle(ChatFormatting.DARK_PURPLE), true);
+        } else {
+            player.setGameMode(GameType.SPECTATOR);
+            player.displayClientMessage(Component.translatable("message.dnf.maniac.day")
+                    .withStyle(ChatFormatting.DARK_PURPLE), true);
+        }
+    }
+
+    public static void applyManiacTick(ServerPlayer player) {
+        if (!isDNFManiac(player)) {
+            return;
+        }
+        DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+        if (isNight(player) && !component.isManiacStunned()) {
+            if (player.isSpectator()) {
+                player.setGameMode(GameType.ADVENTURE);
+            }
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 45, 1, false, false));
+        } else if (!isNight(player) && !player.isSpectator()) {
+            player.setGameMode(GameType.SPECTATOR);
+        }
+    }
+
+    public static boolean isTargetProtectedFromManiac(ServerPlayer target) {
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(target.serverLevel());
+        AABB cafeteria = world.getCafeteriaArea();
+        if (cafeteria != null && cafeteria.contains(target.position())) {
+            return true;
+        }
+        if (!DNFPlayerComponent.KEY.get(target).hasSafeRoomSan(target)) {
+            return false;
+        }
+        AABB dormRoom = world.getDormRoom(target.getUUID());
+        if (dormRoom != null) {
+            return dormRoom.contains(target.position());
+        }
+        Integer roomNumber = GameUtils.roomToPlayer.get(target.getUUID());
+        if (roomNumber == null) {
+            return false;
+        }
+        Vec3 roomCenter = AreasWorldComponent.KEY.get(target.level()).getRoomPosition(roomNumber);
+        return roomCenter != null && target.position().distanceToSqr(roomCenter) <= 4.0 * 4.0;
+    }
+
+    /**
+     * 发送玩家到里世界
+     * 玩家死亡时调用,进入里世界而不是真正死亡
+     */
+    public static void sendPlayerToUnderworld(ServerPlayer player) {
+        if (player == null || player.level() == null) return;
+        
+        // 获取里世界组件
+        DNFUnderworldComponent underworld = DNFUnderworldComponent.KEY.get(player);
+        DNFWorldComponent worldComponent = DNFWorldComponent.KEY.get(player.level());
+        
+        // 生成发光线索点
+        BlockPos cluePoint = worldComponent.generateCluePoint(player.level());
+        
+        // 进入里世界
+        underworld.enterUnderworld(cluePoint);
+        
+        // 设置玩家为旁观模式
+        player.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+        
+        // 播放音效
+        player.level().playSound(null, player.blockPosition(), 
+                net.minecraft.sounds.SoundEvents.WARDEN_DEATH, 
+                net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 0.8f);
+        
+        // 显示消息
+        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.dnf.underworld.enter")
+                .withStyle(net.minecraft.ChatFormatting.DARK_PURPLE), true);
+        
+        // 在发光线索点生成粒子效果
+        if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+            sl.sendParticles(net.minecraft.core.particles.ParticleTypes.GLOW,
+                    cluePoint.getX() + 0.5, cluePoint.getY() + 0.5, cluePoint.getZ() + 0.5,
+                    20, 0.5, 0.5, 0.5, 0.1);
+            
+            // 生成里世界怪物
+            spawnUnderworldMonster(sl, player);
+        }
+    }
+
+    /**
+     * 在里世界生成怪物
+     */
+    private static void spawnUnderworldMonster(net.minecraft.server.level.ServerLevel serverLevel, ServerPlayer player) {
+        // 在玩家附近生成怪物
+        double angle = Math.random() * Math.PI * 2;
+        double distance = 15 + Math.random() * 10; // 15-25格距离
+        
+        int x = (int)(player.getX() + Math.cos(angle) * distance);
+        int y = (int)player.getY();
+        int z = (int)(player.getZ() + Math.sin(angle) * distance);
+        
+        BlockPos spawnPos = new BlockPos(x, y, z);
+        BlockPos groundPos = serverLevel.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, spawnPos);
+        
+        io.wifi.events.day_night_fight.entity.UnderworldMonsterEntity monster = 
+                io.wifi.events.day_night_fight.entity.DNFEntities.UNDERWORLD_MONSTER.create(serverLevel);
+        
+        if (monster != null) {
+            monster.moveTo(groundPos.getX() + 0.5, groundPos.getY(), groundPos.getZ() + 0.5, 0, 0);
+            serverLevel.addFreshEntity(monster);
+        }
+    }
+
+    public static boolean tryPoisonerAbility(ServerPlayer player) {
+        if (!isDNFPoisoner(player)) {
+            return false;
+        }
+        if (!isNight(player)) {
+            player.displayClientMessage(Component.translatable("message.dnf.poisoner.night_only")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(player.serverLevel());
+        if (player.isShiftKeyDown()) {
+            if (DNFPlayerComponent.KEY.get(player).getPoisonKills() < 5) {
+                player.displayClientMessage(Component.translatable("message.dnf.poisoner.water_locked")
+                        .withStyle(ChatFormatting.RED), true);
+                return false;
+            }
+            BlockHitResult hit = findLookedAtBlock(player, 6.0);
+            if (hit == null || !world.isWaterSource(hit.getBlockPos())) {
+                player.displayClientMessage(Component.translatable("message.dnf.poisoner.water_no_target")
+                        .withStyle(ChatFormatting.GRAY), true);
+                return false;
+            }
+            world.poisonWaterTomorrow(player.getUUID());
+            player.displayClientMessage(Component.translatable("message.dnf.poisoner.water_poisoned")
+                    .withStyle(ChatFormatting.DARK_GREEN), false);
+            return true;
+        }
+
+        ItemStack held = player.getMainHandItem();
+        if (!DNFItems.isDnfFood(held)) {
+            player.displayClientMessage(Component.translatable("message.dnf.poisoner.need_food")
+                    .withStyle(ChatFormatting.YELLOW), true);
+            return false;
+        }
+        if (DNFItems.isContaminated(held)) {
+            player.displayClientMessage(Component.translatable("message.dnf.poisoner.already_poisoned")
+                    .withStyle(ChatFormatting.GRAY), true);
+            return false;
+        }
+        ItemStack poisoned = held.copy();
+        poisoned.setCount(1);
+        if (!DNFPlayerComponent.KEY.get(player).craftPoisonedFood(player, world.getCurrentDay(), poisoned)) {
+            return false;
+        }
+        if (!player.isCreative()) {
+            held.shrink(1);
+        }
+        DNFItems.giveOrDrop(player, poisoned);
+        return true;
+    }
+
+    public static boolean inspectFoodBox(ServerPlayer player) {
+        BlockHitResult hit = findLookedAtBlock(player, 6.0);
+        if (hit == null) {
+            return false;
+        }
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(player.serverLevel());
+        if (!world.isFoodBox(hit.getBlockPos())) {
+            return false;
+        }
+        Container container = world.getFoodBoxContainer();
+        if (container == null) {
+            return false;
+        }
+        int contaminated = DNFItems.countContaminated(container);
+        player.displayClientMessage(Component.translatable("message.dnf.chef.food_box_checked", contaminated)
+                .withStyle(contaminated > 0 ? ChatFormatting.RED : ChatFormatting.GREEN), false);
+        return true;
+    }
+
+    public static ServerPlayer findLookedAtPlayer(ServerPlayer player, double range) {
+        HitResult result = ProjectileUtil.getHitResultOnViewVector(player,
+                entity -> entity instanceof ServerPlayer target && target != player && isDnfAlive(target), range);
+        if (result instanceof EntityHitResult entityHitResult
+                && entityHitResult.getEntity() instanceof ServerPlayer target) {
+            return target;
+        }
+        return null;
+    }
+
+    public static BlockHitResult findLookedAtBlock(ServerPlayer player, double range) {
+        HitResult result = player.pick(range, 0.0f, false);
+        return result instanceof BlockHitResult blockHitResult ? blockHitResult : null;
+    }
+
     private static void registerEvents() {
         if (eventsRegistered) {
             return;
@@ -199,6 +486,49 @@ public class DNF {
 
             BlockState state = world.getBlockState(hitResult.getBlockPos());
             DNFPlayerComponent component = DNFPlayerComponent.KEY.get(serverPlayer);
+            DNFWorldComponent dnfWorld = DNFWorldComponent.KEY.get(world);
+            BlockPos clickedPos = hitResult.getBlockPos();
+            if (dnfWorld.isMeteor(clickedPos)) {
+                triggerTrueEnding(serverPlayer.serverLevel());
+                return InteractionResult.SUCCESS;
+            }
+            if (dnfWorld.isFoodBox(clickedPos)) {
+                if (DNF.isDNFChef(serverPlayer) && serverPlayer.isShiftKeyDown()) {
+                    return inspectFoodBox(serverPlayer) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+                }
+                ItemStack held = serverPlayer.getItemInHand(hand);
+                if (DNF.isDNFPoisoner(serverPlayer) && DNF.isNight(serverPlayer) && DNFItems.isContaminated(held)) {
+                    Container container = dnfWorld.getFoodBoxContainer();
+                    if (container == null) {
+                        serverPlayer.displayClientMessage(Component.translatable("message.dnf.food_box.missing")
+                                .withStyle(ChatFormatting.RED), true);
+                        return InteractionResult.FAIL;
+                    }
+                    ItemStack single = held.copy();
+                    single.setCount(1);
+                    if (DNFWorldComponent.addToContainer(container, single)) {
+                        if (!serverPlayer.isCreative()) {
+                            held.shrink(1);
+                        }
+                        serverPlayer.displayClientMessage(Component.translatable("message.dnf.poisoner.food_deposited")
+                                .withStyle(ChatFormatting.DARK_GREEN), true);
+                        return InteractionResult.SUCCESS;
+                    }
+                    serverPlayer.displayClientMessage(Component.translatable("message.dnf.food_box.full")
+                            .withStyle(ChatFormatting.RED), true);
+                    return InteractionResult.FAIL;
+                }
+                return InteractionResult.PASS;
+            }
+            if (serverPlayer.isShiftKeyDown() && DNF.isNight(serverPlayer)
+                    && (state.is(Blocks.BOOKSHELF) || state.is(Blocks.CHISELED_BOOKSHELF))) {
+                ItemStack scraps = new ItemStack(DNFItems.PAPER_SCRAP, 10);
+                DNFItems.giveOrDrop(serverPlayer, scraps);
+                serverPlayer.getCooldowns().addCooldown(DNFItems.PAPER_SCRAP, 60 * 20);
+                serverPlayer.displayClientMessage(Component.translatable("message.dnf.paper.scraps")
+                        .withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.SUCCESS;
+            }
             if (state.is(Blocks.COBWEB)) {
                 if (component.beginCleaningTask(serverPlayer)) {
                     BlockState originalState = state;
@@ -240,6 +570,90 @@ public class DNF {
             }
             return InteractionResult.PASS;
         });
+        UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (world.isClientSide || !(player instanceof ServerPlayer serverPlayer)
+                    || !isDayNightFightMode(world) || !GameUtils.isPlayerAliveAndSurvival(serverPlayer)
+                    || !(entity instanceof PlayerBodyEntity)) {
+                return InteractionResult.PASS;
+            }
+            SRERole role = SREGameWorldComponent.KEY.get(world).getRole(serverPlayer);
+            if (isDNFAntagonist(role) || role == DNFRoles.CHEF) {
+                return InteractionResult.PASS;
+            }
+            return startBodyReportVote(serverPlayer);
+        });
+    }
+
+    private static InteractionResult startBodyReportVote(ServerPlayer reporter) {
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(reporter.serverLevel());
+        if (world.isMeetingActive() || VoteManager.getCurrentSession() != null) {
+            reporter.displayClientMessage(Component.translatable("message.dnf.vote.already_active")
+                    .withStyle(ChatFormatting.YELLOW), true);
+            return InteractionResult.FAIL;
+        }
+        List<ServerPlayer> voters = reporter.serverLevel().players().stream()
+                .filter(DNF::isDnfAlive)
+                .filter(player -> !isDNFManiac(player))
+                .toList();
+        if (voters.isEmpty()) {
+            return InteractionResult.FAIL;
+        }
+        VoteManager.VoteBuilder builder = VoteManager.builder(Component.translatable("message.dnf.vote.title"))
+                .duration(60 * 20)
+                .allowReVote(true)
+                .showResults(true)
+                .syncInterval(20)
+                .targetPlayers(voters)
+                .callback(session -> {
+                    world.setMeetingActive(false);
+                    var top = session.getTopResults();
+                    if (top == null || top.isEmpty() || top.size() != 1 || top.get(0).getValue().count() <= 0) {
+                        reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
+                                Component.translatable("message.dnf.vote.no_target").withStyle(ChatFormatting.GRAY),
+                                false);
+                        world.setVotedTarget(null);
+                        return;
+                    }
+                    String resultId = top.get(0).getKey();
+                    try {
+                        UUID targetId = UUID.fromString(resultId);
+                        world.setVotedTarget(targetId);
+                        Player playerTarget = reporter.serverLevel().getPlayerByUUID(targetId);
+                        if (playerTarget instanceof ServerPlayer target) {
+                            target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 3 * 60 * 20, 0, false, false));
+                            reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
+                                    Component.translatable("message.dnf.vote.target", target.getDisplayName())
+                                            .withStyle(ChatFormatting.YELLOW),
+                                    false);
+                        }
+                    } catch (IllegalArgumentException ignored) {
+                        world.setVotedTarget(null);
+                    }
+                });
+        for (ServerPlayer voter : voters) {
+            builder.addOption(VoteOption.player(voter, voter.getUUID().toString()));
+        }
+        if (builder.start() == null) {
+            return InteractionResult.FAIL;
+        }
+        world.setMeetingActive(true);
+        reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
+                Component.translatable("message.dnf.vote.reported", reporter.getDisplayName())
+                        .withStyle(ChatFormatting.YELLOW),
+                false);
+        return InteractionResult.SUCCESS;
+    }
+
+    private static void triggerTrueEnding(ServerLevel serverLevel) {
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(serverLevel);
+        if (world.isTrueEndingTriggered()) {
+            return;
+        }
+        world.setTrueEndingTriggered(true);
+        SREGameRoundEndComponent roundEnd = SREGameRoundEndComponent.KEY.get(serverLevel);
+        roundEnd.CustomWinnerTitle = Component.translatable("game.win.star.dnf_true");
+        roundEnd.CustomWinnerSubtitle = Component.translatable("message.dnf.ending.true");
+        RoleUtils.customWinnerWin(serverLevel, "dnf_true", 0xA8F0FF);
     }
 
     private static boolean isDustBlock(BlockState state) {

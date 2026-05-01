@@ -249,6 +249,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             SetAutoTrainResetCommand.register(dispatcher);
             SetBoundCommand.register(dispatcher);
             AutoStartCommand.register(dispatcher);
+            ParticipationCommand.register(dispatcher);
             AutoShutdownWhenNotRunningCommand.register(dispatcher);
             ConfigCommand.register(dispatcher);
             SwitchMapCommand.register(dispatcher);

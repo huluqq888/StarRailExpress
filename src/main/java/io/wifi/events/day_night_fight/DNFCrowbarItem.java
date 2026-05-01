@@ -1,6 +1,7 @@
 package io.wifi.events.day_night_fight;
 
 import io.wifi.starrailexpress.content.block_entity.DoorBlockEntity;
+import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
 import io.wifi.starrailexpress.index.TMMSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -34,6 +35,11 @@ public class DNFCrowbarItem extends Item {
                     .withStyle(ChatFormatting.RED), true);
             return InteractionResult.FAIL;
         }
+        if (!DNF.isNight(player)) {
+            player.displayClientMessage(Component.translatable("message.dnf.killer.night_only")
+                    .withStyle(ChatFormatting.DARK_RED), true);
+            return InteractionResult.FAIL;
+        }
 
         BlockEntity entity = world.getBlockEntity(context.getClickedPos());
         if (!(entity instanceof DoorBlockEntity)) {
@@ -44,6 +50,10 @@ public class DNFCrowbarItem extends Item {
         }
 
         if (!world.isClientSide) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                    && !DNFPlayerComponent.KEY.get(serverPlayer).tryUseCrowbar(serverPlayer)) {
+                return InteractionResult.FAIL;
+            }
             world.playSound(null, context.getClickedPos(), TMMSounds.ITEM_CROWBAR_PRY, SoundSource.BLOCKS, 2.5f, .75f);
             player.swing(InteractionHand.MAIN_HAND, true);
             door.blast();

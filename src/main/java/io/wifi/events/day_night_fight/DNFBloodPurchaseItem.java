@@ -17,9 +17,9 @@ import java.util.function.Supplier;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
 
 public class DNFBloodPurchaseItem extends Item {
-    private final int price;
-    private final Supplier<ItemStack> purchase;
-    private final String nameKey;
+    public final int price;
+    public final Supplier<ItemStack> purchase;
+    public final String nameKey;
 
     public DNFBloodPurchaseItem(Properties properties, int price, Supplier<ItemStack> purchase, String nameKey) {
         super(properties);
@@ -52,7 +52,7 @@ public class DNFBloodPurchaseItem extends Item {
         tooltip.add(Component.translatable(nameKey).withStyle(ChatFormatting.GRAY));
     }
 
-    static boolean buy(ServerPlayer player, int price, ItemStack purchase, String nameKey) {
+    public static boolean buy(Player player, int price, ItemStack purchase, String nameKey) {
         DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
         if (!component.spendBlood(price)) {
             player.displayClientMessage(Component.translatable("message.dnf.killer.not_enough_blood", price)

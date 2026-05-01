@@ -209,6 +209,8 @@ public class SREClient implements ClientModInitializer {
         EntityRendererRegistry.register(TMMEntities.FIRECRACKER, FirecrackerEntityRenderer::new);
         EntityRendererRegistry.register(TMMEntities.GRENADE, ThrownItemRenderer::new);
         EntityRendererRegistry.register(TMMEntities.NOTE, NoteEntityRenderer::new);
+        EntityRendererRegistry.register(io.wifi.events.day_night_fight.entity.DNFEntities.UNDERWORLD_MONSTER, 
+                io.wifi.events.day_night_fight.client.renderer.UnderworldMonsterRenderer::new);
 
         // Register entity model layers
         TMMModelLayers.initialize();

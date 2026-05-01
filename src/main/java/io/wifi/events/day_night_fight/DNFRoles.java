@@ -1,16 +1,27 @@
 package io.wifi.events.day_night_fight;
 
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 import io.wifi.starrailexpress.api.*;
+import io.wifi.starrailexpress.cca.SREGameRoundEndComponent;
+import io.wifi.starrailexpress.cca.SREPlayerPsychoComponent;
+import io.wifi.starrailexpress.event.AllowPlayerOpenLockedDoor;
+import io.wifi.starrailexpress.event.CantPlayerOpenDoor;
 import io.wifi.starrailexpress.util.ShopEntry;
+import io.wifi.starrailexpress.game.GameConstants;
+import io.wifi.starrailexpress.index.TMMItems;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.utils.RoleUtils;
 
@@ -29,20 +40,43 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.agmas.noellesroles.init.ModItems;
+import org.jetbrains.annotations.NotNull;
+
+import static io.wifi.events.day_night_fight.DNFBloodPurchaseItem.buy;
 
 public class DNFRoles {
     public static final ResourceLocation KILLER_ID = SRE.id("dnf_killer");
+    public static final ResourceLocation MANIAC_ID = SRE.id("dnf_maniac");
     public static final ResourceLocation SOLDIER_ID = SRE.id("dnf_soldier");
     public static final ResourceLocation CHEF_ID = SRE.id("dnf_chef");
+    public static final ResourceLocation POISONER_ID = SRE.id("dnf_poisoner");
     public static final ResourceLocation PSYCHOLOGIST_ID = SRE.id("dnf_psychologist");
     public static final ResourceLocation LOCKSMITH_ID = SRE.id("dnf_locksmith");
     public static final ResourceLocation CIVILIAN_ID = SRE.id("dnf_civilian");
     public static final ResourceLocation FLYING_KNIFE_DEATH = SRE.id("dnf_flying_knife");
 
-    private static final java.util.Map<java.util.UUID, Integer> DNF_CHARGING_TICKS = new java.util.HashMap<>();
-    private static final java.util.Map<java.util.UUID, Long> DNF_TRAIL_EXPIRE = new java.util.HashMap<>();
+    private static final Map<UUID, Integer> DNF_CHARGING_TICKS = new HashMap<>();
+    private static final Map<UUID, Long> DNF_TRAIL_EXPIRE = new HashMap<>();
     public static final ResourceLocation DNF_ABYSS_ID = SRE.id("dnf_abyss");
 
+    static {
+        CantPlayerOpenDoor.EVENT.register(player -> {
+            if (!(player instanceof ServerPlayer serverPlayer))return false;
+            if (player.level() instanceof ServerLevel sl) {
+                if (SREGameWorldComponent.KEY.get( sl).gameMode== SREGameModes.DAY_NIGHT_FIGHT) {
+                    if (!DNF.isDNFKiller(serverPlayer)) {
+                        if (!DNFPlayerComponent.KEY.get(serverPlayer).hasSafeRoomSan(serverPlayer)){
+                            return true;
+                        }
+
+                    }
+                }
+
+            }
+            return  false;
+        });
+    }
     public static SRERole DNF_ABYSS = TMMRoles.registerRole(new NormalRole(
             DNF_ABYSS_ID,
             new Color(120, 0, 0).getRGB(),
@@ -60,18 +94,21 @@ public class DNFRoles {
                 return InteractionResult.PASS;
             }
 
-            serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+            serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
             if (serverPlayer.isAlive() && victim.isAlive() && serverPlayer.distanceTo(victim) <= 4.0) {
-                GameUtils.killPlayer(victim, true, serverPlayer, Noellesroles.id("dnf_tentacle"));
+                // 修改:让玩家进入里世界而不是直接死亡
+                if (victim instanceof ServerPlayer serverVictim) {
+                    DNF.sendPlayerToUnderworld(serverVictim);
+                }
             }
             if (serverPlayer.isAlive()) {
-                serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+                serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
             }
             serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition().above(1), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.0f, 1.0f);
 
             // 添加少量粒子效果
-            if (serverPlayer.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIMSON_SPORE,
+            if (serverPlayer.level() instanceof ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.CRIMSON_SPORE,
                         serverPlayer.getX(), serverPlayer.getY() + 1, serverPlayer.getZ(),
                         5, 0.3, 0.5, 0.3, 0.05);
             }
@@ -79,9 +116,9 @@ public class DNFRoles {
             return InteractionResult.CONSUME;
         }
         @Override
-        public net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> onItemUse(Player player, net.minecraft.world.level.Level world, InteractionHand hand) {
+        public InteractionResultHolder<ItemStack> onItemUse(Player player, Level world, InteractionHand hand) {
             player.startUsingItem(hand);
-            return net.minecraft.world.InteractionResultHolder.success(player.getItemInHand(hand));
+            return InteractionResultHolder.success(player.getItemInHand(hand));
         }
 
         @Override
@@ -93,10 +130,10 @@ public class DNFRoles {
         public void serverTick(ServerPlayer player) {
             player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, false));
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, false));
-            if (player.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIMSON_SPORE, player.getX(), player.getY() + 1, player.getZ(), 3, 0.4, 0.8, 0.4, 0.01);
+            if (player.level() instanceof ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.CRIMSON_SPORE, player.getX(), player.getY() + 1, player.getZ(), 3, 0.4, 0.8, 0.4, 0.01);
             }
-            java.util.UUID id = player.getUUID();
+            UUID id = player.getUUID();
             if (player.isUsingItem()) {
                 DNF_CHARGING_TICKS.put(id, DNF_CHARGING_TICKS.getOrDefault(id, 0) + 1);
                 player.setDeltaMovement(0, player.getDeltaMovement().y, 0);
@@ -105,7 +142,10 @@ public class DNFRoles {
                     player.stopUsingItem();
                     var hitBox = player.getBoundingBox().inflate(2.5).move(player.getLookAngle().scale(2.0));
                     for (Player p2 : player.level().getEntitiesOfClass(Player.class, hitBox, p -> p != player && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p))) {
-                        GameUtils.killPlayer((ServerPlayer) p2, true, player, Noellesroles.id("dnf_tentacle"));
+                        // 修改:让玩家进入里世界而不是直接死亡
+                        if (p2 instanceof ServerPlayer serverP2) {
+                            DNF.sendPlayerToUnderworld(serverP2);
+                        }
                     }
                 }
             } else {
@@ -119,10 +159,66 @@ public class DNFRoles {
             return new ArrayList<>();
         }
     }).setCanSeeCoin(false).setCanUseInstinct(false).setCanSeeTime(false).setCanGetBodyItems(true);
+    public static final SRERole MANIAC = TMMRoles.registerRole(new DNFNormalRole(MANIAC_ID, 0x3A0010, false, true,
+            SRERole.MoodType.FAKE, Integer.MAX_VALUE, false) {
+        @Override
+        public void onInit(MinecraftServer server, ServerPlayer serverPlayer) {
+            DNFPlayerComponent.KEY.get(serverPlayer).init();
+            DNF.applyPhaseState(serverPlayer, DNF.isNight(serverPlayer));
+        }
+
+        @Override
+        public void serverTick(ServerPlayer player) {
+            DNF.applyManiacTick(player);
+        }
+
+
+        @Override
+        public InteractionResult leftClickEntity(Player player, Entity target) {
+            if (!(player instanceof ServerPlayer serverPlayer) || !(target instanceof ServerPlayer victim)) {
+                return InteractionResult.PASS;
+            }
+            if (!DNF.isNight(serverPlayer) || DNFPlayerComponent.KEY.get(serverPlayer).isManiacStunned()) {
+                return InteractionResult.CONSUME;
+            }
+            if (!GameUtils.isPlayerAliveAndSurvival(victim) || DNF.isTargetProtectedFromManiac(victim)) {
+                serverPlayer.displayClientMessage(Component.translatable("message.dnf.maniac.safe_room")
+                        .withStyle(ChatFormatting.DARK_PURPLE), true);
+                return InteractionResult.CONSUME;
+            }
+            if (serverPlayer.distanceTo(victim) <= 4.0) {
+                GameUtils.killPlayer(victim, true, serverPlayer, SRE.id("dnf_maniac"));
+                serverPlayer.level().playSound(null, victim.blockPosition(), SoundEvents.WARDEN_ATTACK_IMPACT,
+                        SoundSource.PLAYERS, 1.0f, 0.6f);
+            }
+            return InteractionResult.CONSUME;
+        }
+
+        @Override
+        public boolean allowDeath(Player victim, Player killer, ResourceLocation deathReason, boolean spawnBody) {
+            if (victim instanceof ServerPlayer serverVictim
+                    && (deathReason.equals(GameConstants.DeathReasons.REVOLVER)
+                            || deathReason.equals(GameConstants.DeathReasons.DERRINGER)
+                            || deathReason.equals(GameConstants.DeathReasons.SNIPER_RIFLE))) {
+                DNFPlayerComponent.KEY.get(serverVictim).stunManiac(serverVictim);
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
+            if (killer instanceof ServerPlayer serverKiller) {
+                DNFPlayerComponent.KEY.get(serverKiller).recordKill(serverKiller);
+            }
+        }
+    }.setMax(2).setCanSeeCoin(false).setCanUseInstinct(false).setCanGetBodyItems(false))
+            .setCanBeRandomedByOtherRoles(false);
+
     public static final SRERole KILLER = TMMRoles.registerRole(
             new CustomWinnerRole(KILLER_ID, 0x7A1414, false, true, SRERole.MoodType.FAKE, -1, true) {
                 @Override
-                public void onInit(net.minecraft.server.MinecraftServer server, ServerPlayer serverPlayer) {
+                public void onInit(MinecraftServer server, ServerPlayer serverPlayer) {
                     DNFPlayerComponent.KEY.get(serverPlayer).init();
                     if (DNF.isNight(serverPlayer)) {
                         DNF.equipNightTools(serverPlayer);
@@ -130,10 +226,48 @@ public class DNFRoles {
                 }
 
                 @Override
+                public List<ShopEntry> getShopEntries() {
+                    ArrayList<ShopEntry> shopEntries = new ArrayList<>();
+                    shopEntries.add(new ShopEntry(new ItemStack(DNFItems.BLOOD_BUY_FLYING_KNIFE), 10, dev.doctor4t.wathe.util.ShopEntry.Type.TOOL){
+                        @Override
+                        public boolean onBuy(@NotNull Player player) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean canBuy(@NotNull Player player) {
+                            if (!DNF.isDNFKiller(player)) {
+                                player.displayClientMessage(Component.translatable("message.dnf.item.killer_only")
+                                        .withStyle(ChatFormatting.RED), true);
+                                return false;
+                            }
+                            DNFBloodPurchaseItem bloodBuyFlyingKnife = (DNFBloodPurchaseItem) DNFItems.BLOOD_BUY_FLYING_KNIFE;
+                            return buy(player, bloodBuyFlyingKnife.price, bloodBuyFlyingKnife.purchase.get(), bloodBuyFlyingKnife.nameKey);
+                        }
+                    });
+                    shopEntries.add(new ShopEntry(new ItemStack(DNFItems.BLOOD_BUY_LOCKPICK), 10, dev.doctor4t.wathe.util.ShopEntry.Type.TOOL){
+                        @Override
+                        public boolean onBuy(@NotNull Player player) {
+                            return false;
+                        }
+                        @Override
+                        public boolean canBuy(@NotNull Player player) {
+                            if (!DNF.isDNFKiller(player)) {
+                                player.displayClientMessage(Component.translatable("message.dnf.item.killer_only")
+                                        .withStyle(ChatFormatting.RED), true);
+                                return false;
+                            }
+                            DNFBloodPurchaseItem bloodBuyFlyingKnife = (DNFBloodPurchaseItem) DNFItems.BLOOD_BUY_FLYING_KNIFE;
+                            return buy(player, bloodBuyFlyingKnife.price, bloodBuyFlyingKnife.purchase.get(), bloodBuyFlyingKnife.nameKey);
+                        }
+                    });
+                    return shopEntries;
+                }
+
+                @Override
                 public List<ItemStack> getDefaultItems() {
                     ArrayList<ItemStack> items = new ArrayList<>();
-                    items.add(DNFItems.BLOOD_BUY_FLYING_KNIFE.getDefaultInstance());
-                    items.add(DNFItems.BLOOD_BUY_LOCKPICK.getDefaultInstance());
+
                     items.add(DNFItems.ABYSS_VIAL.getDefaultInstance());
                     return items;
                 }
@@ -161,7 +295,7 @@ public class DNFRoles {
                 @Override
                 public boolean onAbilityUse(ServerPlayer player) {
                     if (player instanceof ServerPlayer serverPlayer) {
-                        DNF.exchangeBlood(serverPlayer, serverPlayer.isShiftKeyDown());
+                        DNFPlayerComponent.KEY.get(serverPlayer).requestAid(serverPlayer, serverPlayer.isShiftKeyDown());
                     }
                     return true;
                 }
@@ -173,7 +307,8 @@ public class DNFRoles {
                                 .withStyle(ChatFormatting.DARK_RED), true);
                         return false;
                     }
-                    return true;
+                    return player instanceof ServerPlayer serverPlayer
+                            && DNFPlayerComponent.KEY.get(serverPlayer).canUseKnife(serverPlayer);
                 }
 
                 @Override
@@ -181,7 +316,17 @@ public class DNFRoles {
                     if (!DNF.isNight(player)) {
                         return false;
                     }
+                    if (player instanceof ServerPlayer serverPlayer) {
+                        DNFPlayerComponent.KEY.get(serverPlayer).consumeKnifeUse(serverPlayer);
+                    }
                     return true;
+                }
+
+                @Override
+                public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
+                    if (killer instanceof ServerPlayer serverKiller) {
+                        DNFPlayerComponent.KEY.get(serverKiller).recordKill(serverKiller);
+                    }
                 }
 
 
@@ -199,21 +344,21 @@ public class DNFRoles {
                     if (!serverPlayer.getMainHandItem().is(DNFItems.ABYSS_TENTACLE)) {
                         return InteractionResult.PASS;
                     }
-                    if (io.wifi.starrailexpress.cca.SREPlayerPsychoComponent.KEY.get(serverPlayer).getPsychoTicks() <= 0) {
+                    if (SREPlayerPsychoComponent.KEY.get(serverPlayer).getPsychoTicks() <= 0) {
                         return InteractionResult.PASS;
                     }
-                    serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+                    serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
                     if (serverPlayer.isAlive() && victim.isAlive() && serverPlayer.distanceTo(victim) <= 4.0) {
                         GameUtils.killPlayer(victim, true, serverPlayer, Noellesroles.id("dnf_tentacle"));
                     }
                     if (serverPlayer.isAlive()) {
-                        serverPlayer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+                        serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
                     }
                     serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition().above(1), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.0f, 1.0f);
                     
                     // 添加少量粒子效果
-                    if (serverPlayer.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                        sl.sendParticles(net.minecraft.core.particles.ParticleTypes.CRIMSON_SPORE, 
+                    if (serverPlayer.level() instanceof ServerLevel sl) {
+                        sl.sendParticles(ParticleTypes.CRIMSON_SPORE,
                                 serverPlayer.getX(), serverPlayer.getY() + 1, serverPlayer.getZ(), 
                                 5, 0.3, 0.5, 0.3, 0.05);
                     }
@@ -246,7 +391,7 @@ public class DNFRoles {
 
                 @Override
                 public void win(ServerPlayer player) {
-                    var roundEnd = io.wifi.starrailexpress.cca.SREGameRoundEndComponent.KEY.get(player.serverLevel());
+                    var roundEnd = SREGameRoundEndComponent.KEY.get(player.serverLevel());
                     roundEnd.CustomWinnerTitle = Component.translatable("game.win.star.dnf_killer");
                     roundEnd.CustomWinnerSubtitle = Component.translatable("message.dnf.killer.ending");
                     RoleUtils.customWinnerWin(player.serverLevel(), this.identifier().getPath(), this.color());
@@ -263,12 +408,42 @@ public class DNFRoles {
                     .setCanSeeTeammateKiller(false)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(false);
 
     public static final SRERole SOLDIER = TMMRoles.registerRole(new DNFNormalRole(SOLDIER_ID, 0x496D89, true, false,
-            SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false).setVigilanteTeam(true).setMax(2))
+            SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
+        @Override
+        public List<ItemStack> getDefaultItems() {
+            return List.of(ModItems.BATON.getDefaultInstance(), TMMItems.REVOLVER.getDefaultInstance());
+        }
+
+        @Override
+        public boolean onUseGun(Player player) {
+            return !(player instanceof ServerPlayer serverPlayer)
+                    || DNFPlayerComponent.KEY.get(serverPlayer).consumeSoldierShot(serverPlayer);
+        }
+
+        @Override
+        public boolean onGunHit(Player killer, Player victim) {
+            if (killer instanceof ServerPlayer serverKiller && victim instanceof ServerPlayer serverVictim
+                    && !DNF.isNight(serverKiller) && !SREGameWorldComponent.KEY.get(serverKiller.level())
+                            .isRole(serverVictim, DNFRoles.MANIAC)) {
+                RoleUtils.changeRole(serverKiller, DNFRoles.CIVILIAN);
+                serverKiller.displayClientMessage(Component.translatable("message.dnf.soldier.demoted")
+                        .withStyle(ChatFormatting.RED), false);
+            }
+            return true;
+        }
+
+        @Override
+        public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
+            if (killer instanceof ServerPlayer serverKiller) {
+                DNFPlayerComponent.KEY.get(serverKiller).recordKill(serverKiller);
+            }
+        }
+    }.setVigilanteTeam(true).setMax(2))
             .setCanBeRandomedByOtherRoles(false).setCanGetBodyItems( true);
     public static final SRERole CHEF = TMMRoles.registerRole(new DNFNormalRole(CHEF_ID, 0x8C6A2D, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
-        public void onInit(net.minecraft.server.MinecraftServer server, ServerPlayer serverPlayer) {
+        public void onInit(MinecraftServer server, ServerPlayer serverPlayer) {
             DNFPlayerComponent.KEY.get(serverPlayer).init();
         }
 
@@ -291,14 +466,66 @@ public class DNFRoles {
             return DNFItems.cookBodyAsChef(serverPlayer, body);
         }
     }.setMax(1)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
+    public static final SRERole POISONER = TMMRoles.registerRole(new DNFNormalRole(POISONER_ID, 0x355F2D, false, true,
+            SRERole.MoodType.FAKE, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
+        @Override
+        public void onInit(MinecraftServer server, ServerPlayer serverPlayer) {
+            DNFPlayerComponent.KEY.get(serverPlayer).init();
+        }
+
+        @Override
+        public boolean onAbilityUse(ServerPlayer player) {
+            return DNF.tryPoisonerAbility(player);
+        }
+
+        @Override
+        public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
+            if (killer instanceof ServerPlayer serverKiller && deathReason.equals(GameConstants.DeathReasons.POISON)) {
+                DNFPlayerComponent.KEY.get(serverKiller).recordKill(serverKiller);
+                DNFPlayerComponent.KEY.get(serverKiller).recordPoisonKill();
+            }
+        }
+    }.setMax(1).setCanSeeCoin(false).setCanUseInstinct(false)).setCanBeRandomedByOtherRoles(false)
+            .setCanGetBodyItems(false);
+
     public static final SRERole PSYCHOLOGIST = TMMRoles.registerRole(new DNFNormalRole(PSYCHOLOGIST_ID, 0x8E6BC6, true,
-            false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false).setMax(2))
+            false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
+        @Override
+        public boolean onAbilityUse(ServerPlayer player) {
+            if (!DNFPlayerComponent.KEY.get(player).spendSan(player, 0.8f, "message.dnf.psychologist.not_enough_san")) {
+                return false;
+            }
+            ServerPlayer target = DNF.findLookedAtPlayer(player, 8.0);
+            if (target == null) {
+                player.displayClientMessage(Component.translatable("message.dnf.psychologist.no_target")
+                        .withStyle(ChatFormatting.GRAY), true);
+                return false;
+            }
+            boolean killed = DNFPlayerComponent.KEY.get(target).getKilledPlayers() > 0;
+            player.displayClientMessage(Component.translatable(killed
+                    ? "message.dnf.psychologist.result_killer"
+                    : "message.dnf.psychologist.result_clean", target.getDisplayName())
+                    .withStyle(killed ? ChatFormatting.RED : ChatFormatting.GREEN), false);
+            return true;
+        }
+    }.setMax(2))
             .setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
     public static final SRERole LOCKSMITH = TMMRoles.registerRole(new DNFNormalRole(LOCKSMITH_ID, 0xD1A448, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
-        public InteractionResult onUseBlock(Player player, net.minecraft.world.level.Level world,
-                net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hitResult) {
+        public boolean onAbilityUse(ServerPlayer player) {
+            if (!DNFPlayerComponent.KEY.get(player).spendSan(player, 0.25f, "message.dnf.locksmith.not_enough_san")) {
+                return false;
+            }
+            DNFItems.giveOrDrop(player, DNFItems.REPAIR_TOOL.getDefaultInstance());
+            player.displayClientMessage(Component.translatable("message.dnf.locksmith.tool_created")
+                    .withStyle(ChatFormatting.YELLOW), true);
+            return true;
+        }
+
+        @Override
+        public InteractionResult onUseBlock(Player player, Level world,
+                InteractionHand hand, BlockHitResult hitResult) {
             return DNFItems.tryRepairLockpickedDoor(player, world, hitResult.getBlockPos());
         }
     }.setMax(4)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);

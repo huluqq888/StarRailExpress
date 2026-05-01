@@ -536,6 +536,10 @@ public interface TMMBlocks {
       TMMItems.DECORATION_GROUP);
   Block CARGO_BOX = registrar.createWithItem("cargo_box", new CargoBoxBlock(BlockBehaviour.Properties.of().strength(1)
       .sound(SoundType.COPPER).mapColor(MapColor.COLOR_GRAY).noOcclusion()), TMMItems.DECORATION_GROUP);
+  Block DNF_WASHING_MACHINE = registrar.createWithItem("dnf_washing_machine",
+      new io.wifi.events.day_night_fight.DNFWashingMachineBlock(BlockBehaviour.Properties.of()
+          .forceSolidOn().strength(1.2f).sound(SoundType.METAL).mapColor(MapColor.COLOR_LIGHT_GRAY)),
+      TMMItems.DECORATION_GROUP);
   Block WHITE_LOUNGE_COUCH = registrar.createWithItem("white_lounge_couch",
       new LoungeCouch(
           BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(0.5f).sound(SoundType.CHISELED_BOOKSHELF)),

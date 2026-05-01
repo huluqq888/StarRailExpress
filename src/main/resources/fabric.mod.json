@@ -135,6 +135,7 @@
       "noellesroles:shooting_frenzy",
       "noellesroles:watcher",
       "noellesroles:super_loose_end",
+
       "stupid_express:doused",
       "stupid_express:custom_winner",
       "stupid_express:cooldown",
@@ -159,6 +160,10 @@
       "starrailexpress:areas",
       "starrailexpress:role",
       "starrailexpress:monitor",
+      "starrailexpress:dnf_world",
+      "starrailexpress:dnf_underworld",
+      "starrailexpress:dnf_clothing",
+
       "starrailexpress:body_entity",
       "starrailexpress:mood",
       "starrailexpress:task",
@@ -175,6 +180,7 @@
       "starrailexpress:note",
       "starrailexpress:time",
       "starrailexpress:autostart",
+      "starrailexpress:participation",
       "starrailexpress:map_voting",
       "starrailexpress:nametag_inventory",
       "starrailexpress:player_stats",

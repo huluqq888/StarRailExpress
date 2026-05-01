@@ -3,8 +3,10 @@ package io.wifi.events.day_night_fight.cca;
 import io.wifi.events.day_night_fight.DNF;
 import io.wifi.events.day_night_fight.DNFDailyTaskComponent;
 import io.wifi.events.day_night_fight.DNFItems;
+import io.wifi.events.day_night_fight.DNFRoles;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.cca.SREPlayerTaskComponent;
@@ -18,8 +20,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameType;
+import org.agmas.noellesroles.init.ModItems;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.ComponentRegistry;
@@ -37,6 +43,20 @@ public class DNFPlayerComponent implements RoleComponent {
             SRE.id("dnf_killer"), DNFPlayerComponent.class);
 
     private final Player player;
+    private int killedPlayers;
+    private int poisonKills;
+    private int poisonCraftDay = -1;
+    private int poisonCraftedToday;
+    private int knifeNightDay = -1;
+    private int knifeUsesTonight;
+    private int crowbarNightDay = -1;
+    private boolean crowbarUsedTonight;
+    private boolean aidReady;
+    private int pendingAidType;
+    private int pendingAidDay = -1;
+    private int soldierShotDay = -1;
+    private int soldierShotsToday;
+    private boolean maniacStunned;
 
     public DNFPlayerComponent(Player player) {
         this.player = player;
@@ -67,6 +87,20 @@ public class DNFPlayerComponent implements RoleComponent {
     public void clear() {
         stats().clear();
         daily().clear();
+        killedPlayers = 0;
+        poisonKills = 0;
+        poisonCraftDay = -1;
+        poisonCraftedToday = 0;
+        knifeNightDay = -1;
+        knifeUsesTonight = 0;
+        crowbarNightDay = -1;
+        crowbarUsedTonight = false;
+        aidReady = false;
+        pendingAidType = 0;
+        pendingAidDay = -1;
+        soldierShotDay = -1;
+        soldierShotsToday = 0;
+        maniacStunned = false;
     }
 
     public int getBlood() {
@@ -115,6 +149,11 @@ public class DNFPlayerComponent implements RoleComponent {
         daily.setCleaningInProgress(false);
         daily.setChefFoodWorkToday(0);
         daily.setChefWaterCheckedToday(false);
+        soldierShotDay = day;
+        soldierShotsToday = 0;
+        poisonCraftDay = day;
+        poisonCraftedToday = 0;
+        maniacStunned = false;
 
         SREPlayerMoodComponent.KEY.get(serverPlayer).setMood(day == 0 ? DNF.INITIAL_SAN : DNF.MORNING_SAN);
 
@@ -134,6 +173,32 @@ public class DNFPlayerComponent implements RoleComponent {
         recoverSan(serverPlayer, DNF.SAN_FOOD_GAIN, "message.dnf.task.food");
         tryCompleteMealTask(serverPlayer, daily);
         daily.sync();
+        KEY.sync(serverPlayer);
+    }
+
+    public void startDnfNight(ServerPlayer serverPlayer, int day) {
+        knifeNightDay = day;
+        knifeUsesTonight = 0;
+        crowbarNightDay = day;
+        crowbarUsedTonight = false;
+        if (DNF.isDNFKiller(serverPlayer)) {
+            serverPlayer.getCooldowns().addCooldown(io.wifi.starrailexpress.index.TMMItems.KNIFE,
+                    DNF.KNIFE_COOLDOWN_TICKS);
+        }
+        if (pendingAidType != 0 && pendingAidDay <= day) {
+            if (pendingAidType == 1) {
+                giveOrDrop(serverPlayer, DNFItems.LOCKPICK.getDefaultInstance());
+                serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.aid_delivered_lockpick")
+                        .withStyle(ChatFormatting.RED), false);
+            } else if (pendingAidType == 2) {
+                giveOrDrop(serverPlayer, ModItems.ONCE_REVOLVER.getDefaultInstance());
+                serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.aid_delivered_gun")
+                        .withStyle(ChatFormatting.RED), false);
+            }
+            pendingAidType = 0;
+            pendingAidDay = -1;
+        }
+        KEY.sync(serverPlayer);
     }
 
     public void markDrankWater(ServerPlayer serverPlayer) {
@@ -256,6 +321,7 @@ public class DNFPlayerComponent implements RoleComponent {
             return false;
         }
         daily.setChefWaterCheckedToday(true);
+        DNFWorldComponent.KEY.get(serverPlayer.serverLevel()).clearWaterPoison();
         serverPlayer.displayClientMessage(Component.translatable("message.dnf.chef.water_checked")
                 .withStyle(ChatFormatting.AQUA), false);
         daily.sync();
@@ -267,18 +333,17 @@ public class DNFPlayerComponent implements RoleComponent {
         if (daily.isChefInitialFoodSeeded()) {
             return;
         }
-        daily.setChefInitialFoodSeeded(true);
-        giveOrDrop(serverPlayer, new ItemStack(DNFItems.CORN_GRUEL, DNF.INITIAL_CAFETERIA_FOOD));
-        serverPlayer.displayClientMessage(Component.translatable("message.dnf.chef.initial_food",
-                DNF.INITIAL_CAFETERIA_FOOD).withStyle(ChatFormatting.GREEN), false);
-        daily.sync();
+        if (DNFItems.seedInitialFood(serverPlayer)) {
+            daily.setChefInitialFoodSeeded(true);
+            daily.sync();
+        }
     }
 
     private void giveChefDailySupplies(ServerPlayer serverPlayer) {
         giveOrDrop(serverPlayer, new ItemStack(DNFItems.CORNMEAL_BAG));
         giveOrDrop(serverPlayer, new ItemStack(DNFItems.FLOUR_BAG));
         giveOrDrop(serverPlayer, new ItemStack(DNFItems.SUSPICIOUS_MEAT));
-        giveOrDrop(serverPlayer, new ItemStack(DNFItems.WATER_BOTTLE, 2));
+        giveOrDrop(serverPlayer, DNFItems.createWaterBottle(serverPlayer, 2));
         serverPlayer.displayClientMessage(Component.translatable("message.dnf.chef.daily_supplies")
                 .withStyle(ChatFormatting.DARK_GREEN), false);
     }
@@ -295,6 +360,11 @@ public class DNFPlayerComponent implements RoleComponent {
 
     private boolean completeSanTask(ServerPlayer serverPlayer, DNFDailyTaskComponent daily, String messageKey,
             float sanGain) {
+        if (!daily.isAteToday()) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.need_food")
+                    .withStyle(ChatFormatting.YELLOW), true);
+            return false;
+        }
         recoverSan(serverPlayer, sanGain, messageKey);
         return true;
     }
@@ -320,6 +390,149 @@ public class DNFPlayerComponent implements RoleComponent {
             addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_CHEF_WORK);
         }
         tasks.sync();
+    }
+
+    public int getKilledPlayers() {
+        return killedPlayers;
+    }
+
+    public void recordKill(ServerPlayer killer) {
+        killedPlayers++;
+        if (DNF.isDNFKiller(killer)) {
+            aidReady = true;
+            killer.displayClientMessage(Component.translatable("message.dnf.killer.aid_ready")
+                    .withStyle(ChatFormatting.DARK_RED), true);
+        }
+        KEY.sync(killer);
+    }
+
+    public void recordPoisonKill() {
+        poisonKills++;
+        KEY.sync(player);
+    }
+
+    public int getPoisonKills() {
+        return poisonKills;
+    }
+
+    public boolean craftPoisonedFood(ServerPlayer serverPlayer, int day, ItemStack stack) {
+        if (poisonCraftDay != day) {
+            poisonCraftDay = day;
+            poisonCraftedToday = 0;
+        }
+        int limit = day == 0 ? 5 : 1;
+        if (poisonCraftedToday >= limit) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.poisoner.food_limit", limit)
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        poisonCraftedToday++;
+        stack.set(io.wifi.starrailexpress.index.SREDataComponentTypes.POISONER, serverPlayer.getUUID().toString());
+        serverPlayer.displayClientMessage(Component.translatable("message.dnf.poisoner.food_made",
+                poisonCraftedToday, limit).withStyle(ChatFormatting.DARK_GREEN), true);
+        KEY.sync(serverPlayer);
+        return true;
+    }
+
+    public boolean canUseKnife(ServerPlayer serverPlayer) {
+        int day = DNFWorldComponent.KEY.get(serverPlayer.serverLevel()).getCurrentDay();
+        if (knifeNightDay != day) {
+            knifeNightDay = day;
+            knifeUsesTonight = 0;
+        }
+        if (knifeUsesTonight >= 3) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.knife_limit")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return true;
+    }
+
+    public void consumeKnifeUse(ServerPlayer serverPlayer) {
+        int day = DNFWorldComponent.KEY.get(serverPlayer.serverLevel()).getCurrentDay();
+        if (knifeNightDay != day) {
+            knifeNightDay = day;
+            knifeUsesTonight = 0;
+        }
+        knifeUsesTonight++;
+        KEY.sync(serverPlayer);
+    }
+
+    public boolean tryUseCrowbar(ServerPlayer serverPlayer) {
+        int day = DNFWorldComponent.KEY.get(serverPlayer.serverLevel()).getCurrentDay();
+        if (crowbarNightDay != day) {
+            crowbarNightDay = day;
+            crowbarUsedTonight = false;
+        }
+        if (crowbarUsedTonight) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.crowbar_limit")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        crowbarUsedTonight = true;
+        KEY.sync(serverPlayer);
+        return true;
+    }
+
+    public void requestAid(ServerPlayer serverPlayer, boolean lockpick) {
+        if (!aidReady) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.aid_not_ready")
+                    .withStyle(ChatFormatting.RED), true);
+            return;
+        }
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(serverPlayer.serverLevel());
+        pendingAidType = lockpick ? 1 : 2;
+        pendingAidDay = world.getCurrentDay() + 1;
+        aidReady = false;
+        serverPlayer.displayClientMessage(Component.translatable(lockpick
+                ? "message.dnf.killer.aid_requested_lockpick"
+                : "message.dnf.killer.aid_requested_gun").withStyle(ChatFormatting.DARK_RED), false);
+        KEY.sync(serverPlayer);
+    }
+
+    public boolean consumeSoldierShot(ServerPlayer serverPlayer) {
+        int day = DNFWorldComponent.KEY.get(serverPlayer.serverLevel()).getCurrentDay();
+        if (soldierShotDay != day) {
+            soldierShotDay = day;
+            soldierShotsToday = 0;
+        }
+        if (soldierShotsToday >= 1) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.soldier.no_bullet")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        soldierShotsToday++;
+        KEY.sync(serverPlayer);
+        return true;
+    }
+
+    public boolean spendSan(ServerPlayer serverPlayer, float amount, String failKey) {
+        SREPlayerMoodComponent mood = SREPlayerMoodComponent.KEY.get(serverPlayer);
+        if (mood.getMood() + 0.0001f < amount) {
+            serverPlayer.displayClientMessage(Component.translatable(failKey, (int) (amount * 100))
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        mood.setMood(mood.getMood() - amount);
+        return true;
+    }
+
+    public boolean hasSafeRoomSan(ServerPlayer serverPlayer) {
+        return SREPlayerMoodComponent.KEY.get(serverPlayer).getMood() >= DNF.SAN_ROOM_INSPECT_THRESHOLD;
+    }
+
+    public void stunManiac(ServerPlayer serverPlayer) {
+        maniacStunned = true;
+        serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, DNF.NIGHT_TICKS, 20, false, false));
+        serverPlayer.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 8 * 20, 0, false, false));
+        serverPlayer.setGameMode(GameType.SPECTATOR);
+        serverPlayer.displayClientMessage(Component.translatable("message.dnf.maniac.stunned")
+                .withStyle(ChatFormatting.DARK_PURPLE), false);
+        KEY.sync(serverPlayer);
+    }
+
+    public boolean isManiacStunned() {
+        return maniacStunned;
     }
 
     private static void addHudTask(SREPlayerTaskComponent tasks, SREPlayerTaskComponent.Task type) {
@@ -379,21 +592,55 @@ public class DNFPlayerComponent implements RoleComponent {
 
     @Override
     public void writeToNbt(@NotNull CompoundTag tag, HolderLookup.Provider registryLookup) {
-        // Deprecated facade state. Keep empty to avoid duplicate persistence and sync traffic.
+        writeRuntimeState(tag);
     }
 
     @Override
     public void readFromNbt(@NotNull CompoundTag tag, HolderLookup.Provider registryLookup) {
-        // Deprecated facade state. State migrated to dedicated components.
+        readRuntimeState(tag);
     }
 
     @Override
     public void writeToSyncNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
-        // Deprecated facade state. State migrated to dedicated components.
+        writeRuntimeState(tag);
     }
 
     @Override
     public void readFromSyncNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
-        // Deprecated facade state. State migrated to dedicated components.
+        readRuntimeState(tag);
+    }
+
+    private void writeRuntimeState(CompoundTag tag) {
+        tag.putInt("KilledPlayers", killedPlayers);
+        tag.putInt("PoisonKills", poisonKills);
+        tag.putInt("PoisonCraftDay", poisonCraftDay);
+        tag.putInt("PoisonCraftedToday", poisonCraftedToday);
+        tag.putInt("KnifeNightDay", knifeNightDay);
+        tag.putInt("KnifeUsesTonight", knifeUsesTonight);
+        tag.putInt("CrowbarNightDay", crowbarNightDay);
+        tag.putBoolean("CrowbarUsedTonight", crowbarUsedTonight);
+        tag.putBoolean("AidReady", aidReady);
+        tag.putInt("PendingAidType", pendingAidType);
+        tag.putInt("PendingAidDay", pendingAidDay);
+        tag.putInt("SoldierShotDay", soldierShotDay);
+        tag.putInt("SoldierShotsToday", soldierShotsToday);
+        tag.putBoolean("ManiacStunned", maniacStunned);
+    }
+
+    private void readRuntimeState(CompoundTag tag) {
+        killedPlayers = tag.getInt("KilledPlayers");
+        poisonKills = tag.getInt("PoisonKills");
+        poisonCraftDay = tag.getInt("PoisonCraftDay");
+        poisonCraftedToday = tag.getInt("PoisonCraftedToday");
+        knifeNightDay = tag.getInt("KnifeNightDay");
+        knifeUsesTonight = tag.getInt("KnifeUsesTonight");
+        crowbarNightDay = tag.getInt("CrowbarNightDay");
+        crowbarUsedTonight = tag.getBoolean("CrowbarUsedTonight");
+        aidReady = tag.getBoolean("AidReady");
+        pendingAidType = tag.getInt("PendingAidType");
+        pendingAidDay = tag.getInt("PendingAidDay");
+        soldierShotDay = tag.getInt("SoldierShotDay");
+        soldierShotsToday = tag.getInt("SoldierShotsToday");
+        maniacStunned = tag.getBoolean("ManiacStunned");
     }
 }

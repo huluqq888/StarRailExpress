@@ -1,13 +1,11 @@
 package io.wifi.starrailexpress.cca;
 
+import io.wifi.events.day_night_fight.cca.*;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeTeamsPlayerComponent;
 import io.wifi.starrailexpress.cca.gamemode.CustomRoleGameModeWorldComponent;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.content.mail.MailboxComponent;
 import io.wifi.events.day_night_fight.DNFDailyTaskComponent;
-import io.wifi.events.day_night_fight.cca.DNFKillerStatsComponent;
-import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
-import io.wifi.events.day_night_fight.cca.SREPlayerClueComponent;
 import net.exmo.sre.nametag.NameTagInventoryComponent;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
@@ -30,8 +28,11 @@ public class SREComponents
         registry.register(SREMonitorWorldComponent.KEY, SREMonitorWorldComponent::new);
         registry.register(SREGameTimeComponent.KEY, SREGameTimeComponent::new);
         registry.register(AutoStartComponent.KEY, AutoStartComponent::new);
+        registry.register(ParticipationComponent.KEY, ParticipationComponent::new);
         registry.register(SREGameRoundEndComponent.KEY, SREGameRoundEndComponent::new);
         registry.register(MapVotingComponent.KEY, MapVotingComponent::new);
+        registry.register(DNFWorldComponent.KEY, DNFWorldComponent.class, DNFWorldComponent::new);
+
     }
 
     @Override
@@ -84,5 +85,7 @@ public class SREComponents
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY).end(DNFDailyTaskComponent::new);
         registry.beginRegistration(Player.class, DNFPlayerComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY).end(DNFPlayerComponent::new);
+        registry.beginRegistration(Player.class, io.wifi.events.day_night_fight.cca.DNFUnderworldComponent.KEY)
+                .respawnStrategy(RespawnCopyStrategy.NEVER_COPY).end(io.wifi.events.day_night_fight.cca.DNFUnderworldComponent::new);
     }
 }

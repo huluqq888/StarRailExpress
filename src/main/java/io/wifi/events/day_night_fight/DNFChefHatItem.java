@@ -47,17 +47,14 @@ public class DNFChefHatItem extends Item {
         
         // 播放音效
         world.playSound(null, player.blockPosition(), 
-                net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER, 
+                net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER.value(),
                 net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.0f);
         
         // 显示切换成功消息
         player.displayClientMessage(Component.translatable("message.dnf.chef_hat.switched_to_chef")
-                .withStyle(ChatFormatting.DARK_GREEN), false);
+                .withStyle(ChatFormatting.DARK_GREEN), true);
 
-        // 如果不是创造模式,消耗物品
-        if (!player.isCreative()) {
-            stack.shrink(1);
-        }
+
 
         return InteractionResultHolder.success(stack);
     }

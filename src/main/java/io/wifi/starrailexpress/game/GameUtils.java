@@ -671,10 +671,12 @@ public class GameUtils {
     }
 
     private static List<ServerPlayer> getStartingPlayers(ServerLevel serverWorld) {
+        ParticipationComponent participation = ParticipationComponent.KEY.get(serverWorld);
         if (forcedReadyPlayers != null && !forcedReadyPlayers.isEmpty()) {
             List<ServerPlayer> selected = forcedReadyPlayers.stream()
                     .map(serverWorld.getServer().getPlayerList()::getPlayer)
                     .filter(Objects::nonNull)
+                    .filter(participation::isParticipating)
                     .toList();
             if (!selected.isEmpty()) {
                 return selected;
@@ -685,7 +687,9 @@ public class GameUtils {
 
     private static List<ServerPlayer> getReadyPlayerList(ServerLevel serverWorld) {
         AreasWorldComponent areas = AreasWorldComponent.KEY.get(serverWorld);
+        ParticipationComponent participation = ParticipationComponent.KEY.get(serverWorld);
         return serverWorld.getServer().getPlayerList().getPlayers().stream()
+                .filter(participation::isParticipating)
                 .filter(serverPlayerEntity -> areas.getReadyArea().contains(serverPlayerEntity.position())).toList();
     }
 
@@ -1128,7 +1132,19 @@ public class GameUtils {
     public static int getReadyPlayerCount(Level world) {
         List<? extends Player> players = world.players();
         AreasWorldComponent areas = AreasWorldComponent.KEY.get(world);
-        return Math.toIntExact(players.stream().filter(p -> areas.getReadyArea().contains(p.position())).count());
+        ParticipationComponent participation = ParticipationComponent.KEY.get(world);
+        return Math.toIntExact(players.stream()
+                .filter(participation::isParticipating)
+                .filter(p -> areas.getReadyArea().contains(p.position()))
+                .count());
+    }
+
+    public static int getParticipatingPlayerCount(Level world) {
+        return ParticipationComponent.KEY.get(world).getParticipatingOnlineCount();
+    }
+
+    public static int getOptedOutPlayerCount(Level world) {
+        return ParticipationComponent.KEY.get(world).getOptedOutOnlineCount();
     }
 
     /**

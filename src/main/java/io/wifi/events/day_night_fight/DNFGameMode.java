@@ -1,7 +1,9 @@
 package io.wifi.events.day_night_fight;
 
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
+import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
 import io.wifi.starrailexpress.api.SRERole;
+import io.wifi.starrailexpress.cca.SREGameRoundEndComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
@@ -54,12 +56,15 @@ public class DNFGameMode extends SREMurderGameMode {
             List<ServerPlayer> players) {
         Harpymodloader.refreshRoles();
         SRETrainWorldComponent.KEY.get(serverWorld).setTimeOfDay(SRETrainWorldComponent.TimeOfDay.DAY);
+        DNFWorldComponent dnfWorld = DNFWorldComponent.KEY.get(serverWorld);
+        dnfWorld.resetRoundState();
+        dnfWorld.setPhase(0, false);
         gameWorldComponent.clearRoleMap();
         addPlayersToTeam(serverWorld.getServer().createCommandSourceStack(), players, "harpymodloader_game");
         executeFunction(serverWorld.getServer().createCommandSourceStack(), "harpymodloader:start_game");
 
         Map<Player, SRERole> roleAssignments = assignDnfRoles(serverWorld, players);
-        long killerCount = roleAssignments.values().stream().filter(DNF::isDNFKiller).count();
+        long killerCount = roleAssignments.values().stream().filter(DNF::isDNFAntagonist).count();
         for (Map.Entry<Player, SRERole> entry : roleAssignments.entrySet()) {
             Player player = entry.getKey();
             SRERole role = entry.getValue();
@@ -81,9 +86,11 @@ public class DNFGameMode extends SREMurderGameMode {
             DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
             component.init();
             component.startDnfDay(player, 0, role == DNFRoles.CHEF);
-            if (role == DNFRoles.CHEF) {
-                component.giveInitialCafeteriaFood(player);
-            }
+            DNFItems.ensureDefaultClothes(player);
+            DNF.applyPhaseState(player, false);
+        }
+        if (!players.isEmpty()) {
+            DNFItems.seedInitialFood(players.get(0));
         }
         currentDay = 0;
         currentPhase = Phase.DAY;
@@ -98,7 +105,7 @@ public class DNFGameMode extends SREMurderGameMode {
     @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         tickDayNightCycle(serverWorld, gameWorldComponent);
-        super.tickServerGameLoop(serverWorld, gameWorldComponent);
+        checkDnfEndings(serverWorld, gameWorldComponent);
     }
 
     @Override
@@ -121,32 +128,33 @@ public class DNFGameMode extends SREMurderGameMode {
         ArrayList<ServerPlayer> unassigned = new ArrayList<>(players);
         Collections.shuffle(unassigned);
 
-        int maxSpecials = Math.max(1, Math.min(13, players.size() - Math.max(1, players.size() / 2)));
-
         Map<Player, SRERole> roleAssignments = new HashMap<>();
         for (Player player : players) {
             roleAssignments.put(player, null);
         }
         Map<UUID, SRERole> forcedRoles = new HashMap<>(Harpymodloader.FORCED_MODDED_ROLE_FLIP);
 
-        int killerCount = Math.min(4, Math.max(1, players.size() / 10));
-        int chefCount = players.size() >= 6 ? 1 : 0;
-        int soldierCount = 2;
-        int psychologistCount = 2;
-        int locksmithCount = 4;
-        // DNFRoles.KILLER;
-        // DNFRoles.CHEF;
-        // DNFRoles.SOLDIER;
-        // DNFRoles.PSYCHOLOGIST;
-        // DNFRoles.LOCKSMITH;
+        int playerCount = players.size();
+        double scale = playerCount >= 48 ? 1.0 : Math.max(0.0, playerCount / 48.0);
+        int maniacCount = scaledCount(playerCount, 2, 12, scale);
+        int killerCount = scaledCount(playerCount, 4, 8, scale);
+        int soldierCount = scaledCount(playerCount, 2, 8, scale);
+        int chefCount = playerCount >= 6 ? 1 : 0;
+        int poisonerCount = playerCount >= 8 ? 1 : 0;
+        int psychologistCount = scaledCount(playerCount, 2, 12, scale);
+        int locksmithCount = scaledCount(playerCount, 4, 10, scale);
         for (Map.Entry<UUID, SRERole> entry : forcedRoles.entrySet()) {
             Player player = serverWorld.getPlayerByUUID(entry.getKey());
             if (player != null) {
                 SRERole role = entry.getValue();
                 if (role != null) {
                     roleAssignments.put(player, role);
-                    if (RoleUtils.compareRole(role, DNFRoles.KILLER)) {
+                    if (RoleUtils.compareRole(role, DNFRoles.MANIAC)) {
+                        maniacCount--;
+                    } else if (RoleUtils.compareRole(role, DNFRoles.KILLER)) {
                         killerCount--;
+                    } else if (RoleUtils.compareRole(role, DNFRoles.POISONER)) {
+                        poisonerCount--;
                     } else if (RoleUtils.compareRole(role, DNFRoles.CHEF)) {
                         chefCount--;
                     } else if (RoleUtils.compareRole(role, DNFRoles.SOLDIER)) {
@@ -163,7 +171,12 @@ public class DNFGameMode extends SREMurderGameMode {
             return (roleAssignments.getOrDefault(p, null) != null);
         });
         ArrayList<SRERole> roles = new ArrayList<>();
+        int maxSpecials = Math.min(unassigned.size(), Math.max(0,
+                maniacCount + killerCount + soldierCount + chefCount + poisonerCount + psychologistCount
+                        + locksmithCount));
+        addRoles(roles, DNFRoles.MANIAC, Math.max(0, maniacCount), maxSpecials);
         addRoles(roles, DNFRoles.KILLER, killerCount, maxSpecials);
+        addRoles(roles, DNFRoles.POISONER, Math.max(0, poisonerCount), maxSpecials);
         addRoles(roles, DNFRoles.CHEF, chefCount, maxSpecials);
         addRoles(roles, DNFRoles.SOLDIER, soldierCount, maxSpecials);
         addRoles(roles, DNFRoles.PSYCHOLOGIST, psychologistCount, maxSpecials);
@@ -173,11 +186,21 @@ public class DNFGameMode extends SREMurderGameMode {
         }
         Collections.shuffle(roles);
 
-        HashMap<Player, SRERole> assignments = new HashMap<>();
+        HashMap<Player, SRERole> assignments = new HashMap<>(roleAssignments);
         for (int i = 0; i < unassigned.size(); i++) {
             assignments.put(unassigned.get(i), roles.get(i));
         }
         return assignments;
+    }
+
+    private static int scaledCount(int playerCount, int baseline, int minPlayers, double scale) {
+        if (playerCount < minPlayers) {
+            return 0;
+        }
+        if (playerCount >= 48) {
+            return baseline;
+        }
+        return Math.max(1, (int) Math.round(baseline * scale));
     }
 
     private static void addRoles(ArrayList<SRERole> roles, SRERole role, int count, int maxSpecials) {
@@ -197,18 +220,36 @@ public class DNFGameMode extends SREMurderGameMode {
         }
 
         phaseTicks = 0;
+        DNFWorldComponent dnfWorld = DNFWorldComponent.KEY.get(serverWorld);
         if (currentPhase == Phase.DAY) {
             currentPhase = Phase.NIGHT;
+            dnfWorld.setPhase(currentDay, true);
             updateWorldTime(serverWorld);
             announcePhase(serverWorld, "message.dnf.phase.night", currentDay + 1);
             for (ServerPlayer player : serverWorld.players()) {
+                DNFPlayerComponent.KEY.get(player).startDnfNight(player, currentDay);
                 DNF.updateNightTools(player);
+                DNF.applyPhaseState(player, true);
             }
+            return;
+        }
+
+        if (currentDay >= 6 && !dnfWorld.isTrueEndingTriggered()) {
+            for (ServerPlayer player : serverWorld.players()) {
+                if (DNF.isDnfAlive(player)) {
+                    DNFItems.settleClothesEndOfDay(player);
+                }
+            }
+            triggerDnfEnding(serverWorld, "dnf_survival", "game.win.star.dnf_survival",
+                    "message.dnf.ending.survival", 0x719E5B);
             return;
         }
 
         currentPhase = Phase.DAY;
         currentDay++;
+        dnfWorld.setPhase(currentDay, false);
+        dnfWorld.rollWaterPoisonToToday();
+        dnfWorld.clearVote();
         updateWorldTime(serverWorld);
         announcePhase(serverWorld, "message.dnf.phase.day", currentDay + 1);
         for (ServerPlayer player : serverWorld.players()) {
@@ -218,13 +259,41 @@ public class DNFGameMode extends SREMurderGameMode {
             }
             DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
             component.startDnfDay(player, currentDay, role == DNFRoles.CHEF);
+            if (DNF.isDnfAlive(player)) {
+                DNFItems.settleClothesEndOfDay(player);
+            }
             if (role == DNFRoles.CHEF) {
                 player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
                         "message.dnf.chef.new_day", currentDay + 1).withStyle(net.minecraft.ChatFormatting.DARK_GREEN),
                         false);
             }
             DNF.updateNightTools(player);
+            DNF.applyPhaseState(player, false);
         }
+    }
+
+    private void checkDnfEndings(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        if (gameWorldComponent.getGameStatus() != SREGameWorldComponent.GameStatus.ACTIVE) {
+            return;
+        }
+        boolean nonAntagonistAlive = false;
+        for (ServerPlayer player : serverWorld.players()) {
+            if (DNF.isDnfAlive(player) && !DNF.isDNFAntagonist(gameWorldComponent.getRole(player))) {
+                nonAntagonistAlive = true;
+                break;
+            }
+        }
+        if (!nonAntagonistAlive) {
+            triggerDnfEnding(serverWorld, "dnf_wipeout", "game.win.star.dnf_wipeout",
+                    "message.dnf.ending.wipeout", 0x7A1414);
+        }
+    }
+
+    private void triggerDnfEnding(ServerLevel serverWorld, String id, String titleKey, String subtitleKey, int color) {
+        SREGameRoundEndComponent roundEnd = SREGameRoundEndComponent.KEY.get(serverWorld);
+        roundEnd.CustomWinnerTitle = net.minecraft.network.chat.Component.translatable(titleKey);
+        roundEnd.CustomWinnerSubtitle = net.minecraft.network.chat.Component.translatable(subtitleKey);
+        RoleUtils.customWinnerWin(serverWorld, id, color);
     }
 
     private int getCurrentPhaseLength() {

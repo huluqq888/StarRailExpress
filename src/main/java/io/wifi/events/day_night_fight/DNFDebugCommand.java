@@ -3,13 +3,17 @@ package io.wifi.events.day_night_fight;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
+import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.core.BlockPos;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 
 public class DNFDebugCommand {
     public static void register() {
@@ -20,6 +24,8 @@ public class DNFDebugCommand {
                                 .then(Commands.literal("flying_knife").executes(ctx -> give(ctx, DNFItems.FLYING_KNIFE)))
                                 .then(Commands.literal("lockpick").executes(ctx -> give(ctx, DNFItems.LOCKPICK)))
                                 .then(Commands.literal("crowbar").executes(ctx -> give(ctx, DNFItems.CROWBAR)))
+                                .then(Commands.literal("repair_tool").executes(ctx -> give(ctx, DNFItems.REPAIR_TOOL)))
+                                .then(Commands.literal("paper_scrap").executes(ctx -> give(ctx, DNFItems.PAPER_SCRAP)))
                                 .then(Commands.literal("food").executes(DNFDebugCommand::giveFood))
                                 .then(Commands.literal("chef_supplies").executes(DNFDebugCommand::giveChefSupplies))
                                 .then(Commands.literal("all").executes(DNFDebugCommand::giveAll)))
@@ -41,7 +47,20 @@ public class DNFDebugCommand {
                                 .then(Commands.literal("dust").executes(DNFDebugCommand::completeDust))
                                 .then(Commands.literal("chef_work").executes(DNFDebugCommand::completeChefWork))
                                 .then(Commands.literal("water_check").executes(DNFDebugCommand::checkWater))
-                                .then(Commands.literal("reset_day").executes(DNFDebugCommand::resetDay)))));
+                                .then(Commands.literal("reset_day").executes(DNFDebugCommand::resetDay)))
+                        .then(Commands.literal("config")
+                                .then(Commands.literal("show").executes(DNFDebugCommand::showConfig))
+                                .then(Commands.literal("set")
+                                        .then(Commands.literal("food_box").executes(ctx -> setTargetPos(ctx, "food_box")))
+                                        .then(Commands.literal("water_source").executes(ctx -> setTargetPos(ctx, "water_source")))
+                                        .then(Commands.literal("meteor").executes(ctx -> setTargetPos(ctx, "meteor")))
+                                        .then(Commands.literal("wall_hole").executes(ctx -> setTargetPos(ctx, "wall_hole")))
+                                        .then(Commands.literal("cafeteria_area")
+                                                .then(Commands.argument("radius", IntegerArgumentType.integer(1))
+                                                        .executes(DNFDebugCommand::setCafeteriaArea)))
+                                        .then(Commands.literal("dorm_room")
+                                                .then(Commands.argument("radius", IntegerArgumentType.integer(1))
+                                                        .executes(DNFDebugCommand::setDormRoom)))))));
     }
 
     private static int give(CommandContext<CommandSourceStack> ctx, net.minecraft.world.item.Item item)
@@ -169,6 +188,60 @@ public class DNFDebugCommand {
         DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
         component.startDnfDay(player, component.getDnfDay() + 1, DNF.isDNFChef(player));
         ctx.getSource().sendSuccess(() -> Component.literal("Reset DNF daily state"), false);
+        return 1;
+    }
+
+    private static int setTargetPos(CommandContext<CommandSourceStack> ctx, String key)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        BlockHitResult hit = DNF.findLookedAtBlock(player, 8.0);
+        if (hit == null) {
+            ctx.getSource().sendFailure(Component.literal("No targeted block"));
+            return 0;
+        }
+        BlockPos pos = hit.getBlockPos();
+        DNFWorldComponent component = DNFWorldComponent.KEY.get(player.serverLevel());
+        switch (key) {
+            case "food_box" -> component.setFoodBoxPos(pos);
+            case "water_source" -> component.setWaterSourcePos(pos);
+            case "meteor" -> component.setMeteorPos(pos);
+            case "wall_hole" -> component.setWallHolePos(pos);
+            default -> {
+                return 0;
+            }
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF " + key + " = " + pos.toShortString()), false);
+        return 1;
+    }
+
+    private static int setCafeteriaArea(CommandContext<CommandSourceStack> ctx)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        int radius = IntegerArgumentType.getInteger(ctx, "radius");
+        DNFWorldComponent component = DNFWorldComponent.KEY.get(player.serverLevel());
+        component.setCafeteriaArea(new AABB(player.blockPosition()).inflate(radius, 3, radius));
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF cafeteria area centered at "
+                + player.blockPosition().toShortString() + " radius " + radius), false);
+        return 1;
+    }
+
+    private static int setDormRoom(CommandContext<CommandSourceStack> ctx)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        int radius = IntegerArgumentType.getInteger(ctx, "radius");
+        DNFWorldComponent.KEY.get(player.serverLevel()).setDormRoom(player.getUUID(),
+                new AABB(player.blockPosition()).inflate(radius, 3, radius));
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF dorm room set for "
+                + player.getGameProfile().getName() + " radius " + radius), false);
+        return 1;
+    }
+
+    private static int showConfig(CommandContext<CommandSourceStack> ctx) {
+        DNFWorldComponent component = DNFWorldComponent.KEY.get(ctx.getSource().getLevel());
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF config: food_box="
+                + component.getFoodBoxPos() + ", water_source=" + component.getWaterSourcePos()
+                + ", meteor=" + component.getMeteorPos() + ", wall_hole=" + component.getWallHolePos()
+                + ", day=" + component.getCurrentDay() + ", night=" + component.isNight()), false);
         return 1;
     }
 

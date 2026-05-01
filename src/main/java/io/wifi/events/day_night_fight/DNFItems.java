@@ -1,7 +1,10 @@
 package io.wifi.events.day_night_fight;
 
+import io.wifi.events.day_night_fight.block.WashingMachineBlock;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
+import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
 import io.wifi.starrailexpress.content.block.SmallDoorBlock;
 import io.wifi.starrailexpress.content.block.TrainDoorBlock;
 import io.wifi.starrailexpress.content.block_entity.SmallDoorBlockEntity;
@@ -21,17 +24,23 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.Unbreakable;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import org.agmas.noellesroles.utils.RoleUtils;
 
 import java.util.List;
@@ -72,6 +81,26 @@ public class DNFItems {
             new DNFTentacleItem(new Item.Properties().stacksTo(1)));
     public static final Item CHEF_HAT = register("dnf_chef_hat",
             new DNFChefHatItem(new Item.Properties().stacksTo(1)));
+    public static final Item REPAIR_TOOL = register("dnf_repair_tool",
+            new DNFRepairToolItem(new Item.Properties().stacksTo(16)));
+    public static final Item PAPER_SCRAP = register("dnf_paper_scrap",
+            new DNFPaperScrapItem(new Item.Properties().stacksTo(16)));
+    public static final Item SOAP = register("dnf_soap",
+            new Item(new Item.Properties().stacksTo(1).durability(8)) {
+                @Override
+                public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip,
+                        TooltipFlag flag) {
+                    appendDnfTooltip(stack, context, tooltip, flag, "message.dnf.soap.tooltip");
+                }
+            });
+    public static final Item DNF_CLOCK = register("dnf_clock",
+            new DNFClockItem(new Item.Properties().stacksTo(1)));
+    public static final Block WASHING_MACHINE = registerBlock("dnf_washing_machine",
+            new WashingMachineBlock(FabricBlockSettings.create()
+                    .strength(2.0f)
+                    .requiresTool()));
+    public static final Item WASHING_MACHINE_ITEM = register("dnf_washing_machine",
+            new BlockItem(WASHING_MACHINE, new Item.Properties()));
 
     public static void init() {
         ItemGroupEvents.modifyEntriesEvent(TMMItems.EQUIPMENT_GROUP).register(entries -> {
@@ -90,11 +119,20 @@ public class DNFItems {
             entries.accept(ABYSS_VIAL);
             entries.accept(ABYSS_TENTACLE);
             entries.accept(CHEF_HAT);
+            entries.accept(REPAIR_TOOL);
+            entries.accept(PAPER_SCRAP);
+            entries.accept(SOAP);
+            entries.accept(DNF_CLOCK);
+            entries.accept(WASHING_MACHINE_ITEM);
         });
     }
 
     private static Item register(String id, Item item) {
         return Registry.register(BuiltInRegistries.ITEM, SRE.id(id), item);
+    }
+
+    private static Block registerBlock(String id, Block block) {
+        return Registry.register(BuiltInRegistries.BLOCK, SRE.id(id), block);
     }
 
     public static InteractionResult tryOpenWithLockpick(UseOnContext context) {
@@ -131,6 +169,13 @@ public class DNFItems {
         if (!DNF.isDNFLocksmith(player)) {
             return InteractionResult.PASS;
         }
+        if (!SREItemUtils.hasItem(player, REPAIR_TOOL)) {
+            if (!world.isClientSide) {
+                player.displayClientMessage(Component.translatable("message.dnf.locksmith.need_tool")
+                        .withStyle(ChatFormatting.YELLOW), true);
+            }
+            return InteractionResult.FAIL;
+        }
         BlockPos lowerPos = lowerDoorPos(world, clickedPos);
         if (lowerPos == null || !(world.getBlockEntity(lowerPos) instanceof SmallDoorBlockEntity door)) {
             return InteractionResult.PASS;
@@ -147,6 +192,9 @@ public class DNFItems {
         }
         if (!world.isClientSide) {
             door.setJammed(0);
+            if (!player.isCreative()) {
+                SREItemUtils.clearItem(player, REPAIR_TOOL, 1);
+            }
             world.playSound(null, lowerPos, TMMSounds.ITEM_KEY_DOOR, SoundSource.BLOCKS, 1f, 1.2f);
             player.displayClientMessage(Component.translatable("message.dnf.locksmith.repaired")
                     .withStyle(ChatFormatting.GREEN), true);
@@ -176,6 +224,9 @@ public class DNFItems {
             return InteractionResult.PASS;
         }
         if (checkWater) {
+            if (DNF.inspectFoodBox(player)) {
+                return InteractionResult.SUCCESS;
+            }
             return DNFPlayerComponent.KEY.get(player).checkChefWater(player)
                     ? InteractionResult.SUCCESS
                     : InteractionResult.FAIL;
@@ -205,11 +256,17 @@ public class DNFItems {
             return InteractionResult.PASS;
         }
         DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+        ItemStack output = new ItemStack(MEAT_RATION, DNF.CHEF_RECIPE_OUTPUT);
+        if (!canFoodBoxAccept(player, output)) {
+            return InteractionResult.FAIL;
+        }
         if (!component.useChefCapacity(player, DNF.CHEF_RECIPE_OUTPUT)) {
             return InteractionResult.FAIL;
         }
         body.discard();
-        giveOrDrop(player, new ItemStack(MEAT_RATION, DNF.CHEF_RECIPE_OUTPUT));
+        if (!putFoodBoxOrFail(player, output)) {
+            return InteractionResult.FAIL;
+        }
         player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.GENERIC_EAT,
                 SoundSource.PLAYERS, 0.8f, 0.7f);
         player.displayClientMessage(Component.translatable("message.dnf.chef.craft_meat_from_body",
@@ -224,6 +281,10 @@ public class DNFItems {
                     .withStyle(ChatFormatting.YELLOW), true);
             return InteractionResult.FAIL;
         }
+        ItemStack outputStack = new ItemStack(output, DNF.CHEF_RECIPE_OUTPUT);
+        if (!canFoodBoxAccept(player, outputStack)) {
+            return InteractionResult.FAIL;
+        }
         DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
         if (!component.useChefCapacity(player, DNF.CHEF_RECIPE_OUTPUT)) {
             return InteractionResult.FAIL;
@@ -233,10 +294,87 @@ public class DNFItems {
             consumeItem(player, liquid, 1);
             giveOrDrop(player, new ItemStack(Items.GLASS_BOTTLE));
         }
-        giveOrDrop(player, new ItemStack(output, DNF.CHEF_RECIPE_OUTPUT));
+        if (!putFoodBoxOrFail(player, outputStack)) {
+            return InteractionResult.FAIL;
+        }
         player.displayClientMessage(Component.translatable(messageKey, DNF.CHEF_RECIPE_OUTPUT)
                 .withStyle(ChatFormatting.DARK_GREEN), false);
         return InteractionResult.SUCCESS;
+    }
+
+    public static boolean seedInitialFood(ServerPlayer player) {
+        boolean ok = putFoodBoxOrFail(player, new ItemStack(CORN_GRUEL, DNF.INITIAL_CAFETERIA_FOOD));
+        if (ok) {
+            player.displayClientMessage(Component.translatable("message.dnf.chef.initial_food",
+                    DNF.INITIAL_CAFETERIA_FOOD).withStyle(ChatFormatting.GREEN), false);
+        }
+        return ok;
+    }
+
+    public static ItemStack createWaterBottle(ServerPlayer player, int count) {
+        ItemStack stack = new ItemStack(WATER_BOTTLE, count);
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(player.serverLevel());
+        if (world.isWaterPoisonedToday() && world.getWaterPoisonerToday() != null) {
+            stack.set(io.wifi.starrailexpress.index.SREDataComponentTypes.POISONER,
+                    world.getWaterPoisonerToday().toString());
+        }
+        return stack;
+    }
+
+    public static boolean putFoodBoxOrFail(ServerPlayer player, ItemStack stack) {
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(player.serverLevel());
+        if (world.getFoodBoxContainer() == null) {
+            player.displayClientMessage(Component.translatable("message.dnf.food_box.missing")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        ItemStack toInsert = stack.copy();
+        boolean ok = world.addToFoodBox(toInsert);
+        if (!ok) {
+            player.displayClientMessage(Component.translatable("message.dnf.food_box.full")
+                    .withStyle(ChatFormatting.RED), true);
+        }
+        return ok;
+    }
+
+    private static boolean canFoodBoxAccept(ServerPlayer player, ItemStack stack) {
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(player.serverLevel());
+        Container container = world.getFoodBoxContainer();
+        if (container == null) {
+            player.displayClientMessage(Component.translatable("message.dnf.food_box.missing")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        if (!DNFWorldComponent.canFit(container, stack)) {
+            player.displayClientMessage(Component.translatable("message.dnf.food_box.full")
+                    .withStyle(ChatFormatting.RED), true);
+            return false;
+        }
+        return true;
+    }
+
+    public static int countContaminated(Container container) {
+        int count = 0;
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            ItemStack stack = container.getItem(slot);
+            if (isContaminated(stack)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
+    public static boolean isDnfFoodOrWater(ItemStack stack) {
+        return stack.is(CORN_GRUEL) || stack.is(BLACK_BREAD) || stack.is(MEAT_RATION) || stack.is(WATER_BOTTLE);
+    }
+
+    public static boolean isDnfFood(ItemStack stack) {
+        return stack.is(CORN_GRUEL) || stack.is(BLACK_BREAD) || stack.is(MEAT_RATION);
+    }
+
+    public static boolean isContaminated(ItemStack stack) {
+        return isDnfFoodOrWater(stack)
+                && stack.getOrDefault(io.wifi.starrailexpress.index.SREDataComponentTypes.POISONER, null) != null;
     }
 
     private static boolean hasItem(ServerPlayer player, Item item, int count) {
@@ -275,5 +413,105 @@ public class DNFItems {
         if (!player.addItem(stack.copy())) {
             player.drop(stack.copy(), false);
         }
+    }
+
+    public static void ensureDefaultClothes(ServerPlayer player) {
+        equipOrGive(player, EquipmentSlot.CHEST, createDnfClothing(Items.LEATHER_CHESTPLATE));
+        equipOrGive(player, EquipmentSlot.LEGS, createDnfClothing(Items.LEATHER_LEGGINGS));
+        DNF.ensureHas(player, DNF_CLOCK.getDefaultInstance());
+    }
+
+    private static void equipOrGive(ServerPlayer player, EquipmentSlot slot, ItemStack stack) {
+        if (player.getItemBySlot(slot).isEmpty()) {
+            player.setItemSlot(slot, stack);
+            return;
+        }
+        giveOrDrop(player, stack);
+    }
+
+    private static ItemStack createDnfClothing(Item item) {
+        ItemStack stack = new ItemStack(item);
+        stack.set(DataComponents.UNBREAKABLE, new Unbreakable(true));
+        return stack;
+    }
+
+    public static void settleClothesEndOfDay(ServerPlayer player) {
+        dirtyClothes(player);
+        float penalty = getClothingSanPenalty(player);
+        if (penalty <= 0f) {
+            return;
+        }
+        SREPlayerMoodComponent mood = SREPlayerMoodComponent.KEY.get(player);
+        mood.addMood(-penalty);
+        player.displayClientMessage(Component.translatable(
+                penalty >= DNF.SAN_NO_CLOTHES_PENALTY ? "message.dnf.clothes.penalty_missing"
+                        : "message.dnf.clothes.penalty_dirty",
+                (int) (penalty * 100)).withStyle(ChatFormatting.DARK_RED), false);
+    }
+
+    private static void dirtyClothes(ServerPlayer player) {
+        damageClothingPiece(player.getItemBySlot(EquipmentSlot.CHEST), DNF.CLOTHES_DAILY_DIRT_DAMAGE);
+        damageClothingPiece(player.getItemBySlot(EquipmentSlot.LEGS), DNF.CLOTHES_DAILY_DIRT_DAMAGE);
+    }
+
+    private static void damageClothingPiece(ItemStack stack, int damage) {
+        if (!isDnfClothing(stack) || stack.getMaxDamage() <= 1) {
+            return;
+        }
+        stack.setDamageValue(Math.min(stack.getMaxDamage() - 1, stack.getDamageValue() + damage));
+    }
+
+    public static boolean washClothes(ServerPlayer player) {
+        ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
+        ItemStack legs = player.getItemBySlot(EquipmentSlot.LEGS);
+        if (!isDnfClothing(chest) || !isDnfClothing(legs)) {
+            player.displayClientMessage(Component.translatable("message.dnf.clothes.need_worn")
+                    .withStyle(ChatFormatting.YELLOW), true);
+            return false;
+        }
+        if (chest.getDamageValue() == 0 && legs.getDamageValue() == 0) {
+            player.displayClientMessage(Component.translatable("message.dnf.clothes.already_clean")
+                    .withStyle(ChatFormatting.GRAY), true);
+            return false;
+        }
+        chest.setDamageValue(0);
+        legs.setDamageValue(0);
+        player.displayClientMessage(Component.translatable("message.dnf.clothes.washed")
+                .withStyle(ChatFormatting.AQUA), true);
+        return true;
+    }
+
+    public static float getClothingSanPenalty(Player player) {
+        if (!isWearingDnfClothes(player)) {
+            return DNF.SAN_NO_CLOTHES_PENALTY;
+        }
+        return getClothingDirtiness(player) >= DNF.CLOTHES_DIRTY_THRESHOLD
+                ? DNF.SAN_DIRTY_CLOTHES_PENALTY
+                : 0f;
+    }
+
+    public static boolean isWearingDnfClothes(Player player) {
+        return isDnfClothing(player.getItemBySlot(EquipmentSlot.CHEST))
+                && isDnfClothing(player.getItemBySlot(EquipmentSlot.LEGS));
+    }
+
+    public static float getClothingDirtiness(Player player) {
+        ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
+        ItemStack legs = player.getItemBySlot(EquipmentSlot.LEGS);
+        if (!isDnfClothing(chest) || !isDnfClothing(legs)) {
+            return 1f;
+        }
+        return Math.max(pieceDirtiness(chest), pieceDirtiness(legs));
+    }
+
+    private static float pieceDirtiness(ItemStack stack) {
+        if (stack.getMaxDamage() <= 0) {
+            return 0f;
+        }
+        return Math.clamp((float) stack.getDamageValue() / (float) stack.getMaxDamage(), 0f, 1f);
+    }
+
+    public static boolean isDnfClothing(ItemStack stack) {
+        return stack.is(Items.LEATHER_CHESTPLATE) || stack.is(Items.LEATHER_LEGGINGS);
     }
 }
