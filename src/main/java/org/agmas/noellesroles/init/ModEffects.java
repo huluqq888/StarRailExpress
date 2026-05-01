@@ -28,6 +28,8 @@ public class ModEffects {
             new SimpleMobEffect(MobEffectCategory.NEUTRAL, 0xFFFFFF));
     public static final Holder<MobEffect> BLACK_MONITOR = register("black_monitor",
             new SimpleMobEffect(MobEffectCategory.NEUTRAL, 0xFFFFFF));
+    public static final Holder<MobEffect> GHOST_STATE = register("ghost_state",
+            new SimpleMobEffect(MobEffectCategory.NEUTRAL, 0xFFFFFF));
     public static final Holder<MobEffect> MOVE_BANED = register("move_baned",
             new SimpleMobEffect(MobEffectCategory.NEUTRAL, 0xFFFFFF) {
                 @Override
