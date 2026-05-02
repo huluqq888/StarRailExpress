@@ -67,6 +67,7 @@ import net.exmo.sre.mod_whitelist.common.network.ModWhitelistConfigPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -93,6 +94,7 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -114,6 +116,8 @@ import pro.fazeclan.river.stupid_express.modifier.refugee.cca.RefugeeComponent;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+
+import static org.agmas.noellesroles.init.ModEventsRegister.canThrowItems;
 
 public class SREClient implements ClientModInitializer {
     private static float soundLevel = 0f;
@@ -368,6 +372,13 @@ public class SREClient implements ClientModInitializer {
             hideLocalMainHandItemInLayer = isHandHiddenByEvent(player, mainHand, true);
             hideLocalOffHandItemInLayer = isHandHiddenByEvent(player, offHand, false);
         });
+        ItemTooltipCallback.EVENT.register(
+                (itemStack, tooltipContext, tooltipFlag, list) -> {
+                    if (canThrowItems.contains(itemStack.getItem())){
+                        list.add(Component.translatable("starrailexpress.tip.can_thrown"));
+                    }
+                }
+        );
         ClientTickEvents.START_WORLD_TICK.register(clientWorld -> {
             if (Minecraft.getInstance() == null || Minecraft.getInstance().player == null) {
                 return;

@@ -49,6 +49,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrownTrident;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.entity.EntityTypeTest;
@@ -559,6 +560,7 @@ public class ModEventsRegister {
     }
 
     public static boolean isMJVerifyEnabled = false;
+    public static List<Item> canThrowItems = new ArrayList<>();
 
     public static void registerEvents() {
         OnKillPlayerTriggered.EVENT.register((victim, spawnBody, _killer, deathReasosn, forceKill) -> {
@@ -1719,6 +1721,7 @@ public class ModEventsRegister {
                 "noellesroles:pill",
                 "noellesroles:pocket_watch",
                 "noellesroles:throwing_knife",
+                "starrailexpress:dnf_suspicious_meat",
                 "noellesroles:shisiye",
                 "noellesroles:signed_paper",
                 "noellesroles:mercenary_contract",
@@ -1731,6 +1734,12 @@ public class ModEventsRegister {
                 "minecraft:lantern",
                 "noellesroles:passbook",
                 "minecraft:written_book"));
+        BuiltInRegistries.ITEM.entrySet().stream()
+                .filter(entry ->SRE.canDropItem.contains(entry.getKey().toString()))
+                .map(entry -> entry.getValue().getDefaultInstance().getItem())
+                .forEach(item -> {
+                    ModEventsRegister.canThrowItems.add(item);
+                });
 
     }
 
