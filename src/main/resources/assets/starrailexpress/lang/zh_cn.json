@@ -1283,7 +1283,7 @@
   "message.dnf.chef.smoker_meat": "已烹饪肉食配给 x%s。",
   "message.dnf.chef.initial_food": "食堂食物箱已有 %s 份玉米糊糊。",
   "message.dnf.chef.new_day": "第 %s 天开始了。食材箱又被补满。",
-  "message.dnf.chef.need_ingredient": "手持玉米面袋、面粉袋或熟悉的肉，再使用技能制作食物。。",
+  "message.dnf.chef.need_ingredient": "手持玉米面袋、面粉袋或熟悉的肉，再使用技能制作食物。",
   "message.dnf.chef.missing_recipe": "缺少配方材料。",
   "message.dnf.chef.already_cooked": "这个尸体已经被烹饪了",
   "message.dnf.chef.capacity": "今天的食物位已使用 %s/%s，无法继续工作。",
