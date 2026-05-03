@@ -39,7 +39,6 @@ public class ClueSystemCommand {
 
     private static int spawn(ServerPlayer player, String title, String content) {
         var entry = ClueSystem.spawnClueEntity((ServerLevel) player.level(), player.blockPosition(), title, content);
-        ClueSystem.recordClue(player, entry);
         player.sendSystemMessage(Component.translatable("commands.sre.clue.spawn.success", title, entry.clueEntityUuid()));
         return 1;
     }

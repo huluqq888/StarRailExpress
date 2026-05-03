@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.HashMap;
 
+import static io.wifi.starrailexpress.cca.SRETrainWorldComponent.TimeOfDay.DAY;
+
 public class DNFGameMode extends SREMurderGameMode {
     @Override
     public boolean canPickBodyContent() {
@@ -70,7 +72,7 @@ public class DNFGameMode extends SREMurderGameMode {
     public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> players) {
         Harpymodloader.refreshRoles();
-        SRETrainWorldComponent.KEY.get(serverWorld).setTimeOfDay(SRETrainWorldComponent.TimeOfDay.DAY);
+        SRETrainWorldComponent.KEY.get(serverWorld).setTimeOfDay(DAY);
         DNFWorldComponent dnfWorld = DNFWorldComponent.KEY.get(serverWorld);
         dnfWorld.resetRoundState();
         dnfWorld.setPhase(0, false);
@@ -106,11 +108,11 @@ public class DNFGameMode extends SREMurderGameMode {
             player.addEffect(new MobEffectInstance(ModEffects.STAMINA_BOOST, Integer.MAX_VALUE, 2, false, false,false));
             DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
             component.init();
-            // 清空玩家的线索库
-            SREPlayerClueComponent.KEY.get(player).init();
             component.startDnfDay(player, 0, role == DNFRoles.CHEF);
             DNFItems.ensureDefaultClothes(player);
             DNF.applyPhaseState(player, false);
+            // 清空玩家的线索库
+            SREPlayerClueComponent.KEY.get(player).init();
         }
         if (!players.isEmpty()) {
             DNFItems.seedInitialFood(players.get(0));
@@ -343,7 +345,7 @@ public class DNFGameMode extends SREMurderGameMode {
 
     private void updateWorldTime(ServerLevel serverWorld) {
         SRETrainWorldComponent.TimeOfDay timeOfDay = switch (currentPhase) {
-            case DAY -> SRETrainWorldComponent.TimeOfDay.DAY;
+            case DAY -> DAY;
             case DUSK -> SRETrainWorldComponent.TimeOfDay.SUNDOWN;
             case NIGHT -> SRETrainWorldComponent.TimeOfDay.NIGHT;
         };

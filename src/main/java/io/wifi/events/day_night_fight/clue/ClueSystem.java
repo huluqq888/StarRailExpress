@@ -1,5 +1,7 @@
 package io.wifi.events.day_night_fight.clue;
 
+import io.wifi.events.day_night_fight.entity.ClueEntity;
+import io.wifi.events.day_night_fight.entity.DNFEntities;
 import io.wifi.events.day_night_fight.cca.SREPlayerClueComponent;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
@@ -10,8 +12,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.core.component.DataComponents;
@@ -35,13 +35,13 @@ public final class ClueSystem {
     public static SREPlayerClueComponent getData(ServerPlayer player) { return SREPlayerClueComponent.KEY.get(player); }
 
     public static SREPlayerClueComponent.ClueEntry spawnClueEntity(ServerLevel level, BlockPos pos, String title, String content) {
-        Display.TextDisplay display = EntityType.TEXT_DISPLAY.create(level);
-        if (display == null) throw new IllegalStateException("cannot create text display");
-        display.setPos(pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
-        display.setBillboardConstraints(Display.BillboardConstraints.CENTER);
-        display.setText(Component.translatable("message.sre.clue_system.display_title", title));
-        level.addFreshEntity(display);
-        return new SREPlayerClueComponent.ClueEntry(display.getUUID(), title, content, System.currentTimeMillis());
+        ClueEntity entity = new ClueEntity(DNFEntities.CLUE_POINT, level);
+        UUID clueUuid = entity.getClueUuid();
+        long createdAt = System.currentTimeMillis();
+        entity.setClueData(clueUuid, title, content, createdAt);
+        entity.setPos(pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
+        level.addFreshEntity(entity);
+        return new SREPlayerClueComponent.ClueEntry(clueUuid, title, content, createdAt);
     }
 
     public static void recordClue(ServerPlayer player, SREPlayerClueComponent.ClueEntry entry) {

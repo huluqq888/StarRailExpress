@@ -1206,6 +1206,7 @@
   "message.dnf.locksmith.need_tool": "你需要先制作维修工具。",
   "message.dnf.locksmith.not_enough_san": "制作维修工具需要 %s%% san。",
   "message.dnf.locksmith.tool_created": "你制作了一个维修工具。",
+  "message.dnf.clue.unlocked": "§a发现线索！§r",
   "message.dnf.crowbar.blasted": "门被彻底撬毁，无法被锁匠修复。",
   "message.dnf.soldier.no_bullet": "你今天的子弹已经用完了。",
   "message.dnf.soldier.demoted": "你在白天开枪，已被降级为普通罪犯。",
@@ -1268,7 +1269,6 @@
   "message.dnf.task_point.exchange_need_byproduct": "你需要 1 个清理副产品才能兑换。",
   "message.dnf.task_point.exchange_success": "你用清理副产品换到了 1 个绿宝石。",
   "message.dnf.task.need_food": "你今天还没吃上一口东西，san 值无法恢复。",
-  "message.dnf.clue.unlocked": "§a发现新线索！",
   "message.dnf.food_box.missing": "尚未配置 DNF 食物箱。",
   "message.dnf.food_box.full": "DNF 食物箱已满。",
   "message.dnf.blood_shop.bought": "你用血值换来了%s。剩余血值：%s",
@@ -1285,7 +1285,6 @@
   "message.dnf.chef.new_day": "第 %s 天开始了。食材箱又被补满。",
   "message.dnf.chef.need_ingredient": "手持玉米面袋、面粉袋或熟悉的肉，再使用技能制作食物。",
   "message.dnf.chef.missing_recipe": "缺少配方材料。",
-  "message.dnf.chef.already_cooked": "这个尸体已经被烹饪了",
   "message.dnf.chef.capacity": "今天的食物位已使用 %s/%s，无法继续工作。",
   "message.dnf.chef.water_checked": "你检查了水源，暂时挡住了老厨师的手脚。",
   "message.dnf.chef.water_already_checked": "今天的水源已经检查过了。",
@@ -1391,7 +1390,6 @@
   "message.dnf.chef.diary_chef_only": "只有厨师能读懂这本旧日记。",
   "message.dnf.chef.diary_found": "你找到了老厨师的日记。它提到了毒师和几瓶名为“救赎之道”的药剂。",
   "message.dnf.chef.diary_already_found": "你已经拿走过老厨师的日记了。",
-  "message.dnf.chef.diary_read": "你又读了一遍老厨师的日记。",
   "message.dnf.redemption.wrong_role": "只有毒师或厨师能使用这份配方。",
   "message.dnf.redemption.recipe_locked": "你还没有解锁救赎配方。",
   "message.dnf.redemption.already_crafted": "救赎药剂已经制作完成。",
@@ -1486,6 +1484,5 @@
   "item.starrailexpress.dnf_water_dispenser": "饮水机",
   "block.trainmurdermystery.dnf_hotbar_storage": "快捷栏储物箱",
   "item.starrailexpress.dnf_hotbar_storage": "快捷栏储物箱",
-  "container.starrailexpress.dnf_hotbar_storage": "快捷栏储物箱",
-  "info.screen.role.see_more": "按 Tab 查看更多"
+  "container.starrailexpress.dnf_hotbar_storage": "快捷栏储物箱"
 }

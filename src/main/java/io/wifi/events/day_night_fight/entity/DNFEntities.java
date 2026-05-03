@@ -19,6 +19,11 @@ public interface DNFEntities {
                     .sized(0.25f, 0.25f)
                     .clientTrackingRange(64)
     );
+    EntityType<ClueEntity> CLUE_POINT = registrar.create("dnf_clue_point",
+            EntityType.Builder.of(ClueEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(64)
+    );
 
     static void initialize() {
         registrar.registerEntries();

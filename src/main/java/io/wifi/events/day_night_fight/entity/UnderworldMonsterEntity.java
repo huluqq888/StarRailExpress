@@ -1,6 +1,7 @@
 package io.wifi.events.day_night_fight.entity;
 
 import io.wifi.events.day_night_fight.cca.DNFUnderworldComponent;
+import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.server.level.ServerLevel;
@@ -28,6 +29,8 @@ public class UnderworldMonsterEntity extends Monster {
     private int searchTick = 0;
     private Player targetPlayer = null;
     private static final int DETECTION_RANGE = 20; // 检测范围(无透视)
+    private int attackCooldown = 0; // 攻击冷却时间
+    private static final int ATTACK_INTERVAL = 60; // 攻击间隔（tick），60 tick = 3秒
 
     public UnderworldMonsterEntity(EntityType<? extends Monster> entityType, Level world) {
         super(entityType, world);
@@ -68,6 +71,11 @@ public class UnderworldMonsterEntity extends Monster {
         searchTick++;
         if (searchTick % 20 == 0) {
             findAndChasePlayer();
+        }
+        
+        // 减少攻击冷却时间
+        if (attackCooldown > 0) {
+            attackCooldown--;
         }
         
         // 追逐目标
@@ -133,6 +141,13 @@ public class UnderworldMonsterEntity extends Monster {
      */
     private void attackPlayer() {
         if (targetPlayer == null || !(targetPlayer instanceof ServerPlayer)) return;
+
+        if (!GameUtils.isPlayerAliveAndSurvival(targetPlayer))return;
+        
+        // 检查攻击冷却时间
+        if (attackCooldown > 0) {
+            return;
+        }
         
         ServerPlayer player = (ServerPlayer) targetPlayer;
         DNFUnderworldComponent underworld = DNFUnderworldComponent.KEY.get(player);
@@ -156,6 +171,9 @@ public class UnderworldMonsterEntity extends Monster {
             // 击退效果
             Vec3 knockback = targetPlayer.position().subtract(position()).normalize().scale(0.5);
             targetPlayer.setDeltaMovement(knockback.x, 0.3, knockback.z);
+            
+            // 设置攻击冷却时间
+            attackCooldown = ATTACK_INTERVAL;
         }
     }
 

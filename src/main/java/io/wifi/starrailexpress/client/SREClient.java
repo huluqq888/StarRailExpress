@@ -8,6 +8,8 @@ import dev.doctor4t.ratatouille.client.util.ambience.AmbienceUtil;
 import dev.doctor4t.ratatouille.client.util.ambience.BackgroundAmbience;
 import io.wifi.ConfigCompact.ClientConfigEvents;
 import io.wifi.events.day_night_fight.block.DNFBlocks;
+import io.wifi.events.day_night_fight.entity.ClueRenderer;
+import io.wifi.events.day_night_fight.entity.DNFEntities;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.SRERole;
@@ -225,6 +227,8 @@ public class SREClient implements ClientModInitializer {
                 io.wifi.events.day_night_fight.client.renderer.UnderworldMonsterRenderer::new);
         EntityRendererRegistry.register(io.wifi.events.day_night_fight.entity.DNFEntities.TASK_POINT,
                 io.wifi.events.day_night_fight.client.renderer.DNFTaskPointRenderer::new);
+        EntityRendererRegistry.register(DNFEntities.CLUE_POINT,
+                ClueRenderer::new);
 
         // Register entity model layers
         TMMModelLayers.initialize();

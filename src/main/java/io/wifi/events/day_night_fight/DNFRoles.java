@@ -590,8 +590,12 @@ public class DNFRoles {
                     Level level = player.level();
                     SREGameWorldComponent sreGameWorldComponent = SREGameWorldComponent.KEY.get(level);
                     if (sreGameWorldComponent.isKillerTeam( player)) {
+                        if (DNF.isNight( player)){
+                            return false;
+                        }
                         return true;
                     }
+
                     if (sreGameWorldComponent.gameMode== SREGameModes.DAY_NIGHT_FIGHT){
 
                         if (!player.hasEffect(ModEffects.GHOST_STATE)) {
@@ -628,6 +632,7 @@ public class DNFRoles {
                             return false;
 
                         }
+
                     }
                     return true;
                 }

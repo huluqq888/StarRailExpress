@@ -90,6 +90,12 @@ public class SREItemUtils {
 
     public static boolean hasItem(Player player, Item item) {
         Predicate<ItemStack> predicate = (itemStack) -> {
+            if (itemStack.getItem() == Items.BUNDLE){
+                BundleContents bundleContents = itemStack.get(DataComponents.BUNDLE_CONTENTS);
+                if (bundleContents !=null){
+                    return bundleContents.itemCopyStream().anyMatch(itemStack1 -> itemStack1.is(item));
+                }
+            }
             return itemStack.is(item);
         };
         int result = player.getInventory().clearOrCountMatchingItems(predicate, 0,
