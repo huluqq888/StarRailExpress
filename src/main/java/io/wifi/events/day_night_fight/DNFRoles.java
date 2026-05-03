@@ -579,12 +579,6 @@ public class DNFRoles {
                     .withStyle(ChatFormatting.YELLOW), true);
             return true;
         }
-
-        @Override
-        public InteractionResult onUseBlock(Player player, Level world,
-                InteractionHand hand, BlockHitResult hitResult) {
-            return DNFItems.tryRepairLockpickedDoor(player, world, hitResult.getBlockPos());
-        }
     }.setMax(4)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
     public static final SRERole CIVILIAN = TMMRoles.registerRole(new DNFNormalRole(CIVILIAN_ID, 0x719E5B, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
