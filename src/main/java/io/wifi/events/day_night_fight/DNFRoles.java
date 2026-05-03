@@ -200,10 +200,28 @@ public class DNFRoles {
         @Override
         public void serverTick(ServerPlayer player) {
             DNF.applyManiacTick(player);
+            if (!DNF.isNight(player)){
+                SREPlayerPsychoComponent srePlayerPsychoComponent = SREPlayerPsychoComponent.KEY.get(player);
+                if (srePlayerPsychoComponent.psychoTicks>0){
+                    SREItemUtils.clearItem(player,DNFItems.ABYSS_TENTACLE);
+                    srePlayerPsychoComponent.stopPsychoAndRefreshPsychoCount(true);
+                    srePlayerPsychoComponent.sync();
+                }
+            }
         }
+                @Override
+                public Item getPsychoItem() {
+                    return DNFItems.ABYSS_TENTACLE;
+                }
 
+                @Override
+                public List<ItemStack> getDefaultItems() {
+                    var items = new ArrayList<ItemStack>();
+                    items.add(DNFItems.ABYSS_VIAL.getDefaultInstance());
+                    return items;
+                }
 
-        @Override
+                @Override
         public InteractionResult leftClickEntity(Player player, Entity target) {
             if (!(player instanceof ServerPlayer serverPlayer) || !(target instanceof ServerPlayer victim)) {
                 return InteractionResult.PASS;
@@ -298,7 +316,7 @@ public class DNFRoles {
                 public List<ItemStack> getDefaultItems() {
                     ArrayList<ItemStack> items = new ArrayList<>();
 
-                    items.add(DNFItems.ABYSS_VIAL.getDefaultInstance());
+
                     return items;
                 }
 
@@ -309,14 +327,7 @@ public class DNFRoles {
                         DNF.updateNightTools(player);
                         component.checkHunger(player);
                     }
-                    if (!DNF.isNight(player)){
-                        SREPlayerPsychoComponent srePlayerPsychoComponent = SREPlayerPsychoComponent.KEY.get(player);
-                        if (srePlayerPsychoComponent.psychoTicks>0){
-                            SREItemUtils.clearItem(player,DNFItems.ABYSS_TENTACLE);
-                            srePlayerPsychoComponent.stopPsychoAndRefreshPsychoCount(true);
-                            srePlayerPsychoComponent.sync();
-                        }
-                    }
+
                 }
 
                 @Override
@@ -603,10 +614,12 @@ public class DNFRoles {
                     if (!(player instanceof ServerPlayer serverPlayer))return true;
                     Level level = player.level();
                     SREGameWorldComponent sreGameWorldComponent = SREGameWorldComponent.KEY.get(level);
+                    if (DNF.isNight( player)&&DNF.isDNFManiac(player)){
+                        return false;
+                    }
+
                     if (sreGameWorldComponent.isKillerTeam( player)) {
-                        if (DNF.isNight( player)){
-                            return false;
-                        }
+
                         return true;
                     }
 

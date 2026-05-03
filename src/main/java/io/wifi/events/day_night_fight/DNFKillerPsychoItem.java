@@ -30,7 +30,7 @@ public class DNFKillerPsychoItem extends Item {
         if (!DNF.isNight(player)){
             return InteractionResultHolder.fail(user.getItemInHand(hand));
         }
-        if (!DNF.isDNFKiller(player)) {
+        if (!DNF.isDNFManiac(player)) {
             player.displayClientMessage(Component.translatable("message.dnf.item.killer_only").withStyle(ChatFormatting.RED), true);
             return InteractionResultHolder.fail(user.getItemInHand(hand));
         }
@@ -39,7 +39,7 @@ public class DNFKillerPsychoItem extends Item {
             psycho.stopPsychoAndSync();
             return InteractionResultHolder.success(user.getItemInHand(hand));
         }
-        psycho.startPsycho_time(Integer.MAX_VALUE / 4, 1);
+        psycho.startPsycho_time(Integer.MAX_VALUE / 4, 10);
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 10, false, false, false));
         player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 10, false, false, false));
         world.playSound(null, player.blockPosition(), SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.0f, 0.8f);
