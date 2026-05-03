@@ -54,6 +54,9 @@ public class DNFTaskPointBlock extends Block {
 
     @Override
     protected RenderShape getRenderShape(BlockState blockState) {
+        if (type==TaskPointType.WEB){
+            return RenderShape.INVISIBLE;
+        }
         return RenderShape.MODEL;
     }
 

@@ -58,7 +58,7 @@ public class DNFRedemptionFormulaItem extends Item {
         consumeItem(player, Items.GLASS_BOTTLE, 1);
         DNFItems.giveOrDrop(player, new ItemStack(DNFItems.REDEMPTION_POTION, 2));
         player.displayClientMessage(Component.translatable("message.dnf.redemption.crafted")
-                .withStyle(ChatFormatting.DARK_GREEN), false);
+                .withStyle(ChatFormatting.DARK_GREEN), true);
 
         ServerPlayer partner = component.getRedemptionPartner(player.serverLevel());
         component.markRedemptionPotionCrafted(player);

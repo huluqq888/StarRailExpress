@@ -62,6 +62,15 @@ public class BeveragePlateBlockEntity extends BlockEntity {
         this.sync();
     }
 
+    public ItemStack removeItem(int index) {
+        if (index < 0 || index >= this.storedItems.size()) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = this.storedItems.remove(index);
+        this.sync();
+        return stack;
+    }
+
     public String getPoisoner() {
         return this.poisoner;
     }

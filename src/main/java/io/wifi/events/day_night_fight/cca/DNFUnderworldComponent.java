@@ -3,6 +3,7 @@ package io.wifi.events.day_night_fight.cca;
 import io.wifi.events.day_night_fight.DNF;
 import io.wifi.events.day_night_fight.block.DNFBlocks;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.RoleComponent;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
@@ -31,12 +32,6 @@ import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 public class DNFUnderworldComponent implements RoleComponent, ServerTickingComponent {
     public static final ComponentKey<DNFUnderworldComponent> KEY = ComponentRegistry.getOrCreate(
             SRE.id("dnf_underworld"), DNFUnderworldComponent.class);
-
-    private static final int MAX_REVIVE_TICKS = 180 * 20;
-    private static final int ATTACK_TIME_REDUCTION_TICKS = 30 * 20;
-    private static final int ROOM_HALF_SIZE = 5;
-    private static final int ROOM_HEIGHT = 5;
-    private static final int ROOM_SPACING = 32;
 
     private final Player player;
     private boolean waitingRoom;
@@ -126,17 +121,17 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         ServerLevel level = serverPlayer.serverLevel();
         waitingRoom = true;
         inUnderworld = false;
-        reviveCountdownTicks = MAX_REVIVE_TICKS;
+        reviveCountdownTicks = maxReviveTicks();
         waitingRoomOrigin = computeWaitingRoomOrigin(serverPlayer);
-        doorPos = waitingRoomOrigin.offset(0, 1, ROOM_HALF_SIZE);
+        doorPos = waitingRoomOrigin.offset(0, 1, roomHalfSize());
 
         buildWaitingRoom(level, waitingRoomOrigin);
         applyWaitingRoomEffects(serverPlayer);
         serverPlayer.teleportTo(level, waitingRoomOrigin.getX() + 0.5, waitingRoomOrigin.getY() + 1.0,
-                waitingRoomOrigin.getZ() - ROOM_HALF_SIZE + 2.5, serverPlayer.getYRot(), serverPlayer.getXRot());
+                waitingRoomOrigin.getZ() - roomHalfSize() + 2.5, serverPlayer.getYRot(), serverPlayer.getXRot());
         level.playSound(null, serverPlayer.blockPosition(), SoundEvents.WARDEN_DEATH, SoundSource.PLAYERS, 1.0f, 0.8f);
         serverPlayer.displayClientMessage(Component.translatable("message.dnf.underworld.waiting_room")
-                .withStyle(ChatFormatting.DARK_PURPLE), false);
+                .withStyle(ChatFormatting.DARK_PURPLE), true);
         sync();
     }
 
@@ -148,7 +143,7 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         BlockPos revivePos = DNFWorldComponent.KEY.get(level).findRandomUnderworldSpawn(level);
         waitingRoom = false;
         inUnderworld = true;
-        reviveCountdownTicks = MAX_REVIVE_TICKS;
+        reviveCountdownTicks = maxReviveTicks();
         applyTrueUnderworldEffects(serverPlayer);
         serverPlayer.teleportTo(level, revivePos.getX() + 0.5, revivePos.getY() + 1.0, revivePos.getZ() + 0.5,
                 serverPlayer.getYRot(), serverPlayer.getXRot());
@@ -187,7 +182,7 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         if (!inUnderworld) {
             return;
         }
-        reviveCountdownTicks = Math.max(0, reviveCountdownTicks - ATTACK_TIME_REDUCTION_TICKS);
+        reviveCountdownTicks = Math.max(0, reviveCountdownTicks - attackTimeReductionTicks());
         sync();
     }
 
@@ -229,7 +224,7 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         if (!inUnderworld) {
             return 0.0f;
         }
-        float elapsed = 1.0f - Math.clamp((float) reviveCountdownTicks / (float) MAX_REVIVE_TICKS, 0.0f, 1.0f);
+        float elapsed = 1.0f - Math.clamp((float) reviveCountdownTicks / (float) maxReviveTicks(), 0.0f, 1.0f);
         return elapsed * 0.5f;
     }
 
@@ -240,7 +235,9 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         }
         tick();
         if (inUnderworld && reviveCountdownTicks <= 0) {
-            GameUtils.killPlayer(player, true, null);
+            if (GameUtils.isPlayerAliveAndSurvival(player)) {
+                GameUtils.killPlayer(player, true, null);
+            }
         }
     }
 
@@ -273,30 +270,32 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
     private static BlockPos computeWaitingRoomOrigin(ServerPlayer player) {
         DNFWorldComponent world = DNFWorldComponent.KEY.get(player.serverLevel());
         int hash = Math.abs(player.getUUID().hashCode());
-        int xOffset = 96 + (hash % 8) * ROOM_SPACING;
-        int zOffset = 96 + ((hash / 8) % 8) * ROOM_SPACING;
-        return world.getUnderworldCenter().offset(xOffset, 24, zOffset);
+        int xOffset = waitingRoomBaseOffsetX() + (hash % 8) * roomSpacing();
+        int zOffset = waitingRoomBaseOffsetZ() + ((hash / 8) % 8) * roomSpacing();
+        return world.getUnderworldCenter().offset(xOffset, waitingRoomBaseOffsetY(), zOffset);
     }
 
     private static void buildWaitingRoom(ServerLevel level, BlockPos origin) {
         BlockState white = DNFBlocks.WHITE_BLOCK.defaultBlockState();
         BlockState air = Blocks.AIR.defaultBlockState();
         BlockState door = DNFBlocks.UNDERWORLD_DOOR.defaultBlockState();
+        int halfSize = roomHalfSize();
+        int roomHeight = roomHeight();
 
-        for (int x = -ROOM_HALF_SIZE; x <= ROOM_HALF_SIZE; x++) {
-            for (int y = 0; y <= ROOM_HEIGHT; y++) {
-                for (int z = -ROOM_HALF_SIZE; z <= ROOM_HALF_SIZE; z++) {
-                    boolean shell = x == -ROOM_HALF_SIZE || x == ROOM_HALF_SIZE
-                            || z == -ROOM_HALF_SIZE || z == ROOM_HALF_SIZE || y == 0 || y == ROOM_HEIGHT;
+        for (int x = -halfSize; x <= halfSize; x++) {
+            for (int y = 0; y <= roomHeight; y++) {
+                for (int z = -halfSize; z <= halfSize; z++) {
+                    boolean shell = x == -halfSize || x == halfSize
+                            || z == -halfSize || z == halfSize || y == 0 || y == roomHeight;
                     level.setBlock(origin.offset(x, y, z), shell ? white : air, 3);
                 }
             }
         }
 
-        level.setBlock(origin.offset(0, 1, ROOM_HALF_SIZE), door, 3);
-        level.setBlock(origin.offset(0, 2, ROOM_HALF_SIZE), door, 3);
-        level.setBlock(origin.offset(0, 1, ROOM_HALF_SIZE + 1), white, 3);
-        level.setBlock(origin.offset(0, 2, ROOM_HALF_SIZE + 1), white, 3);
+        level.setBlock(origin.offset(0, 1, halfSize), door, 3);
+        level.setBlock(origin.offset(0, 2, halfSize), door, 3);
+        level.setBlock(origin.offset(0, 1, halfSize + 1), white, 3);
+        level.setBlock(origin.offset(0, 2, halfSize + 1), white, 3);
 
         level.setBlock(origin.offset(-3, 1, -1), Blocks.QUARTZ_STAIRS.defaultBlockState(), 3);
         level.setBlock(origin.offset(-2, 1, -1), Blocks.QUARTZ_SLAB.defaultBlockState(), 3);
@@ -305,5 +304,37 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         level.setBlock(origin.offset(-4, 1, 3), Blocks.WHITE_CARPET.defaultBlockState(), 3);
         level.setBlock(origin.offset(4, 1, -3), Blocks.SMOOTH_QUARTZ_STAIRS.defaultBlockState(), 3);
         level.setBlock(origin.offset(1, 1, -4), Blocks.WHITE_GLAZED_TERRACOTTA.defaultBlockState(), 3);
+    }
+
+    private static int maxReviveTicks() {
+        return Math.max(1, SREConfig.instance().dnfUnderworldReviveSeconds) * 20;
+    }
+
+    private static int attackTimeReductionTicks() {
+        return Math.max(0, SREConfig.instance().dnfUnderworldAttackTimeReductionSeconds) * 20;
+    }
+
+    private static int roomHalfSize() {
+        return Math.max(3, SREConfig.instance().dnfUnderworldWaitingRoomHalfSize);
+    }
+
+    private static int roomHeight() {
+        return Math.max(3, SREConfig.instance().dnfUnderworldWaitingRoomHeight);
+    }
+
+    private static int roomSpacing() {
+        return Math.max(roomHalfSize() * 2 + 4, SREConfig.instance().dnfUnderworldWaitingRoomSpacing);
+    }
+
+    private static int waitingRoomBaseOffsetX() {
+        return SREConfig.instance().dnfUnderworldWaitingRoomBaseOffsetX;
+    }
+
+    private static int waitingRoomBaseOffsetY() {
+        return SREConfig.instance().dnfUnderworldWaitingRoomBaseOffsetY;
+    }
+
+    private static int waitingRoomBaseOffsetZ() {
+        return SREConfig.instance().dnfUnderworldWaitingRoomBaseOffsetZ;
     }
 }

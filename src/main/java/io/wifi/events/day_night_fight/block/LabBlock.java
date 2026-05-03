@@ -1,6 +1,7 @@
 package io.wifi.events.day_night_fight.block;
 
 import io.wifi.events.day_night_fight.DNF;
+import io.wifi.events.day_night_fight.DNFConfig;
 import io.wifi.events.day_night_fight.DNFItems;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.ChatFormatting;
@@ -80,7 +81,7 @@ public class LabBlock extends Block {
         }
 
         // 计算目标位置（向下 20 格）
-        BlockPos targetPos = blockPos.below(io.wifi.events.day_night_fight.DNF.LAB_TELEPORT_OFFSET_Y);
+        BlockPos targetPos = blockPos.below(DNFConfig.configuredLabTeleportOffsetY());
         
         // 检查目标位置是否安全（确保不是固体方块）
         Level world = player.level();

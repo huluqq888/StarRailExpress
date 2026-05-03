@@ -103,8 +103,8 @@ public class DNFItems {
                 @Override
                 public void inventoryTick(ItemStack itemStack, Level level, Entity entity, int i, boolean bl) {
                     if (entity instanceof Player player){
-                        if (!player.getInventory().hasAnyMatching(a -> a.getItem() == Items.NETHERITE_HELMET)){
-                            player.setItemSlot(EquipmentSlot.CHEST,new ItemStack(Items.NETHERITE_HELMET)) ;
+                        if (!player.getInventory().hasAnyMatching(a -> a.getItem() == Items.NETHERITE_CHESTPLATE)){
+                            player.setItemSlot(EquipmentSlot.CHEST,new ItemStack(Items.NETHERITE_CHESTPLATE)) ;
                         }
                         if (!player.getInventory().hasAnyMatching(a -> a.getItem() == Items.NETHERITE_LEGGINGS)){
                             player.setItemSlot(EquipmentSlot.LEGS,new ItemStack(Items.NETHERITE_LEGGINGS)) ;
@@ -120,14 +120,7 @@ public class DNFItems {
                 }
             });
     public static final Item OLD_CHEF_DIARY = register("dnf_old_chef_diary",
-            new Item(new Item.Properties().stacksTo(1)) {
-                @Override
-                public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip,
-                        TooltipFlag flag) {
-                    appendDnfTooltip(stack, context, tooltip, flag,
-                            "item.starrailexpress.dnf_old_chef_diary.tooltip");
-                }
-            });
+            new DNFOldChefDiaryItem(new Item.Properties().stacksTo(1)));
     public static final Item REDEMPTION_FORMULA = register("dnf_redemption_formula",
             new DNFRedemptionFormulaItem(new Item.Properties().stacksTo(1)));
     public static final Item BLOOD_BUY_FLYING_KNIFE = register("dnf_blood_buy_flying_knife",

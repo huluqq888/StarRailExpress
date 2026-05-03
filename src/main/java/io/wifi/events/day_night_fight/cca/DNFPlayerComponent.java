@@ -6,6 +6,7 @@ import io.wifi.events.day_night_fight.DNFItems;
 import io.wifi.events.day_night_fight.DNFRoles;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
+import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
 import io.wifi.starrailexpress.cca.SREPlayerTaskComponent;
@@ -17,19 +18,23 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import org.agmas.noellesroles.init.ModItems;
+import org.agmas.noellesroles.packet.BroadcastMessageS2CPacket;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.ComponentRegistry;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -64,6 +69,8 @@ public class DNFPlayerComponent implements RoleComponent {
     private UUID redemptionPartner;
     private boolean redemptionPotionCrafted;
     private boolean joinedMeeting;
+    private int otherRoomNightTicks;
+    private int otherRoomWarningStage;
 
     public DNFPlayerComponent(Player player) {
         this.player = player;
@@ -113,6 +120,8 @@ public class DNFPlayerComponent implements RoleComponent {
         redemptionPartner = null;
         redemptionPotionCrafted = false;
         joinedMeeting = false;
+        otherRoomNightTicks = 0;
+        otherRoomWarningStage = 0;
     }
 
     public int getBlood() {
@@ -170,6 +179,8 @@ public class DNFPlayerComponent implements RoleComponent {
         poisonCraftDay = day;
         poisonCraftedToday = 0;
         maniacStunned = false;
+        otherRoomNightTicks = 0;
+        otherRoomWarningStage = 0;
 
         SREPlayerMoodComponent.KEY.get(serverPlayer).setMood(day == 0 ? DNF.INITIAL_SAN : DNF.MORNING_SAN);
 
@@ -192,6 +203,84 @@ public class DNFPlayerComponent implements RoleComponent {
         KEY.sync(serverPlayer);
     }
 
+    public void tickOtherRoomNightRule(ServerPlayer serverPlayer) {
+        if (!DNF.isDayNightFightMode(serverPlayer.level()) || !DNF.isNight(serverPlayer)
+                || !DNF.isDnfAlive(serverPlayer)) {
+            return;
+        }
+        UUID roomOwner = findOtherRoomOwner(serverPlayer);
+        if (roomOwner == null) {
+            return;
+        }
+        int previousTicks = otherRoomNightTicks;
+        otherRoomNightTicks++;
+        sendOtherRoomWarning(serverPlayer, previousTicks, otherRoomNightTicks);
+        if (otherRoomNightTicks >= DNF.OTHER_ROOM_NIGHT_LIMIT_TICKS) {
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.room_intrusion.death")
+                    .withStyle(ChatFormatting.DARK_RED), true);
+            GameUtils.forceKillPlayer(serverPlayer, true, null, GameConstants.DeathReasons.GENERIC);
+            otherRoomNightTicks = 0;
+            otherRoomWarningStage = 0;
+            KEY.sync(serverPlayer);
+        }
+    }
+
+    private void sendOtherRoomWarning(ServerPlayer serverPlayer, int previousTicks, int currentTicks) {
+        if (otherRoomWarningStage <= 0 && currentTicks == 1) {
+            otherRoomWarningStage = 1;
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.room_intrusion.enter")
+                    .withStyle(ChatFormatting.RED), true);
+            KEY.sync(serverPlayer);
+            return;
+        }
+        if (otherRoomWarningStage <= 1 && previousTicks < 15 * 20 && currentTicks >= 15 * 20) {
+            otherRoomWarningStage = 2;
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.room_intrusion.half")
+                    .withStyle(ChatFormatting.RED), true);
+            KEY.sync(serverPlayer);
+            return;
+        }
+        if (otherRoomWarningStage <= 2 && previousTicks < 25 * 20 && currentTicks >= 25 * 20) {
+            otherRoomWarningStage = 3;
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.room_intrusion.danger")
+                    .withStyle(ChatFormatting.DARK_RED), true);
+            KEY.sync(serverPlayer);
+        }
+    }
+
+    private static UUID findOtherRoomOwner(ServerPlayer player) {
+        Integer ownRoom = GameUtils.roomToPlayer.get(player.getUUID());
+        if (ownRoom == null || GameUtils.roomToPlayer.isEmpty()) {
+            return null;
+        }
+        AreasWorldComponent areas = AreasWorldComponent.KEY.get(player.level());
+        double radiusSq = DNF.ROOM_INTRUSION_RADIUS * DNF.ROOM_INTRUSION_RADIUS;
+        for (Map.Entry<Integer, Vec3> roomEntry : areas.getRoomPositions().entrySet()) {
+            int roomNumber = roomEntry.getKey();
+            if (roomNumber == ownRoom) {
+                continue;
+            }
+            Vec3 roomCenter = roomEntry.getValue();
+            if (roomCenter == null || player.position().distanceToSqr(roomCenter) > radiusSq) {
+                continue;
+            }
+            UUID owner = ownerOfRoom(roomNumber);
+            if (owner != null && !owner.equals(player.getUUID())) {
+                return owner;
+            }
+        }
+        return null;
+    }
+
+    private static UUID ownerOfRoom(int roomNumber) {
+        for (Map.Entry<UUID, Integer> entry : GameUtils.roomToPlayer.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().equals(roomNumber)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
     public void startDnfNight(ServerPlayer serverPlayer, int day) {
         knifeNightDay = day;
         knifeUsesTonight = 0;
@@ -201,11 +290,11 @@ public class DNFPlayerComponent implements RoleComponent {
             if (pendingAidType == 1) {
                 giveOrDrop(serverPlayer, DNFItems.LOCKPICK.getDefaultInstance());
                 serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.aid_delivered_lockpick")
-                        .withStyle(ChatFormatting.RED), false);
+                        .withStyle(ChatFormatting.RED), true);
             } else if (pendingAidType == 2) {
                 giveOrDrop(serverPlayer, ModItems.ONCE_REVOLVER.getDefaultInstance());
                 serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.aid_delivered_gun")
-                        .withStyle(ChatFormatting.RED), false);
+                        .withStyle(ChatFormatting.RED), true);
             }
             pendingAidType = 0;
             pendingAidDay = -1;
@@ -466,6 +555,12 @@ public class DNFPlayerComponent implements RoleComponent {
         if (isChef) {
             addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_CHEF_WORK);
         }
+        if (DNF.isDNFPoisoner(serverPlayer)) {
+            addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_POISON_FOOD);
+            addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_POISON_DEPOSIT);
+            addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_POISON_WATER);
+            addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_REDEMPTION);
+        }
         tasks.sync();
     }
 
@@ -510,9 +605,23 @@ public class DNFPlayerComponent implements RoleComponent {
         }
         chefDiaryFound = true;
         giveOrDrop(serverPlayer, DNFItems.OLD_CHEF_DIARY.getDefaultInstance());
-        serverPlayer.displayClientMessage(Component.translatable("message.dnf.chef.diary_found")
-                .withStyle(ChatFormatting.DARK_GREEN), false);
+        MutableComponent component = Component.translatable("message.dnf.chef.diary_found")
+                .withStyle(ChatFormatting.DARK_GREEN);
+        serverPlayer.displayClientMessage(component, true);
+        ServerPlayNetworking.send(serverPlayer,new BroadcastMessageS2CPacket(component));
         KEY.sync(serverPlayer);
+    }
+
+    public void readChefDiary(ServerPlayer serverPlayer) {
+        if (!chefDiaryFound) {
+            chefDiaryFound = true;
+            serverPlayer.displayClientMessage(Component.translatable("message.dnf.chef.diary_found")
+                    .withStyle(ChatFormatting.DARK_GREEN), true);
+            KEY.sync(serverPlayer);
+            return;
+        }
+        serverPlayer.displayClientMessage(Component.translatable("message.dnf.chef.diary_read")
+                .withStyle(ChatFormatting.DARK_GREEN), false);
     }
 
     public boolean isRedemptionRecipeUnlocked() {
@@ -756,6 +865,8 @@ public class DNFPlayerComponent implements RoleComponent {
             tag.putUUID("RedemptionPartner", redemptionPartner);
         }
         tag.putBoolean("RedemptionPotionCrafted", redemptionPotionCrafted);
+        tag.putInt("OtherRoomNightTicks", otherRoomNightTicks);
+        tag.putInt("OtherRoomWarningStage", otherRoomWarningStage);
     }
 
     private void readRuntimeState(CompoundTag tag) {
@@ -777,5 +888,7 @@ public class DNFPlayerComponent implements RoleComponent {
         redemptionRecipeUnlocked = tag.getBoolean("RedemptionRecipeUnlocked");
         redemptionPartner = tag.contains("RedemptionPartner") ? tag.getUUID("RedemptionPartner") : null;
         redemptionPotionCrafted = tag.getBoolean("RedemptionPotionCrafted");
+        otherRoomNightTicks = tag.getInt("OtherRoomNightTicks");
+        otherRoomWarningStage = tag.getInt("OtherRoomWarningStage");
     }
 }

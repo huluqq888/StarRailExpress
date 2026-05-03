@@ -86,10 +86,10 @@ public class DNFRoles {
             DNF_ABYSS_ID,
             new Color(120, 0, 0).getRGB(),
             false,
-            true,
+            false,
             SRERole.MoodType.FAKE,
             Integer.MAX_VALUE,
-            true) {
+            false) {
         @Override
         public InteractionResult leftClickEntity(Player player, Entity target) {
             if (!(player instanceof ServerPlayer serverPlayer) || !(target instanceof Player victim)) {
@@ -440,7 +440,7 @@ public class DNFRoles {
                             .isRole(serverVictim, DNFRoles.MANIAC)) {
                 RoleUtils.changeRole(serverKiller, DNFRoles.CIVILIAN);
                 serverKiller.displayClientMessage(Component.translatable("message.dnf.soldier.demoted")
-                        .withStyle(ChatFormatting.RED), false);
+                        .withStyle(ChatFormatting.RED), true);
             }
             return true;
         }

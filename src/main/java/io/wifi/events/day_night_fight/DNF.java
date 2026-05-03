@@ -10,6 +10,7 @@ import io.wifi.events.day_night_fight.entity.DNFEntities;
 import io.wifi.events.day_night_fight.gui.DNFMenus;
 import io.wifi.events.day_night_fight.commands.ClueSystemCommand;
 import io.wifi.starrailexpress.SREConfig;
+import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.cca.AreasWorldComponent;
@@ -22,6 +23,7 @@ import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.content.block.ToiletBlock;
 import io.wifi.starrailexpress.content.vote.VoteSession;
+import io.wifi.starrailexpress.event.AllowSpectatorPlayerInAreas;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.ShopContent;
 import io.wifi.starrailexpress.index.TMMItems;
@@ -29,6 +31,7 @@ import io.wifi.starrailexpress.util.SREItemUtils;
 import io.wifi.starrailexpress.util.ShopEntry;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -79,6 +82,8 @@ public class DNF {
     public static final int CHAT_FOCUS_TICKS = 5 * 20;
     public static final int TOILET_TASK_TICKS = 15 * 20;
     public static final int CLEANING_TICKS = 8 * 20;
+    public static final int OTHER_ROOM_NIGHT_LIMIT_TICKS = 30 * 20;
+    public static final double ROOM_INTRUSION_RADIUS = 4.0;
     public static final int MAX_DAILY_CLEANING_TASKS = 3;
     public static final float INITIAL_SAN = 0.5f;
     public static final float MORNING_SAN = 0.3f;
@@ -126,7 +131,7 @@ public class DNF {
     /**
      * 应用配置文件中的里世界传送配置到世界组件
      */
-    private static void applyUnderworldConfig() {
+    public static void applyUnderworldConfig() {
         SREConfig config = SREConfig.instance();
         DEFAULT_LAB_CENTER = new BlockPos(
                 config.underworldLabCenterX,
@@ -195,12 +200,11 @@ public class DNF {
     }
 
     public static BlockPos getConfiguredMeetingPos() {
-        SREConfig config = SREConfig.instance();
-        return new BlockPos(config.dnfMeetingX, config.dnfMeetingY, config.dnfMeetingZ);
+        return DNFConfig.configuredMeetingPos();
     }
 
     public static double getConfiguredMeetingRadius() {
-        return Math.max(1.0, SREConfig.instance().dnfMeetingRadius);
+        return DNFConfig.configuredMeetingRadius();
     }
 
     public static ResourceKey<Level> getConfiguredMeetingDimension() {
@@ -279,7 +283,7 @@ public class DNF {
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30, 1, false, false, false));
         if (component.hasPersonalEnding()) {
             player.displayClientMessage(Component.translatable("message.dnf.killer.ending")
-                    .withStyle(ChatFormatting.DARK_PURPLE), false);
+                    .withStyle(ChatFormatting.DARK_PURPLE), true);
             if (player.serverLevel().getGameTime() % 10 == 0) {
                 player.displayClientMessage(Component.translatable("game.win.star.dnf_killer")
                         .withStyle(ChatFormatting.DARK_PURPLE), true);
@@ -406,6 +410,15 @@ public class DNF {
      * 发送玩家到里世界
      * 玩家死亡时调用,进入里世界而不是真正死亡
      */
+    static {
+        AllowSpectatorPlayerInAreas.EVENT.register(player -> {
+            SREGameWorldComponent sreGameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
+            if (sreGameWorldComponent.gameMode == SREGameModes.DAY_NIGHT_FIGHT){
+                return false;
+            }
+            return true;
+        });
+    }
     public static void sendPlayerToUnderworld(ServerPlayer player) {
         if (player == null || player.level() == null) return;
 
@@ -460,7 +473,7 @@ public class DNF {
             }
             world.poisonWaterTomorrow(player.getUUID());
             player.displayClientMessage(Component.translatable("message.dnf.poisoner.water_poisoned")
-                    .withStyle(ChatFormatting.DARK_GREEN), false);
+                    .withStyle(ChatFormatting.DARK_GREEN), true);
             return true;
         }
 
@@ -502,7 +515,7 @@ public class DNF {
         }
         int contaminated = DNFItems.countContaminated(container);
         player.displayClientMessage(Component.translatable("message.dnf.chef.food_box_checked", contaminated)
-                .withStyle(contaminated > 0 ? ChatFormatting.RED : ChatFormatting.GREEN), false);
+                .withStyle(contaminated > 0 ? ChatFormatting.RED : ChatFormatting.GREEN), true);
         return true;
     }
 
@@ -555,6 +568,16 @@ public class DNF {
             return;
         }
         eventsRegistered = true;
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (ServerLevel level : server.getAllLevels()) {
+                if (!isDayNightFightMode(level)) {
+                    continue;
+                }
+                for (ServerPlayer player : level.players()) {
+                    DNFPlayerComponent.KEY.get(player).tickOtherRoomNightRule(player);
+                }
+            }
+        });
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             if (world.isClientSide || !(player instanceof ServerPlayer serverPlayer)
                     || !isDayNightFightMode(world) || !GameUtils.isPlayerAliveAndSurvival(serverPlayer)) {

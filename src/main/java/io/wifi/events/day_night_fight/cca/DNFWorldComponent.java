@@ -1,7 +1,10 @@
 package io.wifi.events.day_night_fight.cca;
 
+import io.wifi.events.day_night_fight.DNF;
 import io.wifi.events.day_night_fight.block.CluePointBlock;
+import io.wifi.events.day_night_fight.DNFConfig;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.SREConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -142,7 +145,8 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getFoodBoxPos() {
-        return map.foodBoxPos;
+        BlockPos configured = DNFConfig.configuredFoodBoxPos();
+        return configured != null ? configured : map.foodBoxPos;
     }
 
     public void setFoodBoxPos(@Nullable BlockPos foodBoxPos) {
@@ -152,7 +156,8 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getWaterSourcePos() {
-        return map.waterSourcePos;
+        BlockPos configured = DNFConfig.configuredWaterSourcePos();
+        return configured != null ? configured : map.waterSourcePos;
     }
 
     public void setWaterSourcePos(@Nullable BlockPos waterSourcePos) {
@@ -162,7 +167,8 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getMeteorPos() {
-        return map.meteorPos;
+        BlockPos configured = DNFConfig.configuredMeteorPos();
+        return configured != null ? configured : map.meteorPos;
     }
 
     public void setMeteorPos(@Nullable BlockPos meteorPos) {
@@ -172,7 +178,8 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getWallHolePos() {
-        return map.wallHolePos;
+        BlockPos configured = DNFConfig.configuredWallHolePos();
+        return configured != null ? configured : map.wallHolePos;
     }
 
     public void setWallHolePos(@Nullable BlockPos wallHolePos) {
@@ -182,7 +189,8 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getOldChefDiaryPos() {
-        return map.oldChefDiaryPos;
+        BlockPos configured = DNFConfig.configuredOldChefDiaryPos();
+        return configured != null ? configured : map.oldChefDiaryPos;
     }
 
     public void setOldChefDiaryPos(@Nullable BlockPos oldChefDiaryPos) {
@@ -192,7 +200,8 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public AABB getCafeteriaArea() {
-        return map.cafeteriaArea;
+        AABB configured = DNFConfig.configuredCafeteriaArea();
+        return configured != null ? configured : map.cafeteriaArea;
     }
 
     public void setCafeteriaArea(@Nullable AABB cafeteriaArea) {
@@ -212,7 +221,7 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getMeetingPos() {
-        return map.meetingPos;
+        return DNFConfig.configuredMeetingPos();
     }
 
     public void setMeetingPos(@Nullable BlockPos meetingPos) {
@@ -221,7 +230,7 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
     }
 
     public double getMeetingRadius() {
-        return map.meetingRadius;
+        return DNFConfig.configuredMeetingRadius();
     }
 
     public void setMeetingRadius(double meetingRadius) {
@@ -231,7 +240,7 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
 
     @Nullable
     public BlockPos getLabCenterPos() {
-        return map.labCenterPos;
+        return map.labCenterPos == null ? DNFConfig.configuredUnderworldCenter() : map.labCenterPos;
     }
 
     public void setLabCenterPos(@Nullable BlockPos labCenterPos) {
@@ -240,7 +249,7 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
     }
 
     public double getLabRadius() {
-        return map.labRadius;
+        return map.labRadius <= 0 ? DNFConfig.configuredUnderworldRadius() : map.labRadius;
     }
 
     public void setLabRadius(double labRadius) {
@@ -249,45 +258,52 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
     }
 
     public boolean isPlayerNearMeeting(ServerPlayer player) {
-        if (map.meetingPos == null || map.meetingRadius <= 0) {
+        BlockPos meetingPos = getMeetingPos();
+        double meetingRadius = getMeetingRadius();
+        if (meetingPos == null || meetingRadius <= 0) {
             return false;
         }
         double distSq = player.distanceToSqr(
-            map.meetingPos.getX() + 0.5, 
-            map.meetingPos.getY() + 0.5, 
-            map.meetingPos.getZ() + 0.5
+            meetingPos.getX() + 0.5,
+            meetingPos.getY() + 0.5,
+            meetingPos.getZ() + 0.5
         );
-        return distSq <= map.meetingRadius * map.meetingRadius;
+        return distSq <= meetingRadius * meetingRadius;
     }
 
     public boolean isFoodBox(BlockPos pos) {
-        return map.foodBoxPos != null && map.foodBoxPos.equals(pos);
+        BlockPos target = getFoodBoxPos();
+        return target != null && target.equals(pos);
     }
 
     public boolean isWaterSource(BlockPos pos) {
-        return map.waterSourcePos != null && map.waterSourcePos.equals(pos);
+        BlockPos target = getWaterSourcePos();
+        return target != null && target.equals(pos);
     }
 
     public boolean isMeteor(BlockPos pos) {
-        return map.meteorPos != null && map.meteorPos.equals(pos);
+        BlockPos target = getMeteorPos();
+        return target != null && target.equals(pos);
     }
 
     public boolean isWallHole(BlockPos pos) {
-        return map.wallHolePos != null && map.wallHolePos.equals(pos);
+        BlockPos target = getWallHolePos();
+        return target != null && target.equals(pos);
     }
 
     public boolean isOldChefDiary(BlockPos pos) {
-        return map.oldChefDiaryPos != null && map.oldChefDiaryPos.equals(pos);
+        BlockPos target = getOldChefDiaryPos();
+        return target != null && target.equals(pos);
     }
 
     @Nullable
     public Container getFoodBoxContainer() {
-        return getContainer(map.foodBoxPos);
+        return getContainer(getFoodBoxPos());
     }
 
     @Nullable
     public Container getWallHoleContainer() {
-        return getContainer(map.wallHolePos);
+        return getContainer(getWallHolePos());
     }
 
     @Nullable
@@ -370,20 +386,22 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
     }
 
     public BlockPos getUnderworldCenter() {
-        return underworld.center;
+        return DNFConfig.configuredUnderworldCenter();
     }
 
     public double getUnderworldRadius() {
-        return underworld.radius;
+        return DNFConfig.configuredUnderworldRadius();
     }
 
     public BlockPos generateCluePoint(Level world) {
         double angle = Math.random() * Math.PI * 2;
-        double distance = Math.random() * underworld.radius;
+        BlockPos center = getUnderworldCenter();
+        double radius = Math.max(1.0, getUnderworldRadius());
+        double distance = Math.random() * radius;
         
-        int x = underworld.center.getX() + (int)(Math.cos(angle) * distance);
-        int z = underworld.center.getZ() + (int)(Math.sin(angle) * distance);
-        int y = underworld.center.getY();
+        int x = center.getX() + (int)(Math.cos(angle) * distance);
+        int z = center.getZ() + (int)(Math.sin(angle) * distance);
+        int y = center.getY();
         
         BlockPos pos = new BlockPos(x, y, z);
         BlockPos groundPos = world.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, pos);
@@ -400,16 +418,18 @@ public class DNFWorldComponent implements AutoSyncedComponent, ServerTickingComp
     }
 
     public BlockPos findRandomUnderworldSpawn(ServerLevel level) {
-        BlockPos fallback = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, underworld.center);
-        double radius = Math.max(1.0, underworld.radius);
+        BlockPos center = getUnderworldCenter();
+        BlockPos fallback = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center);
+        double radius = Math.max(1.0, getUnderworldRadius());
 
         for (int i = 0; i < 32; i++) {
             double angle = level.random.nextDouble() * Math.PI * 2.0;
             double distance = Math.sqrt(level.random.nextDouble()) * radius;
-            int x = underworld.center.getX() + (int) Math.round(Math.cos(angle) * distance);
-            int z = underworld.center.getZ() + (int) Math.round(Math.sin(angle) * distance);
-            BlockPos probe = new BlockPos(x, underworld.center.getY(), z);
+            int x = center.getX() + (int) Math.round(Math.cos(angle) * distance);
+            int z = center.getZ() + (int) Math.round(Math.sin(angle) * distance);
+            BlockPos probe = new BlockPos(x, center.getY(), z);
             BlockPos pos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, probe);
+            pos = pos.above(SREConfig.instance().underworldLabTeleportOffsetY);
             fallback = pos;
             if (level.getWorldBorder().isWithinBounds(pos) && !level.getBlockState(pos.below()).isAir()
                     && level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()

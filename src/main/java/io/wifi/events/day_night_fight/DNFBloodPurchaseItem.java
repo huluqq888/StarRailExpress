@@ -60,7 +60,7 @@ public class DNFBloodPurchaseItem extends Item {
             return false;
         }
         if (!player.addItem(purchase.copy())) {
-            player.drop(purchase.copy(), false);
+            player.drop(purchase.copy(), true);
         }
         player.displayClientMessage(Component.translatable("message.dnf.blood_shop.bought",
                 Component.translatable(nameKey), component.getBlood()).withStyle(ChatFormatting.RED), true);

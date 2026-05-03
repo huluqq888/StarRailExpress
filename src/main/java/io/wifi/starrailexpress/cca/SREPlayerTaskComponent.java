@@ -371,7 +371,11 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
         DNF_LECTURE(nbt -> new PassiveTask("dnf_lecture", nbt.getInt("type"))),
         DNF_LIBRARY_WEB(nbt -> new PassiveTask("dnf_library_web", nbt.getInt("type"))),
         DNF_PRISON_DUST(nbt -> new PassiveTask("dnf_prison_dust", nbt.getInt("type"))),
-        DNF_CHEF_WORK(nbt -> new PassiveTask("dnf_chef_work", nbt.getInt("type")));
+        DNF_CHEF_WORK(nbt -> new PassiveTask("dnf_chef_work", nbt.getInt("type"))),
+        DNF_POISON_FOOD(nbt -> new PassiveTask("dnf_poison_food", nbt.getInt("type"))),
+        DNF_POISON_DEPOSIT(nbt -> new PassiveTask("dnf_poison_deposit", nbt.getInt("type"))),
+        DNF_POISON_WATER(nbt -> new PassiveTask("dnf_poison_water", nbt.getInt("type"))),
+        DNF_REDEMPTION(nbt -> new PassiveTask("dnf_redemption", nbt.getInt("type")));
 
         private static List<Task> availableTasksList = List.of(SLEEP, RAED_BOOK, EAT, DRINK, EXERCISE, MEDITATE, BATHE,
                 CHAIR,

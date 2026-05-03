@@ -227,15 +227,33 @@ public class DNFDebugCommand {
                 return 0;
             }
         }
-        ctx.getSource().sendSuccess(() -> Component.literal("DNF " + key + " = " + pos.toShortString()), false);
+        saveTargetPosToConfig(key, pos);
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF " + key + " = " + pos.toShortString()
+                + " (saved to SREConfig)"), false);
         return 1;
+    }
+
+    private static void saveTargetPosToConfig(String key, BlockPos pos) {
+        switch (key) {
+            case "food_box" -> DNFConfig.saveFoodBoxPos(pos);
+            case "water_source" -> DNFConfig.saveWaterSourcePos(pos);
+            case "meteor" -> DNFConfig.saveMeteorPos(pos);
+            case "wall_hole" -> DNFConfig.saveWallHolePos(pos);
+            case "old_chef_diary" -> DNFConfig.saveOldChefDiaryPos(pos);
+            case "meeting_pos" -> DNFConfig.saveMeetingPos(pos);
+            case "underworld_center" -> DNFConfig.saveUnderworldCenter(pos);
+            default -> {
+            }
+        }
     }
 
     private static int setMeetingRadius(CommandContext<CommandSourceStack> ctx) {
         int radius = IntegerArgumentType.getInteger(ctx, "radius");
         DNFWorldComponent component = DNFWorldComponent.KEY.get(ctx.getSource().getLevel());
         component.setMeetingRadius(radius);
-        ctx.getSource().sendSuccess(() -> Component.literal("DNF meeting radius = " + radius), false);
+        DNFConfig.saveMeetingRadius(radius);
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF meeting radius = " + radius
+                + " (saved to SREConfig)"), false);
         return 1;
     }
 
@@ -243,7 +261,9 @@ public class DNFDebugCommand {
         int radius = IntegerArgumentType.getInteger(ctx, "radius");
         DNFWorldComponent component = DNFWorldComponent.KEY.get(ctx.getSource().getLevel());
         component.setUnderworldRadius(radius);
-        ctx.getSource().sendSuccess(() -> Component.literal("DNF underworld radius = " + radius), false);
+        DNFConfig.saveUnderworldRadius(radius);
+        ctx.getSource().sendSuccess(() -> Component.literal("DNF underworld radius = " + radius
+                + " (saved to SREConfig)"), false);
         return 1;
     }
 
@@ -252,9 +272,12 @@ public class DNFDebugCommand {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
         int radius = IntegerArgumentType.getInteger(ctx, "radius");
         DNFWorldComponent component = DNFWorldComponent.KEY.get(player.serverLevel());
-        component.setCafeteriaArea(new AABB(player.blockPosition()).inflate(radius, 3, radius));
+        AABB area = new AABB(player.blockPosition()).inflate(radius, 3, radius);
+        component.setCafeteriaArea(area);
+        DNFConfig.saveCafeteriaArea(area);
         ctx.getSource().sendSuccess(() -> Component.literal("DNF cafeteria area centered at "
-                + player.blockPosition().toShortString() + " radius " + radius), false);
+                + player.blockPosition().toShortString() + " radius " + radius
+                + " (saved to SREConfig)"), false);
         return 1;
     }
 

@@ -89,7 +89,7 @@ public class DNFServingPlateBlock extends BaseEntityBlock {
                     .withStyle(ChatFormatting.YELLOW), true);
             return ItemInteractionResult.FAIL;
         }
-        if (plate.hasFood()) {
+        if (!plate.canAddFood()) {
             player.displayClientMessage(Component.translatable("message.dnf.plate.full")
                     .withStyle(ChatFormatting.GRAY), true);
             return ItemInteractionResult.FAIL;

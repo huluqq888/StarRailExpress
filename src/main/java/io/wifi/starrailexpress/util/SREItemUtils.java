@@ -1,9 +1,12 @@
 package io.wifi.starrailexpress.util;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.BundleContents;
 
 import java.util.function.Predicate;
 
@@ -98,6 +101,12 @@ public class SREItemUtils {
 
     public static boolean hasItem(Player player, TagKey<Item> item) {
         Predicate<ItemStack> predicate = (itemStack) -> {
+            if (itemStack.getItem() == Items.BUNDLE){
+                BundleContents bundleContents = itemStack.get(DataComponents.BUNDLE_CONTENTS);
+                if (bundleContents !=null){
+                    return bundleContents.itemCopyStream().anyMatch(itemStack1 -> itemStack1.is(item));
+                }
+            }
             return itemStack.is(item);
         };
         int result = player.getInventory().clearOrCountMatchingItems(predicate, 0,

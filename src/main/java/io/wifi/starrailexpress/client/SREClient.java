@@ -7,6 +7,7 @@ import dev.doctor4t.ratatouille.client.util.OptionLocker;
 import dev.doctor4t.ratatouille.client.util.ambience.AmbienceUtil;
 import dev.doctor4t.ratatouille.client.util.ambience.BackgroundAmbience;
 import io.wifi.ConfigCompact.ClientConfigEvents;
+import io.wifi.events.day_night_fight.block.DNFBlocks;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.SRERole;
@@ -263,6 +264,7 @@ public class SREClient implements ClientModInitializer {
                 TMMBlocks.RUSTED_WHEEL,
                 TMMBlocks.BARRIER_PANEL,
                 TMMBlocks.FOOD_PLATTER,
+                DNFBlocks.SERVING_PLATE,
                 TMMBlocks.DRINK_TRAY,
                 TMMBlocks.LIGHT_BARRIER,
                 TMMBlocks.HORN);
@@ -309,7 +311,10 @@ public class SREClient implements ClientModInitializer {
         BlockEntityRenderers.register(
                 TMMBlockEntities.BEVERAGE_PLATE,
                 PlateBlockEntityRenderer::new);
-        BlockEntityRenderers.register(DNFBlockEntities.SERVING_PLATE, PlateBlockEntityRenderer::new);
+        BlockEntityRenderers.register(
+                DNFBlockEntities.SERVING_PLATE,
+                PlateBlockEntityRenderer::new);
+
         BlockEntityRenderers.register(TMMBlockEntities.HORN, HornBlockEntityRenderer::new);
         BlockEntityRenderers.register(TMMBlockEntities.FOURTH_ROOM_TABLE, FourthRoomTableBlockEntityRenderer::new);
 
