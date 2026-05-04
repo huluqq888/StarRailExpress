@@ -402,7 +402,13 @@ public class RoleShopHandler {
           return SREPlayerShopComponent.useMonitorBroken(player, SREConfig.instance().monitorBrokenDuration * 20);
         }
       });
-      SHOP.add(new ShopEntry(ModItems.CAMERA_SHEARS.getDefaultInstance(), 50, ShopEntry.Type.TOOL));
+      // 关灯 - 100金币
+      SHOP.add(new ShopEntry(TMMItems.BLACKOUT.getDefaultInstance(), 100, ShopEntry.Type.TOOL) {
+        public boolean onBuy(@NotNull Player player) {
+          return SREPlayerShopComponent.useBlackout(player);
+        }
+      });
+      SHOP.add(new ShopEntry(ModItems.CAMERA_SHEARS.getDefaultInstance(), 25, ShopEntry.Type.TOOL));
       SHOP.add(new ShopEntry(TMMItems.FIRECRACKER.getDefaultInstance(), 15, ShopEntry.Type.TOOL));
       SHOP.add(new ShopEntry(TMMItems.CROWBAR.getDefaultInstance(), 35, ShopEntry.Type.TOOL));
       SHOP.add(new ShopEntry(TMMItems.LOCKPICK.getDefaultInstance(), 80, ShopEntry.Type.TOOL));
