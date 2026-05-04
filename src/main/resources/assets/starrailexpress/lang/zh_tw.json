@@ -1324,6 +1324,7 @@
   "message.dnf.vote.meeting_initiated": "§e%s§r 發起了會議邀請，請選擇是否參加。",
   "message.dnf.vote.meeting_cancelled": "會議被取消了。",
   "message.dnf.vote.no_response": "沒有玩家回應會議邀請。",
+  "message.dnf.vote.daily_limit_reached": "你一天最多只能舉報屍體兩次。",
   "item.starrailexpress.dnf_soap": "肥皂",
   "item.starrailexpress.dnf_clock": "黎明 時鐘",
   "item.starrailexpress.dnf_cleaning_byproduct": "清理副產品",

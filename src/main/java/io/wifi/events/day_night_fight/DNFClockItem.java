@@ -8,6 +8,8 @@ import io.wifi.starrailexpress.cca.SRETrainWorldComponent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -26,6 +28,12 @@ public class DNFClockItem extends Item {
     }
 
 
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
+        var component = getClockDisplayText(player);
+        player.displayClientMessage(component, true);
+        return super.use(level, player, interactionHand);
+    }
 
     /**
      * 获取时钟显示文本(用于HUD渲染)

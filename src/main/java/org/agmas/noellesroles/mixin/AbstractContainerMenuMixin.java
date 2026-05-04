@@ -1,7 +1,11 @@
 package org.agmas.noellesroles.mixin;
 
+import io.wifi.events.day_night_fight.DNF;
 import io.wifi.events.day_night_fight.gui.HotbarStorageMenu;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.content.gui.CustomInventoryMenu;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.world.entity.player.Player;
@@ -24,6 +28,11 @@ public class AbstractContainerMenuMixin {
         final var instance1 = (AbstractContainerMenu) (Object) this;
         if (!GameUtils.isPlayerAliveAndSurvival(player))
             return;
+        SREGameWorldComponent sreGameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
+
+        if (sreGameWorldComponent !=null&&sreGameWorldComponent.gameStatus == SREGameWorldComponent.GameStatus.ACTIVE &&sreGameWorldComponent.gameMode== SREGameModes.DAY_NIGHT_FIGHT&&!DNF.isDNFKiller( player)){
+            return;
+        }
         if (instance1 instanceof CustomInventoryMenu)
             return;
         if (!(instance1 instanceof InventoryMenu || instance1 instanceof PostmanScreenHandler

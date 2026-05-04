@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerList.class)
 public class DecServerJoinPlayer {
 
-    @Inject(method = "placeNewPlayer", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "placeNewPlayer", at = @At("TAIL"))
     public void placeNewPlayer(Connection connection, ServerPlayer serverPlayer,
             CommonListenerCookie commonListenerCookie, CallbackInfo ci) {
         if (SRE.isLobby)
@@ -49,14 +49,16 @@ public class DecServerJoinPlayer {
                 }
             }
         } else {
-            if (serverPlayer.level() instanceof ServerLevel serverWorld) {
-                BlockPos spawn = serverWorld.getSharedSpawnPos();
-                float angle = serverWorld.getSharedSpawnAngle();
-                serverPlayer.teleportTo(serverWorld, spawn.getX(), spawn.getY(),
-                        spawn.getZ(), angle, 0);
-                SREItemUtils.clearItem(serverPlayer, (a) -> true);
-                if (!serverPlayer.isCreative())
-                    serverPlayer.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
+            if (gameWorldComponent.gameMode != SREGameModes.DAY_NIGHT_FIGHT) {
+                if (serverPlayer.level() instanceof ServerLevel serverWorld) {
+                    BlockPos spawn = serverWorld.getSharedSpawnPos();
+                    float angle = serverWorld.getSharedSpawnAngle();
+                    serverPlayer.teleportTo(serverWorld, spawn.getX(), spawn.getY(),
+                            spawn.getZ(), angle, 0);
+                    SREItemUtils.clearItem(serverPlayer, (a) -> true);
+                    if (!serverPlayer.isCreative())
+                        serverPlayer.setGameMode(net.minecraft.world.level.GameType.ADVENTURE);
+                }
             }
         }
         SyncMapConfigPayload.sendToPlayer(serverPlayer);

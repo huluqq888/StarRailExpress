@@ -256,6 +256,11 @@ public class ModEffects {
      */
     public static final Holder<MobEffect> VOICE_ECHO = register("voice_echo",
             new SimpleMobEffect(MobEffectCategory.NEUTRAL, 0xCBB6FF));
+    /**
+     * 沉默语音：让其他人听不到说话者的声音
+     */
+    public static final Holder<MobEffect> VOICE_SILENCE = register("voice_silence",
+            new SimpleMobEffect(MobEffectCategory.HARMFUL, 0x808080));
 public static final Holder<MobEffect> MONOKUMA_FRENZY = register("monokuma_frenzy",
             new org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaFrenzyEffect());
 

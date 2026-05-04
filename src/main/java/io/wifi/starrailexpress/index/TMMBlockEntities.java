@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.index;
 
 import dev.doctor4t.ratatouille.util.registrar.BlockEntityTypeRegistrar;
 import io.wifi.starrailexpress.SRE;
+import io.wifi.events.day_night_fight.block_entity.HologramDisplayBlockEntity;
 import io.wifi.starrailexpress.content.block.entity.HornBlockEntity;
 import io.wifi.starrailexpress.content.block_entity.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -31,6 +32,9 @@ public interface TMMBlockEntities {
             registrar.create("fourth_room_table", BlockEntityType.Builder.of(
                     org.agmas.noellesroles.game.modes.fourthroom.block.FourthRoomTableBlockEntity::new,
                     TMMBlocks.FOURTH_ROOM_TABLE));
+
+    BlockEntityType<HologramDisplayBlockEntity> HOLOGRAM_DISPLAY = registrar.create("hologram_display",
+            BlockEntityType.Builder.of(HologramDisplayBlockEntity::new, TMMBlocks.HOLOGRAM_DISPLAY));
 
     static void initialize() {
         registrar.registerEntries();

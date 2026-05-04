@@ -150,7 +150,7 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         level.playSound(null, revivePos, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0f, 0.75f);
         level.sendParticles(net.minecraft.core.particles.ParticleTypes.GLOW, revivePos.getX() + 0.5,
                 revivePos.getY() + 1.0, revivePos.getZ() + 0.5, 30, 0.6, 0.8, 0.6, 0.05);
-        DNF.spawnUnderworldMonster(level, serverPlayer);
+        //DNF.spawnUnderworldMonster(level, serverPlayer);
         serverPlayer.displayClientMessage(Component.translatable("message.dnf.underworld.enter")
                 .withStyle(ChatFormatting.DARK_PURPLE), true);
         sync();
@@ -237,6 +237,7 @@ public class DNFUnderworldComponent implements RoleComponent, ServerTickingCompo
         if (inUnderworld && reviveCountdownTicks <= 0) {
             if (GameUtils.isPlayerAliveAndSurvival(player)) {
                 GameUtils.killPlayer(player, false, null);
+                clear();
             }
         }
     }

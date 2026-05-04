@@ -12,6 +12,7 @@ import io.wifi.starrailexpress.cca.SREPlayerMoodComponent;
 import io.wifi.starrailexpress.cca.SREPlayerTaskComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.index.TMMItems;
 import io.wifi.starrailexpress.network.original.TaskCompletePayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -69,8 +70,17 @@ public class DNFPlayerComponent implements RoleComponent {
     private UUID redemptionPartner;
     private boolean redemptionPotionCrafted;
     private boolean joinedMeeting;
-    private int otherRoomNightTicks;
-    private int otherRoomWarningStage;
+    private int otherRoomNightTicks = 0;
+    private int otherRoomWarningStage = 0;
+    private boolean shouldReviveTomorrow = false;
+
+    public boolean shouldReviveTomorrow() {
+        return shouldReviveTomorrow;
+    }
+
+    public void setShouldReviveTomorrow(boolean shouldReviveTomorrow) {
+        this.shouldReviveTomorrow = shouldReviveTomorrow;
+    }
 
     public DNFPlayerComponent(Player player) {
         this.player = player;
@@ -122,8 +132,12 @@ public class DNFPlayerComponent implements RoleComponent {
         joinedMeeting = false;
         otherRoomNightTicks = 0;
         otherRoomWarningStage = 0;
+        shouldReviveTomorrow = false;
     }
 
+    public void sync() {
+        KEY.sync(player);
+    }
     public int getBlood() {
         return stats().getBlood();
     }
@@ -152,6 +166,20 @@ public class DNFPlayerComponent implements RoleComponent {
     public boolean canTakeFoodToday(ServerPlayer player) {
         DNFDailyTaskComponent daily = daily();
         return DNF.isDNFChef(player) || daily.getFoodTakenToday() < 1;
+    }
+
+    // 新增方法：检查今天是否还能发起投票
+    public boolean canInitiateVoteToday() {
+        DNFDailyTaskComponent daily = daily();
+        return daily.getVotesInitiatedToday() < 2;
+    }
+
+    // 新增方法：标记玩家发起了一次投票
+    public void markVoteInitiated(ServerPlayer serverPlayer) {
+        DNFDailyTaskComponent daily = daily();
+        daily.incrementVotesInitiatedToday();
+        daily.sync();
+        KEY.sync(serverPlayer);
     }
 
     // 新增方法：标记玩家今天拿取了一次食物
@@ -192,6 +220,8 @@ public class DNFPlayerComponent implements RoleComponent {
         daily.setFoodTakenToday(0);
         // 重置每天的饮水机使用状态
         daily.setWaterDispenserUsedToday(false);
+        // 重置每天的投票次数
+        daily.setVotesInitiatedToday(0);
         soldierShotDay = day;
         soldierShotsToday = 0;
         poisonCraftDay = day;
@@ -568,6 +598,7 @@ public class DNFPlayerComponent implements RoleComponent {
         if (!DNF.isDNFKiller(serverPlayer)) {
             addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_MEAL);
             addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_TOILET);
+            addHudTask(tasks, SREPlayerTaskComponent.Task.BATHE);
             addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_LECTURE);
         }
         addHudTask(tasks, SREPlayerTaskComponent.Task.DNF_LIBRARY_WEB);
@@ -718,7 +749,7 @@ public class DNFPlayerComponent implements RoleComponent {
     }
 
     public boolean tryUseCrowbar(ServerPlayer serverPlayer) {
-        if (serverPlayer.getCooldowns().isOnCooldown(DNFItems.CROWBAR)) {
+        if (serverPlayer.getCooldowns().isOnCooldown(TMMItems.CROWBAR)) {
             serverPlayer.displayClientMessage(Component.translatable("message.dnf.killer.crowbar_cooldown")
                     .withStyle(ChatFormatting.RED), true);
             return false;

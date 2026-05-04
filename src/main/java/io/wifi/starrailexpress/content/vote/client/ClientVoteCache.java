@@ -67,7 +67,7 @@ public class ClientVoteCache {
     }
 
     public static boolean canReOpen() {
-        return active && allowReVote;
+        return active;
     }
 
     public static Component getTitle() {

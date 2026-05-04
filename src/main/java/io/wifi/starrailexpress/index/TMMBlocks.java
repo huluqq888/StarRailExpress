@@ -3,6 +3,7 @@ package io.wifi.starrailexpress.index;
 import java.util.function.ToIntFunction;
 
 import dev.doctor4t.ratatouille.util.registrar.BlockRegistrar;
+import io.wifi.events.day_night_fight.block.HologramDisplayBlock;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.content.block.*;
 import io.wifi.starrailexpress.index.wathe_bridge.WatheBridgerBlocks;
@@ -665,6 +666,15 @@ public interface TMMBlocks {
   Block FOURTH_ROOM_TABLE = registrar.createWithItem("fourth_room_table",
       new org.agmas.noellesroles.game.modes.fourthroom.block.FourthRoomTableBlock(),
       TMMItems.EQUIPMENT_GROUP);
+
+  // 全息展示方块
+  Block HOLOGRAM_DISPLAY = registrar.createWithItem("hologram_display",
+      new HologramDisplayBlock(BlockBehaviour.Properties.of()
+          .strength(0.5f)
+          .sound(SoundType.GLASS)
+          .noOcclusion()
+          .lightLevel(state -> 15)), // 发光效果
+      TMMItems.DECORATION_GROUP);
 
   private static Block createBranch(String name, Block wood, BlockRegistrar registrar) {
     return registrar.createWithItem(name,

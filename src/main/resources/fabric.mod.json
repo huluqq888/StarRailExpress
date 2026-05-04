@@ -161,6 +161,7 @@
       "starrailexpress:custom_role_team",
       "starrailexpress:areas",
       "starrailexpress:role",
+      "starrailexpress:dnf_inventory_backup",
       "starrailexpress:monitor",
       "starrailexpress:dnf_world",
       "starrailexpress:dnf_underworld",

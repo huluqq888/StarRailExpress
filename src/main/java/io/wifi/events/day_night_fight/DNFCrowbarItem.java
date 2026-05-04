@@ -2,6 +2,7 @@ package io.wifi.events.day_night_fight;
 
 import io.wifi.starrailexpress.content.block_entity.DoorBlockEntity;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
+import io.wifi.starrailexpress.content.item.CrowbarItem;
 import io.wifi.starrailexpress.index.TMMSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -18,7 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.List;
 
-public class DNFCrowbarItem extends Item {
+public class DNFCrowbarItem extends CrowbarItem {
     public DNFCrowbarItem(Properties properties) {
         super(properties);
     }

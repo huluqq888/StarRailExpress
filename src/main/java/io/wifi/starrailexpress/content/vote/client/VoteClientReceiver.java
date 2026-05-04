@@ -15,9 +15,7 @@ public class VoteClientReceiver {
                     if (client.screen instanceof VoteScreen screen) {
                         // 更新屏幕数据
                         screen.updateData(packet);
-                    } else if (packet.hasOptions()
-                            && (!"dnf_meeting_vote".equals(ClientVoteCache.getTypeId())
-                                    || DNF.isInConfiguredMeetingArea(context.player()))) {
+                    } else if (packet.hasOptions()) {
                         client.setScreen(new VoteScreen()); // 无参构造
                     }
                 } else {

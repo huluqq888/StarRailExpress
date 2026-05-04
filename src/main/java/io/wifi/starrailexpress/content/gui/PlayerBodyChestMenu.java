@@ -1,6 +1,8 @@
 package io.wifi.starrailexpress.content.gui;
 
 import io.wifi.events.day_night_fight.DNFChefHatItem;
+import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -15,12 +17,18 @@ import org.agmas.noellesroles.init.ModEventsRegister;
 public class PlayerBodyChestMenu extends AbstractContainerMenu implements CustomInventoryMenu {
     private final PlayerBodyEntityContainer container;
     private final int rows;
+    private final boolean isDayNightFight;
 
     // 如果你使用原版 MenuType，可在此替换为你的自定义类型或直接用原版
     public PlayerBodyChestMenu(int containerId, Inventory playerInventory, PlayerBodyEntityContainer container) {
-        super(MenuType.GENERIC_9x3, containerId);
+        this(containerId, playerInventory, container, false);
+    }
+
+    public PlayerBodyChestMenu(int containerId, Inventory playerInventory, PlayerBodyEntityContainer container, boolean isDayNightFight) {
+        super(isDayNightFight ? MenuType.GENERIC_9x6 : MenuType.GENERIC_9x3, containerId);
         this.container = container;
-        this.rows = 3;
+        this.isDayNightFight = isDayNightFight;
+        this.rows = isDayNightFight ? 6 : 3;
         container.startOpen(playerInventory.player);
 
         // 容器槽位（3行 x 9列）
@@ -124,13 +132,13 @@ public class PlayerBodyChestMenu extends AbstractContainerMenu implements Custom
                     return;
             }
         }
-        Slot slot = getSlot(slotId);
-        if (slot.hasItem()){
-            Item item = slot.getItem().getItem();
-            if (!ModEventsRegister.canThrowItems.contains(item) && !(item instanceof DNFChefHatItem) ){
-                return;
-            }
-        }
+//        Slot slot = getSlot(slotId);
+//        if (slot.hasItem()){
+//            Item item = slot.getItem().getItem();
+//            if (!ModEventsRegister.canThrowItems.contains(item) && !(item instanceof DNFChefHatItem) ){
+//                return;
+//            }
+//        }
 
         // 非容器槽位的操作正常放行
         super.clicked(slotId, button, clickType, player);

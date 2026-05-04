@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.List;
 
 import io.wifi.events.day_night_fight.cca.DNFUnderworldComponent;
+import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
 import io.wifi.starrailexpress.SREConfig;
 import io.wifi.starrailexpress.api.*;
 import io.wifi.starrailexpress.cca.PlayerBodyEntityComponent;
@@ -52,6 +53,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.agmas.noellesroles.init.ModItems;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static io.wifi.events.day_night_fight.DNFBloodPurchaseItem.buy;
 
@@ -98,7 +100,7 @@ public class DNFRoles {
                                           super.serverTick(player);
                                       }
                                   }
-            );
+            ).setCanBeRandomedByOtherRoles(false);
     public static SRERole DNF_ABYSS = TMMRoles.registerRole(new NormalRole(
             DNF_ABYSS_ID,
             new Color(120, 0, 0).getRGB(),
@@ -260,7 +262,7 @@ public class DNFRoles {
                 DNFPlayerComponent.KEY.get(serverKiller).recordKill(serverKiller);
             }
         }
-    }.setMax(2).setCanSeeCoin(false).setCanUseInstinct(false).setCanGetBodyItems(false))
+    }.setMax(2).setCanSeeCoin(false).setCanUseInstinct(true).setCanGetBodyItems(false))
             .setCanBeRandomedByOtherRoles(false);
 
     public static final SRERole KILLER = TMMRoles.registerRole(
@@ -273,49 +275,26 @@ public class DNFRoles {
                     }
                 }
 
-                @Override
-                public List<ShopEntry> getShopEntries() {
-                    ArrayList<ShopEntry> shopEntries = new ArrayList<>();
-                    shopEntries.add(new ShopEntry(new ItemStack(DNFItems.BLOOD_BUY_FLYING_KNIFE), 10, dev.doctor4t.wathe.util.ShopEntry.Type.TOOL){
-                        @Override
-                        public boolean onBuy(@NotNull Player player) {
-                            return false;
-                        }
 
-                        @Override
-                        public boolean canBuy(@NotNull Player player) {
-                            if (!DNF.isDNFKiller(player)) {
-                                player.displayClientMessage(Component.translatable("message.dnf.item.killer_only")
-                                        .withStyle(ChatFormatting.RED), true);
+                    @Override
+                    public List<ShopEntry> getShopEntries() {
+                        ArrayList<ShopEntry> shopEntries = new ArrayList<>();
+                        shopEntries.add(new ShopEntry(Items.BARRIER.getDefaultInstance(),0, dev.doctor4t.wathe.util.ShopEntry.Type.TOOL){
+                            @Override
+                            public boolean canBuy(@NotNull Player player) {
                                 return false;
                             }
-                            DNFBloodPurchaseItem bloodBuyLockpick = (DNFBloodPurchaseItem) DNFItems.BLOOD_BUY_LOCKPICK;
-                            return buy(player, bloodBuyLockpick.price, bloodBuyLockpick.purchase.get(), bloodBuyLockpick.nameKey);
-                        }
-                    });
-                    shopEntries.add(new ShopEntry(new ItemStack(DNFItems.BLOOD_BUY_LOCKPICK), 10, dev.doctor4t.wathe.util.ShopEntry.Type.TOOL){
-                        @Override
-                        public boolean onBuy(@NotNull Player player) {
-                            return false;
-                        }
-                        @Override
-                        public boolean canBuy(@NotNull Player player) {
-                            if (!DNF.isDNFKiller(player)) {
-                                player.displayClientMessage(Component.translatable("message.dnf.item.killer_only")
-                                        .withStyle(ChatFormatting.RED), true);
-                                return false;
-                            }
-                            DNFBloodPurchaseItem bloodBuyFlyingKnife = (DNFBloodPurchaseItem) DNFItems.BLOOD_BUY_FLYING_KNIFE;
-                            return buy(player, bloodBuyFlyingKnife.price, bloodBuyFlyingKnife.purchase.get(), bloodBuyFlyingKnife.nameKey);
-                        }
-                    });
-                    return shopEntries;
+                        });
+                        return shopEntries;
+
                 }
 
                 @Override
                 public List<ItemStack> getDefaultItems() {
                     ArrayList<ItemStack> items = new ArrayList<>();
-
+                    items.add(new ItemStack(DNFItems.BLOOD_BUY_LOCKPICK));
+                    items.add(new ItemStack(DNFItems.ABYSS_VIAL));
+                    items.add(new ItemStack(DNFItems.BLOOD_BUY_FLYING_KNIFE));
 
                     return items;
                 }
@@ -323,11 +302,21 @@ public class DNFRoles {
                 @Override
                 public void serverTick(ServerPlayer player) {
                     DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+                    if (DNF.isNight(player)){
+                        player.addEffect(new MobEffectInstance(ModEffects.VOICE_SILENCE, 20, 1,false,false,false));
+                    }
                     if (player.level().getGameTime() % 20 == 0) {
                         DNF.updateNightTools(player);
                         component.checkHunger(player);
                     }
-
+                    if (!DNF.isNight(player)){
+                        SREPlayerPsychoComponent srePlayerPsychoComponent = SREPlayerPsychoComponent.KEY.get(player);
+                        if (srePlayerPsychoComponent.psychoTicks>0){
+                            SREItemUtils.clearItem(player,DNFItems.ABYSS_TENTACLE);
+                            srePlayerPsychoComponent.stopPsychoAndRefreshPsychoCount(true);
+                            srePlayerPsychoComponent.sync();
+                        }
+                    }
                 }
 
                 @Override
@@ -341,13 +330,13 @@ public class DNFRoles {
                     return DNF.eatBody(serverPlayer, body);
                 }
 
-                @Override
-                public boolean onAbilityUse(ServerPlayer player) {
-                    if (player instanceof ServerPlayer serverPlayer) {
-                        DNFPlayerComponent.KEY.get(serverPlayer).requestAid(serverPlayer, serverPlayer.isShiftKeyDown());
-                    }
-                    return true;
-                }
+//                @Override
+//                public boolean onAbilityUse(ServerPlayer player) {
+//                    if (player instanceof ServerPlayer serverPlayer) {
+//                        DNFPlayerComponent.KEY.get(serverPlayer).requestAid(serverPlayer, serverPlayer.isShiftKeyDown());
+//                    }
+//                    return true;
+//                }
 
                 @Override
                 public boolean onUseKnife(Player player) {
@@ -362,6 +351,7 @@ public class DNFRoles {
 
                 @Override
                 public boolean onUseKnifeHit(Player player, Player target) {
+                    if (player.level().isClientSide)return true;
                     if (!DNF.isNight(player)) {
                         return false;
                     }
@@ -372,48 +362,66 @@ public class DNFRoles {
                 }
 
                 @Override
-                public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
-                    if (killer instanceof ServerPlayer serverKiller) {
-                        DNFPlayerComponent.KEY.get(serverKiller).recordKill(serverKiller);
-                    }
+                public ResourceLocation getPsychoSkin(Player player, boolean isSlim) {
+                    return ResourceLocation.tryBuild("starrailexpress","textures/entity/custom_psycho/dnf_killer.png");
                 }
 
+                //                @Override
+//                public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
+//                    if (killer instanceof ServerPlayer serverKiller) {
+//
+//                    }
+//                }
 
+                @Override
+                public void onDeath(Player victim, boolean spawnBody, @Nullable Player killer, ResourceLocation deathReason) {
+                    if (victim instanceof ServerPlayer serverPlayer) {
+                        DNFWorldComponent world = DNFWorldComponent.KEY.get(serverPlayer.serverLevel());
+                        UUID votedTarget = world.getVotedTarget();
 
+                        // 如果不是投票处决，则标记为第二天复活
+                        if (votedTarget == null || !votedTarget.equals(victim.getUUID())) {
+                            DNFPlayerComponent component = DNFPlayerComponent.KEY.get(victim);
+                            component.setShouldReviveTomorrow(true);
+                            victim.displayClientMessage(Component.translatable("message.dnf.killer.will_revive")
+                                    .withStyle(ChatFormatting.GOLD), true);
+                        }
+                    }
+                }
                 @Override
                 public Item getPsychoItem() {
                     return DNFItems.ABYSS_TENTACLE;
                 }
 
-                @Override
-                public InteractionResult leftClickEntity(Player player, Entity target) {
-                    if (!(player instanceof ServerPlayer serverPlayer) || !(target instanceof Player victim)) {
-                        return InteractionResult.PASS;
-                    }
-                    if (!serverPlayer.getMainHandItem().is(DNFItems.ABYSS_TENTACLE)) {
-                        return InteractionResult.PASS;
-                    }
-                    if (SREPlayerPsychoComponent.KEY.get(serverPlayer).getPsychoTicks() <= 0) {
-                        return InteractionResult.PASS;
-                    }
-                    serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
-                    if (serverPlayer.isAlive() && victim.isAlive() && serverPlayer.distanceTo(victim) <= 4.0) {
-                        GameUtils.killPlayer(victim, true, serverPlayer, Noellesroles.id("dnf_tentacle"));
-                    }
-                    if (serverPlayer.isAlive()) {
-                        serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
-                    }
-                    serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition().above(1), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.0f, 1.0f);
-                    
-                    // 添加少量粒子效果
-                    if (serverPlayer.level() instanceof ServerLevel sl) {
-                        sl.sendParticles(ParticleTypes.CRIMSON_SPORE,
-                                serverPlayer.getX(), serverPlayer.getY() + 1, serverPlayer.getZ(), 
-                                5, 0.3, 0.5, 0.3, 0.05);
-                    }
-                    
-                    return InteractionResult.CONSUME;
-                }
+//                @Override
+//                public InteractionResult leftClickEntity(Player player, Entity target) {
+//                    if (!(player instanceof ServerPlayer serverPlayer) || !(target instanceof Player victim)) {
+//                        return InteractionResult.PASS;
+//                    }
+//                    if (!serverPlayer.getMainHandItem().is(DNFItems.ABYSS_TENTACLE)) {
+//                        return InteractionResult.PASS;
+//                    }
+//                    if (SREPlayerPsychoComponent.KEY.get(serverPlayer).getPsychoTicks() <= 0) {
+//                        return InteractionResult.PASS;
+//                    }
+//                    serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+//                    if (serverPlayer.isAlive() && victim.isAlive() && serverPlayer.distanceTo(victim) <= 4.0) {
+//                        GameUtils.killPlayer(victim, true, serverPlayer, Noellesroles.id("dnf_tentacle"));
+//                    }
+//                    if (serverPlayer.isAlive()) {
+//                        serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 6, false, false, false));
+//                    }
+//                    serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition().above(1), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.0f, 1.0f);
+//
+//                    // 添加少量粒子效果
+//                    if (serverPlayer.level() instanceof ServerLevel sl) {
+//                        sl.sendParticles(ParticleTypes.CRIMSON_SPORE,
+//                                serverPlayer.getX(), serverPlayer.getY() + 1, serverPlayer.getZ(),
+//                                5, 0.3, 0.5, 0.3, 0.05);
+//                    }
+//
+//                    return InteractionResult.CONSUME;
+//                }
 
                 @Override
                 public GameUtils.WinStatus checkWin(ServerPlayer player, GameUtils.WinStatus winStatus) {
@@ -439,6 +447,14 @@ public class DNFRoles {
                 }
 
                 @Override
+                public void onDeathWithBody(Player victim, boolean spawnBody, @Nullable Player killer, ResourceLocation deathReason, PlayerBodyEntity playerBodyEntity) {
+                    super.onDeathWithBody(victim, spawnBody, killer, deathReason, playerBodyEntity);
+                    if (spawnBody){
+                        playerBodyEntity.discard();
+                    }
+                }
+
+                @Override
                 public void win(ServerPlayer player) {
                     var roundEnd = SREGameRoundEndComponent.KEY.get(player.serverLevel());
                     roundEnd.CustomWinnerTitle = Component.translatable("game.win.star.dnf_killer");
@@ -454,7 +470,7 @@ public class DNFRoles {
                     return original;
                 }
             }.setComponentKey(DNFPlayerComponent.KEY).setCanSeeCoin(false).setCanUseInstinct(false).setMax(4)
-                    .setCanSeeTeammateKiller(false)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(false);
+                    .setCanSeeTeammateKiller(true)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(false);
 
     public static final SRERole SOLDIER = TMMRoles.registerRole(new DNFNormalRole(SOLDIER_ID, 0x496D89, true, false,
             SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
@@ -507,7 +523,7 @@ public class DNFRoles {
         @Override
         public List<ItemStack> getDefaultItems() {
             ArrayList<ItemStack> itemStacks = new ArrayList<>();
-            itemStacks.add(DNFItems.CHEF_HAT.getDefaultInstance());
+//            itemStacks.add(DNFItems.CHEF_HAT.getDefaultInstance());
             return itemStacks;
         }
 
@@ -522,7 +538,7 @@ public class DNFRoles {
 //            return
 //        }
     }.setMax(1)).setCanBeRandomedByOtherRoles(false).setCanGetBodyItems(true);
-    public static final SRERole POISONER = TMMRoles.registerRole(new DNFNormalRole(POISONER_ID, 0x355F2D, false, true,
+    public static final SRERole POISONER = TMMRoles.registerRole(new DNFNormalRole(POISONER_ID, 0x355F2D, false, false,
             SRERole.MoodType.FAKE, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
         @Override
         public void onInit(MinecraftServer server, ServerPlayer serverPlayer) {
@@ -546,15 +562,10 @@ public class DNFRoles {
 
         @Override
         public void onKill(Player victim, boolean spawnBody, Player killer, ResourceLocation deathReason) {
-            if (killer instanceof ServerPlayer serverKiller && deathReason.equals(GameConstants.DeathReasons.POISON)) {
-                DNFPlayerComponent component = DNFPlayerComponent.KEY.get(serverKiller);
-                component.recordKill(serverKiller);
-                component.recordPoisonKill();
-                component.giveToxicHeart(serverKiller);
-            }
+
         }
     }.setMax(1).setCanSeeCoin(false).setCanUseInstinct(false).setCanSeeTeammateKiller(false)).setCanBeRandomedByOtherRoles(false)
-            .setCanGetBodyItems(false);
+            .setCanGetBodyItems(false).setNeutrals(true);
 
     public static final SRERole PSYCHOLOGIST = TMMRoles.registerRole(new DNFNormalRole(PSYCHOLOGIST_ID, 0x8E6BC6, true,
             false, SRERole.MoodType.REAL, TMMRoles.CIVILIAN.getMaxSprintTime(), false) {
@@ -625,9 +636,18 @@ public class DNFRoles {
 
                     if (sreGameWorldComponent.gameMode== SREGameModes.DAY_NIGHT_FIGHT){
 
+                        if (DNF.isDNFKiller(killer)){
+                            if (killer instanceof ServerPlayer) DNFPlayerComponent.KEY.get(killer).recordKill(((ServerPlayer) killer));
+                        }
                         if (!player.hasEffect(ModEffects.GHOST_STATE)) {
                             if (DNF.isDNFKiller(player)) {
                                 return true;
+                            }
+                            if (killer instanceof ServerPlayer serverKiller && deathReason.equals(GameConstants.DeathReasons.POISON)) {
+                                DNFPlayerComponent component = DNFPlayerComponent.KEY.get(serverKiller);
+                                component.recordKill(serverKiller);
+                                component.recordPoisonKill();
+                                component.giveToxicHeart(serverKiller);
                             }
                             sreGameWorldComponent.addRole(player, DNF_GHOST);
                             PlayerBodyEntity body = TMMEntities.PLAYER_BODY.create(player.level());

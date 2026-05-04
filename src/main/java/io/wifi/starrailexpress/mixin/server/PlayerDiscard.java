@@ -1,6 +1,7 @@
 package io.wifi.starrailexpress.mixin.server;
 
 import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.cca.DNFInventoryBackupComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
@@ -16,9 +17,16 @@ public class PlayerDiscard {
     @Inject(method = "remove", at = @At("HEAD"))
     public void remove(ServerPlayer serverPlayer, CallbackInfo ci) {
         final var gameWorldComponent = SREGameWorldComponent.KEY.get(serverPlayer.level());
-        if (gameWorldComponent != null && gameWorldComponent.isRunning() &&gameWorldComponent.gameMode!= SREGameModes.DAY_NIGHT_FIGHT
-                && GameUtils.isPlayerAliveAndSurvival(serverPlayer)) {
-            {
+        if (gameWorldComponent != null && gameWorldComponent.isRunning()) {
+            // 如果是DAY_NIGHT_FIGHT模式，保存玩家物品栏
+            if (gameWorldComponent.gameMode == SREGameModes.DAY_NIGHT_FIGHT) {
+                DNFInventoryBackupComponent backupComponent = DNFInventoryBackupComponent.KEY.get(serverPlayer);
+                backupComponent.saveInventory();
+            }
+            
+            // 其他模式下，如果玩家存活则强制击杀
+            if (gameWorldComponent.gameMode != SREGameModes.DAY_NIGHT_FIGHT
+                    && GameUtils.isPlayerAliveAndSurvival(serverPlayer)) {
                 GameUtils.forceKillPlayer(serverPlayer, true, null, GameConstants.DeathReasons.DISCONNECT);
             }
         }

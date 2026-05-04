@@ -8,6 +8,7 @@ import dev.doctor4t.ratatouille.client.util.ambience.AmbienceUtil;
 import dev.doctor4t.ratatouille.client.util.ambience.BackgroundAmbience;
 import io.wifi.ConfigCompact.ClientConfigEvents;
 import io.wifi.events.day_night_fight.block.DNFBlocks;
+import io.wifi.events.day_night_fight.block_entity.HologramDisplayBlockEntity;
 import io.wifi.events.day_night_fight.entity.ClueRenderer;
 import io.wifi.events.day_night_fight.entity.DNFEntities;
 import io.wifi.starrailexpress.SRE;
@@ -28,10 +29,7 @@ import io.wifi.starrailexpress.client.gui.*;
 import io.wifi.starrailexpress.client.gui.screen.*;
 import io.wifi.starrailexpress.client.model.GeneralModelLoadingPlugin;
 import io.wifi.starrailexpress.client.model.TMMModelLayers;
-import io.wifi.starrailexpress.client.render.block_entity.FourthRoomTableBlockEntityRenderer;
-import io.wifi.starrailexpress.client.render.block_entity.PlateBlockEntityRenderer;
-import io.wifi.starrailexpress.client.render.block_entity.SmallDoorBlockEntityRenderer;
-import io.wifi.starrailexpress.client.render.block_entity.WheelBlockEntityRenderer;
+import io.wifi.starrailexpress.client.render.block_entity.*;
 import io.wifi.starrailexpress.client.render.entity.FirecrackerEntityRenderer;
 import io.wifi.starrailexpress.client.render.entity.HornBlockEntityRenderer;
 import io.wifi.starrailexpress.client.render.entity.NoteEntityRenderer;
@@ -103,7 +101,6 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -321,6 +318,7 @@ public class SREClient implements ClientModInitializer {
 
         BlockEntityRenderers.register(TMMBlockEntities.HORN, HornBlockEntityRenderer::new);
         BlockEntityRenderers.register(TMMBlockEntities.FOURTH_ROOM_TABLE, FourthRoomTableBlockEntityRenderer::new);
+        BlockEntityRenderers.register(TMMBlockEntities.HOLOGRAM_DISPLAY, HologramDisplayBlockEntityRenderer::new);
 
         AmbienceUtil.registerBackgroundAmbience(
                 new BackgroundAmbience(TMMSounds.AMBIENT_PSYCHO_DRONE, player -> gameComponent.isPsychoActive(), 20));
@@ -456,6 +454,13 @@ public class SREClient implements ClientModInitializer {
                 TimeRenderer.tick();
                 StaminaRenderer.tick();
             }
+
+//            // 全息展示方块客户端tick
+//            for (var blockEntity : clientWorld.getbl.values()) {
+//                if (blockEntity instanceof HologramDisplayBlockEntity hologramEntity) {
+//                    hologramEntity.clientTick();
+//                }
+//            }
 
         });
         intervalTime = new Random().nextInt(0, 200);

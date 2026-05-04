@@ -107,6 +107,15 @@ public class VoteManager {
             currentSession.markEnded();
             broadcastEnd();
             fireEndCallbacks(currentSession);
+            // 投票结束后清除currentSession，允许开启新的投票
+            currentSession = null;
+            optionsSent = false;
+            return null;
+        }
+        if (currentSession != null && currentSession.isEnded()) {
+            currentSession = null;
+            optionsSent = false;
+            return null;
         }
         return currentSession;
     }
@@ -116,6 +125,8 @@ public class VoteManager {
             currentSession.markEnded();
             broadcastEnd();
             fireEndCallbacks(currentSession);
+            currentSession = null;
+            optionsSent = false;
         }
     }
 
@@ -161,6 +172,13 @@ public class VoteManager {
         if (session.castVote(player.getUUID(), optionIndices)) {
             if (session.isShowResults())
                 broadcastUpdate();
+            if (!session.isEnded() && session.shouldEnd(server.overworld().getGameTime())) {
+                session.markEnded();
+                broadcastEnd();
+                fireEndCallbacks(session);
+                currentSession = null;
+                optionsSent = false;
+            }
             // 可拼接选项名称
             StringBuilder names = new StringBuilder();
             for (int idx : optionIndices) {

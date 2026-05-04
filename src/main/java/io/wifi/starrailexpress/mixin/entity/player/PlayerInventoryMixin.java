@@ -2,6 +2,7 @@ package io.wifi.starrailexpress.mixin.entity.player;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import io.wifi.events.day_night_fight.DNFRoles;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.SREGameModes;
 import io.wifi.starrailexpress.api.SRERole;
@@ -30,6 +31,7 @@ public class PlayerInventoryMixin {
         }
         var gameWorldComponent = SREGameWorldComponent.KEY.get(this.player.level());
         if (gameWorldComponent.gameMode== SREGameModes.DAY_NIGHT_FIGHT){
+
             original.call(scrollAmount);
             return;
         }

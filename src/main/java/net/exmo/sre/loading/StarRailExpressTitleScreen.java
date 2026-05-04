@@ -257,9 +257,11 @@ public class StarRailExpressTitleScreen extends Screen {
                             : new SafetyScreen(this);
                     this.minecraft.setScreen(next);
                 }));
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()){
         this.menuEntries.add(new MenuEntry(
                 Component.translatable("menu.sre.singleplayer"),
                 () -> this.minecraft.setScreen(new SelectWorldScreen(this))));
+        }
         this.menuEntries.add(new MenuEntry(
                 Component.translatable("menu.sre.join_qq"),
                 () -> Util.getPlatform().openUri(QQ_GROUP_URL)));

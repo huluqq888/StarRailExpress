@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 
 import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
+import io.wifi.events.day_night_fight.commands.TimeSkipCommand;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.commands.CommandSourceStack;
@@ -66,6 +67,12 @@ public class DNFDebugCommand {
                                         .then(Commands.argument("count", IntegerArgumentType.integer(0, 1))
                                                 .executes(DNFDebugCommand::setFoodAte))))
                         // 新增water_dispenser指令
+                        .then(Commands.literal("skip_day")
+                                .requires(source -> source.hasPermission(2))
+                                .executes(TimeSkipCommand::skipToNextDay))
+                        .then(Commands.literal("skip_phase")
+                                .requires(source -> source.hasPermission(2))
+                                .executes(TimeSkipCommand::skipToNextPhase))
                         .then(Commands.literal("water_dispenser")
                                 .then(Commands.literal("reset_used").executes(DNFDebugCommand::resetWaterDispenserUsed))
                                 .then(Commands.literal("set_used")

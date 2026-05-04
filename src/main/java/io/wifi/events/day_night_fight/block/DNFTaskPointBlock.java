@@ -54,9 +54,9 @@ public class DNFTaskPointBlock extends Block {
 
     @Override
     protected RenderShape getRenderShape(BlockState blockState) {
-        if (type==TaskPointType.WEB){
-            return RenderShape.ENTITYBLOCK_ANIMATED;
-        }
+//        if (type==TaskPointType.WEB){
+//            return RenderShape.ENTITYBLOCK_ANIMATED;
+//        }
         return RenderShape.MODEL;
     }
 
@@ -196,7 +196,8 @@ public class DNFTaskPointBlock extends Block {
             return InteractionResult.FAIL;
         }
         if (!player.isCreative()) {
-            SREItemUtils.clearItem(player, DNFItems.CLEANING_BYPRODUCT, 1);
+            player.getMainHandItem().shrink(1);
+//            SREItemUtils.clearItem(player, DNFItems.CLEANING_BYPRODUCT, 1);
         }
         ItemStack emerald = new ItemStack(Items.EMERALD);
         if (!player.addItem(emerald)) {

@@ -342,6 +342,7 @@ public class DNFItems {
                 SmallDoorBlock.toggleDoor(world.getBlockState(lowerPos), world, door, lowerPos);
             }
             door.setJammed(Integer.MAX_VALUE / 4);
+            door.blast();
             world.playSound(null, lowerPos.getX() + .5f, lowerPos.getY() + 1, lowerPos.getZ() + .5f,
                     TMMSounds.ITEM_LOCKPICK_DOOR, SoundSource.BLOCKS, 1f, .75f);
             if (!player.isCreative()) {

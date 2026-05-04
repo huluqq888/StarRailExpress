@@ -2,6 +2,8 @@ package io.wifi.starrailexpress.mixin.client.restrictions;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.wifi.starrailexpress.api.SREGameModes;
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.client.gui.screen.ingame.LimitedInventoryScreen;
 import io.wifi.starrailexpress.event.OnOpenInventory;
@@ -27,8 +29,17 @@ public abstract class MinecraftClientMixin {
             return;
         }
 
-        if (SREClient.gameComponent.getFade() > 0) {
+        SREGameWorldComponent gameComponent = SREClient.gameComponent;
+        if (gameComponent!=null){
+            if (gameComponent.gameMode== SREGameModes.DAY_NIGHT_FIGHT){
+                original.call(instance, screen);
+                return;
+            }
+        if (gameComponent.getFade() > 0) {
             return;
+        }
+
+
         }
         boolean flag = SREClient.isPlayerAliveAndInSurvival();
         if(!flag && OnOpenInventory.EVENT.invoker().needOpenLimittedInventory(player, screen)){

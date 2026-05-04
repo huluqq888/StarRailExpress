@@ -6,6 +6,7 @@ import io.wifi.events.day_night_fight.DNFItems;
 import io.wifi.events.day_night_fight.block_entity.DNFServingPlateBlockEntity;
 import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
 import io.wifi.starrailexpress.index.SREDataComponentTypes;
+import io.wifi.starrailexpress.util.SREItemUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -157,6 +158,11 @@ public class DNFServingPlateBlock extends BaseEntityBlock {
             return false;
         }
 
+        if (!SREItemUtils.hasItem(player, DNFItems.SUSPICIOUS_MEAT)){
+            player.displayClientMessage(Component.translatable("message.dnf.plate.suspicious_meat_detected")
+                    .withStyle(ChatFormatting.RED), true);
+            return true;
+        }
         if (!plate.hasFood()) {
             player.displayClientMessage(Component.translatable("message.dnf.plate.no_food_to_poison")
                     .withStyle(ChatFormatting.GRAY), true);
@@ -167,6 +173,7 @@ public class DNFServingPlateBlock extends BaseEntityBlock {
                     .withStyle(ChatFormatting.GRAY), true);
             return true;
         }
+        SREItemUtils.clearItem(player, DNFItems.SUSPICIOUS_MEAT,1);
         plate.setPoisoner(player.getStringUUID());
         world.playSound(null, pos, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.7f, 0.8f);
         player.displayClientMessage(Component.translatable("message.dnf.plate.poisoned")

@@ -1,4 +1,5 @@
-package io.wifi.starrailexpress.cca;
+
+    package io.wifi.starrailexpress.cca;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.api.RoleComponent;
@@ -31,8 +32,8 @@ public class PlayerBodyEntityComponent implements RoleComponent, ServerTickingCo
 
     private UUID killer;
     private String deathReason = "";
-    // 容器大小27，仅允许0-13槽放置物品
-    private final PlayerBodyEntityContainer corpseInventory = new PlayerBodyEntityContainer(27);
+    // 容器大小54（6行），支持DAY_NIGHT_FIGHT模式，仅允许0-53槽放置物品
+    private final PlayerBodyEntityContainer corpseInventory = new PlayerBodyEntityContainer(54);
 
     public PlayerBodyEntityComponent(PlayerBodyEntity playerBodyEntity) {
         this.playerBodyEntity = playerBodyEntity;
@@ -91,7 +92,7 @@ public class PlayerBodyEntityComponent implements RoleComponent, ServerTickingCo
         this.vultured = false;
         this.killer = null;
         this.deathReason = "";
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 54; i++) {
             corpseInventory.setItem(i, ItemStack.EMPTY);
         }
         this.sync();
@@ -120,9 +121,17 @@ public class PlayerBodyEntityComponent implements RoleComponent, ServerTickingCo
         tag.putString("DeathReason", deathReason);
 
         ListTag items = new ListTag();
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 54; i++) {
             ItemStack stack = corpseInventory.getItem(i);
             if (!stack.isEmpty()) {
+                // 确保物品数量在有效范围内 (1-99)
+                if (stack.getCount() <= 0) {
+                    continue; // 跳过无效数量的物品
+                }
+                if (stack.getCount() > 99) {
+                    stack.setCount(99); // 限制最大数量为99
+                }
+                
                 CompoundTag itemTag = new CompoundTag();
                 Tag itemItemTag = stack.save(registryLookup);
                 itemTag.put("Item", itemItemTag);
@@ -151,7 +160,7 @@ public class PlayerBodyEntityComponent implements RoleComponent, ServerTickingCo
         deathReason = tag.getString("DeathReason");
 
         // 清空并加载物品
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 54; i++) {
             corpseInventory.setItem(i, ItemStack.EMPTY);
         }
         if (tag.contains("CorpseInventory", Tag.TAG_LIST)) {
@@ -159,10 +168,18 @@ public class PlayerBodyEntityComponent implements RoleComponent, ServerTickingCo
             for (int i = 0; i < items.size(); i++) {
                 CompoundTag itemTag = items.getCompound(i);
                 int slot = itemTag.getByte("Slot") & 255;
-                if (slot >= 0 && slot < 14) {
+                if (slot >= 0 && slot < 54) {
                     if (itemTag.contains("Item")) {
                         ItemStack stack = ItemStack.parse(registryLookup, itemTag.getCompound("Item"))
                                 .orElse(ItemStack.EMPTY);
+                        // 验证并修正物品数量
+                        if (!stack.isEmpty()) {
+                            if (stack.getCount() <= 0) {
+                                stack = ItemStack.EMPTY; // 无效数量则设为空
+                            } else if (stack.getCount() > 99) {
+                                stack.setCount(99); // 限制最大数量为99
+                            }
+                        }
                         corpseInventory.setItem(slot, stack);
                     }
                 }

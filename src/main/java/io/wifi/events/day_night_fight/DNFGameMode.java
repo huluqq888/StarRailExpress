@@ -1,8 +1,6 @@
 package io.wifi.events.day_night_fight;
 
-import io.wifi.events.day_night_fight.cca.DNFPlayerComponent;
-import io.wifi.events.day_night_fight.cca.DNFWorldComponent;
-import io.wifi.events.day_night_fight.cca.SREPlayerClueComponent;
+import io.wifi.events.day_night_fight.cca.*;
 import io.wifi.starrailexpress.api.SRERole;
 import io.wifi.starrailexpress.cca.SREGameRoundEndComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
@@ -11,9 +9,13 @@ import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
 import io.wifi.starrailexpress.network.original.AnnounceWelcomePayload;
 import io.wifi.starrailexpress.util.SREItemUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,10 +24,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BundleItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.events.ModdedRoleAssigned;
 import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
 import org.agmas.noellesroles.init.ModEffects;
+import org.agmas.noellesroles.packet.BroadcastMessageS2CPacket;
 import org.agmas.noellesroles.utils.RoleUtils;
 
 import java.util.ArrayList;
@@ -56,6 +60,7 @@ public class DNFGameMode extends SREMurderGameMode {
     public int currentDay = 0;
     public Phase currentPhase = Phase.DAY;
     private int phaseTicks = 0;
+    public boolean timePaused = false;
 
     private static final java.util.Map<String, String> PHASE_MESSAGES = new java.util.HashMap<>();
     static {
@@ -91,6 +96,8 @@ public class DNFGameMode extends SREMurderGameMode {
         gameWorldComponent.syncRoles();
 
         for (ServerPlayer player : players) {
+            DNFKillerStatsComponent.KEY.get( player).clear();
+            SREPlayerClueComponent.KEY.get(player).clear();
             SRERole role = gameWorldComponent.getRole(player);
             PlayerRoleWeightManager.addWeight(player, PlayerRoleWeightManager.getRoleType(role), 1);
 //            ServerPlayNetworking.send(player, new AnnounceWelcomePayload(role.getIdentifier().toString(),
@@ -125,6 +132,27 @@ public class DNFGameMode extends SREMurderGameMode {
         Harpymodloader.FORCED_MODDED_ROLE_FLIP.clear();
         Harpymodloader.FORCED_MODDED_MODIFIER.clear();
         PlayerRoleWeightManager.ForcePlayerTeam.clear();
+        
+        // 向所有OP报告玩家身份
+        reportPlayerRolesToOps(serverWorld, gameWorldComponent, players);
+    }
+
+    private void reportPlayerRolesToOps(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent, List<ServerPlayer> players) {
+        // 获取所有有权限2及以上的OP玩家
+        for (ServerPlayer opPlayer : serverWorld.getServer().getPlayerList().getPlayers()) {
+            if (opPlayer.hasPermissions(2)) {
+                opPlayer.sendSystemMessage(Component.translatable("message.dnf.roles_report.title")
+                        .withStyle(ChatFormatting.GOLD));
+                for (ServerPlayer player : players) {
+                    SRERole role = gameWorldComponent.getRole(player);
+                    if (role != null) {
+                        String roleName = role.getIdentifier().getPath();
+                        opPlayer.sendSystemMessage(Component.literal("  " + player.getName().getString() + " -> " + roleName)
+                                .withStyle(ChatFormatting.YELLOW));
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -239,6 +267,11 @@ public class DNFGameMode extends SREMurderGameMode {
         if (serverWorld.getServer().tickRateManager().isFrozen()) {
             return;
         }
+        
+        // Check if time is paused
+        if (this.timePaused) {
+            return;
+        }
 
         phaseTicks++;
         if (phaseTicks < getCurrentPhaseLength()) {
@@ -271,7 +304,7 @@ public class DNFGameMode extends SREMurderGameMode {
             return;
         }
 
-        if (currentDay >= 6 && !dnfWorld.isTrueEndingTriggered()) {
+        if (currentDay >= 8 && !dnfWorld.isTrueEndingTriggered()) {
             for (ServerPlayer player : serverWorld.players()) {
                 if (DNF.isDnfAlive(player)) {
                     DNFItems.settleClothesEndOfDay(player);
@@ -289,6 +322,10 @@ public class DNFGameMode extends SREMurderGameMode {
         dnfWorld.clearVote();
         updateWorldTime(serverWorld);
         announcePhase(serverWorld, "message.dnf.phase.day", currentDay + 1);
+        
+        // 复活应该复活的KILLER角色
+        reviveKillerPlayers(serverWorld, gameWorldComponent);
+        
         for (ServerPlayer player : serverWorld.players()) {
             SRERole role = gameWorldComponent.getRole(player);
             if (role == null) {
@@ -300,9 +337,11 @@ public class DNFGameMode extends SREMurderGameMode {
                 DNFItems.settleClothesEndOfDay(player);
             }
             if (role == DNFRoles.CHEF) {
-                player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
-                        "message.dnf.chef.new_day", currentDay + 1).withStyle(net.minecraft.ChatFormatting.DARK_GREEN),
+                MutableComponent component1 = Component.translatable(
+                        "message.dnf.chef.new_day", currentDay + 1).withStyle(ChatFormatting.DARK_GREEN);
+                player.displayClientMessage(component1,
                         true);
+                ServerPlayNetworking.send(player,new  BroadcastMessageS2CPacket(component1));
             }
             DNF.updateNightTools(player);
             DNF.applyPhaseState(player, false);
@@ -363,6 +402,143 @@ public class DNFGameMode extends SREMurderGameMode {
                     .translatable("message.dnf.dusk.warning")
                     .withStyle(net.minecraft.ChatFormatting.GOLD);
             ServerPlayNetworking.send(player, new org.agmas.noellesroles.packet.BroadcastMessageS2CPacket(message));
+        }
+    }
+    
+    private void reviveKillerPlayers(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        for (ServerPlayer player : serverWorld.players()) {
+            // 检查玩家是否为KILLER角色
+            if (!DNF.isDNFKiller(player)) {
+                continue;
+            }
+            
+            DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+            if (!component.shouldReviveTomorrow()) {
+                continue;
+            }
+            
+            // 复活玩家
+            if (!player.isAlive()) {
+                // 获取玩家的宿舍位置
+                BlockPos dormPos = getDormPosition(player, serverWorld);
+                if (dormPos != null) {
+                    // 传送到宿舍位置
+                    player.teleportTo(dormPos.getX() + 0.5, dormPos.getY(), dormPos.getZ() + 0.5);
+                }
+                
+                // 复活玩家
+                player.setHealth(player.getMaxHealth());
+                player.clearFire();
+                player.removeAllEffects();
+                
+                // 重置复活标记
+                component.setShouldReviveTomorrow(false);
+                
+                // 给予默认物品
+                SRERole role = gameWorldComponent.getRole(player);
+                if (role != null) {
+                    role.getDefaultItems().forEach(item -> player.getInventory().placeItemBackInInventory(item));
+                }
+                
+                player.sendSystemMessage(Component.translatable("message.dnf.killer.revived")
+                        .withStyle(ChatFormatting.GREEN));
+            } else {
+                // 如果玩家已经活着，重置标记
+                component.setShouldReviveTomorrow(false);
+            }
+        }
+    }
+    
+    private BlockPos getDormPosition(ServerPlayer player, ServerLevel serverWorld) {
+        DNFWorldComponent world = DNFWorldComponent.KEY.get(serverWorld);
+        AABB dormRoom = world.getDormRoom(player.getUUID());
+        if (dormRoom != null) {
+            // 返回宿舍房间的中心位置
+            return new BlockPos(
+                (int) ((dormRoom.minX + dormRoom.maxX) / 2),
+                (int) dormRoom.minY,
+                (int) ((dormRoom.minZ + dormRoom.maxZ) / 2)
+            );
+        }
+        
+        // 如果没有宿舍房间，返回世界出生点
+        return serverWorld.getSharedSpawnPos();
+    }
+
+    public void skipToNextPhase(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        // 直接跳过当前阶段到下一阶段
+        DNFWorldComponent dnfWorld = DNFWorldComponent.KEY.get(serverWorld);
+        
+        if (currentPhase == Phase.DAY) {
+            // 跳过到黄昏
+            currentPhase = Phase.DUSK;
+            updateWorldTime(serverWorld);
+            announcePhase(serverWorld, "message.dnf.phase.dusk", currentDay + 1);
+            broadcastDuskWarning(serverWorld);
+            for (ServerPlayer player : serverWorld.players()) {
+                DNF.applyPhaseState(player, false);
+            }
+        } else if (currentPhase == Phase.DUSK) {
+            // 跳过到夜晚
+            currentPhase = Phase.NIGHT;
+            dnfWorld.setPhase(currentDay, true);
+            updateWorldTime(serverWorld);
+            announcePhase(serverWorld, "message.dnf.phase.night", currentDay + 1);
+            for (ServerPlayer player : serverWorld.players()) {
+                DNFPlayerComponent.KEY.get(player).startDnfNight(player, currentDay);
+                DNF.updateNightTools(player);
+                DNF.applyPhaseState(player, true);
+            }
+        } else if (currentPhase == Phase.NIGHT) {
+            // 跳过到下一天
+            skipToNextDay(serverWorld, gameWorldComponent);
+        }
+    }
+
+    public void skipToNextDay(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        DNFWorldComponent dnfWorld = DNFWorldComponent.KEY.get(serverWorld);
+        
+        // 检查是否已经达到最大天数
+        if (currentDay >= 8 && !dnfWorld.isTrueEndingTriggered()) {
+            for (ServerPlayer player : serverWorld.players()) {
+                if (DNF.isDnfAlive(player)) {
+                    DNFItems.settleClothesEndOfDay(player);
+                }
+            }
+            triggerDnfEnding(serverWorld, "dnf_survival", "game.win.star.dnf_survival",
+                    "message.dnf.ending.survival", 0x719E5B);
+            return;
+        }
+
+        // 执行新天开始的逻辑
+        currentPhase = Phase.DAY;
+        currentDay++;
+        dnfWorld.setPhase(currentDay, false);
+        dnfWorld.rollWaterPoisonToToday();
+        dnfWorld.clearVote();
+        updateWorldTime(serverWorld);
+        announcePhase(serverWorld, "message.dnf.phase.day", currentDay + 1);
+        
+        // 复活应该复活的KILLER角色
+        reviveKillerPlayers(serverWorld, gameWorldComponent);
+        
+        for (ServerPlayer player : serverWorld.players()) {
+            SRERole role = gameWorldComponent.getRole(player);
+            if (role == null) {
+                continue;
+            }
+            DNFPlayerComponent component = DNFPlayerComponent.KEY.get(player);
+            component.startDnfDay(player, currentDay, role == DNFRoles.CHEF);
+            if (DNF.isDnfAlive(player)) {
+                DNFItems.settleClothesEndOfDay(player);
+            }
+            if (role == DNFRoles.CHEF) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                        "message.dnf.chef.new_day", currentDay + 1).withStyle(net.minecraft.ChatFormatting.DARK_GREEN),
+                        true);
+            }
+            DNF.updateNightTools(player);
+            DNF.applyPhaseState(player, false);
         }
     }
 

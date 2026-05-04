@@ -87,13 +87,13 @@ public class DNFHud {
             y += 12;
             
             // 如果手持时钟,显示天数和时间
-            if (hasClock) {
-                Component clockText = DNFClockItem.getClockDisplayText(client.player);
-                int textWidth = font.width(clockText);
-                int x = screenWidth / 2 - textWidth / 2;
-                context.drawString(font, clockText, x, y, 0xFFFFFF, true);
-                y += 12;
-            }
+//            if (hasClock) {
+//                Component clockText = DNFClockItem.getClockDisplayText(client.player);
+//                int textWidth = font.width(clockText);
+//                int x = screenWidth / 2 - textWidth / 2;
+//                context.drawString(font, clockText, x, y, 0xFFFFFF, true);
+//                y += 12;
+//            }
             
             // 显示衣物肮脏程度
             float dirtiness = DNFItems.getClothingDirtiness(client.player);

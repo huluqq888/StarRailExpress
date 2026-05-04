@@ -171,6 +171,11 @@ public class NoellesrolesVoiceChatPlugin implements VoicechatPlugin {
           var player = (ServerPlayer) vctplayer;
           SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
           if (gameWorldComponent != null) {
+            // 检查沉默语音效果
+            if (player != null && player.hasEffect(ModEffects.VOICE_SILENCE)) {
+              event.cancel();
+              return;
+            }
             if (gameWorldComponent.getGameStatus().equals(GameStatus.STOPPING)
                 || gameWorldComponent.getGameStatus().equals(GameStatus.STARTING)) {
               event.cancel();
@@ -235,6 +240,9 @@ public class NoellesrolesVoiceChatPlugin implements VoicechatPlugin {
         }
       }
     }
+    
+
+    
     // ServerPlayer players = ((ServerPlayer)
     // event.getSenderConnection().getPlayer().getPlayer());
 

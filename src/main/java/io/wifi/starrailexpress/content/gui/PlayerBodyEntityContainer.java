@@ -20,6 +20,19 @@ public class PlayerBodyEntityContainer extends SimpleContainer {
     }
 
     @Override
+    public void setItem(int slot, ItemStack stack) {
+        // 验证并修正物品数量
+        if (!stack.isEmpty()) {
+            if (stack.getCount() <= 0) {
+                stack = ItemStack.EMPTY; // 无效数量则设为空
+            } else if (stack.getCount() > 99) {
+                stack.setCount(99); // 限制最大数量为99
+            }
+        }
+        super.setItem(slot, stack);
+    }
+
+    @Override
     public void startOpen(Player player) {
         this.currentUser = player;
     }

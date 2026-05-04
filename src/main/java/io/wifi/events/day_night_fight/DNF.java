@@ -68,6 +68,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.noellesroles.game.roles.neutral.vulture.VulturePlayerComponent;
 import org.agmas.noellesroles.init.ModEffects;
+import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -80,15 +81,15 @@ public class DNF {
     public static final int KNIFE_COOLDOWN_TICKS = 50 * 20;
     public static final int CROWBAR_COOLDOWN_TICKS = 300 * 20;
     public static final int FIRST_DAYLIGHT_TICKS = 3 * 60 * 20;
-    public static final int DAYLIGHT_TICKS = 6 * 60 * 20;
+    public static final int DAYLIGHT_TICKS = 8 * 60 * 20;
     public static final int DUSK_TICKS = 2 * 60 * 20;
-    public static final int NIGHT_TICKS = 3 * 60 * 20;
+    public static final int NIGHT_TICKS = 4 * 60 * 20;
     public static final int TWO_DAYS_TICKS = 2 * (DAYLIGHT_TICKS + DUSK_TICKS + NIGHT_TICKS);
     public static final int CHAT_FOCUS_TICKS = 5 * 20;
     public static final int TOILET_TASK_TICKS = 15 * 20;
     public static final int CLEANING_TICKS = 8 * 20;
     public static final int OTHER_ROOM_NIGHT_LIMIT_TICKS = 30 * 20;
-    public static final double ROOM_INTRUSION_RADIUS = 4.0;
+    public static final double ROOM_INTRUSION_RADIUS = 2.5d;
     public static final int MAX_DAILY_CLEANING_TASKS = 3;
     public static final float INITIAL_SAN = 0.5f;
     public static final float MORNING_SAN = 0.3f;
@@ -335,12 +336,12 @@ public class DNF {
 
     public static void equipNightTools(ServerPlayer player) {
         ensureHas(player, TMMItems.KNIFE.getDefaultInstance());
-        ensureHas(player, DNFItems.CROWBAR.getDefaultInstance());
+        ensureHas(player, TMMItems.CROWBAR.getDefaultInstance());
     }
 
     public static void removeNightTools(ServerPlayer player) {
         removeAll(player, TMMItems.KNIFE);
-        removeAll(player, DNFItems.CROWBAR);
+        removeAll(player, TMMItems.CROWBAR);
     }
 
     public static void ensureHas(ServerPlayer player, ItemStack stack) {
@@ -681,13 +682,15 @@ public class DNF {
                 if (tryPoisonerMeetChef(serverPlayer, target)) {
                     return InteractionResult.SUCCESS;
                 }
-                if (!serverPlayer.isShiftKeyDown()) {
-                    serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.chat_shift_required")
-                            .withStyle(ChatFormatting.YELLOW), true);
-                    return InteractionResult.PASS;
+                if (!DNF.isDNFKiller(player)) {
+                    if (!serverPlayer.isShiftKeyDown()) {
+                        serverPlayer.displayClientMessage(Component.translatable("message.dnf.task.chat_shift_required")
+                                .withStyle(ChatFormatting.YELLOW), true);
+                        return InteractionResult.PASS;
+                    }
+                    beginChatFocus(serverPlayer, target);
+                    return InteractionResult.SUCCESS;
                 }
-                beginChatFocus(serverPlayer, target);
-                return InteractionResult.SUCCESS;
             }
             if (!(entity instanceof PlayerBodyEntity)) {
                 return InteractionResult.PASS;
@@ -713,6 +716,15 @@ public class DNF {
                     .withStyle(ChatFormatting.YELLOW), true);
             return InteractionResult.FAIL;
         }
+        
+        // 检查今天是否还能发起投票（限制为2次）
+        DNFPlayerComponent reporterComp = DNFPlayerComponent.KEY.get(reporter);
+        if (!reporterComp.canInitiateVoteToday()) {
+            reporter.displayClientMessage(Component.translatable("message.dnf.vote.daily_limit_reached")
+                    .withStyle(ChatFormatting.RED), true);
+            return InteractionResult.FAIL;
+        }
+        
         List<ServerPlayer> voters = reporter.serverLevel().players().stream()
                 .filter(DNF::isDnfAlive)
                 .toList();
@@ -724,96 +736,75 @@ public class DNF {
             return InteractionResult.FAIL;
         }
         
-        // 第一步：询问玩家是否要参加会议
-        return startMeetingPreVote(reporter, voters);
+        // 标记投票已发起
+        reporterComp.markVoteInitiated(reporter);
+        
+        // 发起会议，10秒后强制传送
+        return startAutoMeeting(reporter, voters);
     }
 
-    private static InteractionResult startMeetingPreVote(ServerPlayer reporter, List<ServerPlayer> voters) {
+    private static InteractionResult startAutoMeeting(ServerPlayer reporter, List<ServerPlayer> voters) {
         DNFWorldComponent world = DNFWorldComponent.KEY.get(reporter.serverLevel());
-        VoteManager.VoteBuilder builder = VoteManager.builder(Component.translatable("message.dnf.vote.meeting_request"))
-                .type("dnf_meeting_request")
-                .duration(30 * 20)
-                .allowReVote(false)
-                .showResults(false)
-                .syncInterval(20)
-                .targetPlayers(voters)
-                .callback(session -> {
-                    world.setMeetingActive(false);
-                    handleMeetingPreVoteResult(reporter, session, voters);
-                });
-        
-        // 添加选项：参加 / 不参加
-        builder.addOption(VoteOption.text(Component.translatable("message.dnf.vote.join_meeting"), "join", 
-                Component.translatable("message.dnf.vote.join_meeting_desc")));
-        builder.addOption(VoteOption.text(Component.translatable("message.dnf.vote.skip_meeting"), "skip",
-                Component.translatable("message.dnf.vote.skip_meeting_desc")));
-        
-        if (builder.start() == null) {
-            return InteractionResult.FAIL;
-        }
-        
         world.setMeetingActive(true);
+        
         reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
                 Component.translatable("message.dnf.vote.meeting_initiated", reporter.getDisplayName())
                         .withStyle(ChatFormatting.YELLOW),
                 false);
-        return InteractionResult.SUCCESS;
-    }
-
-    private static void handleMeetingPreVoteResult(ServerPlayer reporter, VoteSession session, List<ServerPlayer> voters) {
-        if (isNight(reporter)) {
-            reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
-                    Component.translatable("message.dnf.vote.day_only").withStyle(ChatFormatting.YELLOW),
-                    false);
-            return;
-        }
-        DNFWorldComponent world = DNFWorldComponent.KEY.get(reporter.serverLevel());
-        BlockPos meetingPos = getConfiguredMeetingPos();
-        ServerLevel configuredLevel = reporter.getServer().getLevel(getConfiguredMeetingDimension());
-        ServerLevel meetingLevel = configuredLevel == null ? reporter.serverLevel() : configuredLevel;
         
-        if (session.getTotalVotes() <= 0) {
-            reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
-                    Component.translatable("message.dnf.vote.no_response").withStyle(ChatFormatting.GRAY),
-                    false);
-            return;
-        }
-
-        List<ServerPlayer> joinedPlayers = new ArrayList<>();
-        for (ServerPlayer voter : voters) {
-            if (!session.hasVotedFor(voter.getUUID(), "join")) {
-                continue;
+        // 延迟 10 秒后强制传送玩家并开始投票
+        Scheduler.schedule(() -> {
+            if (isNight(reporter)) {
+                reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
+                        Component.translatable("message.dnf.vote.day_only").withStyle(ChatFormatting.YELLOW),
+                        false);
+                world.setMeetingActive(false);
+                return;
             }
-            DNFPlayerComponent playerComp = DNFPlayerComponent.KEY.get(voter);
-            voter.teleportTo(
-                meetingLevel,
-                meetingPos.getX() + 0.5,
-                meetingPos.getY() + 1.0,
-                meetingPos.getZ() + 0.5,
-                voter.getYRot(),
-                voter.getXRot()
-            );
-            playerComp.setJoinedMeeting(true, voter);
-            joinedPlayers.add(voter);
-            voter.displayClientMessage(Component.translatable("message.dnf.vote.teleported_to_meeting")
-                    .withStyle(ChatFormatting.AQUA), false);
-        }
-
-        if (!joinedPlayers.isEmpty()) {
-            reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
-                    Component.translatable("message.dnf.vote.players_joined_meeting", joinedPlayers.size())
-                            .withStyle(ChatFormatting.YELLOW),
-                    false);
-            reporter.serverLevel().getServer().execute(() -> {
-                startMainVote(reporter, joinedPlayers);
-            });
-            return;
-        }
-
-        reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
-                Component.translatable("message.dnf.vote.meeting_cancelled")
-                        .withStyle(ChatFormatting.GRAY),
-                false);
+            
+            BlockPos meetingPos = getConfiguredMeetingPos();
+            ServerLevel configuredLevel = reporter.getServer().getLevel(getConfiguredMeetingDimension());
+            ServerLevel meetingLevel = configuredLevel == null ? reporter.serverLevel() : configuredLevel;
+            SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(reporter.serverLevel());
+            
+            // 强制传送所有非 Ghost 且存活的玩家
+            List<ServerPlayer> transportedPlayers = new ArrayList<>();
+            for (ServerPlayer player : voters) {
+                if (!isDnfAlive(player)) continue;
+                SRERole role = gameWorld.getRole(player);
+                if (role != null && role.identifier().equals(ModRoles.GHOST_ID)) continue;
+                
+                DNFPlayerComponent playerComp = DNFPlayerComponent.KEY.get(player);
+                player.teleportTo(
+                    meetingLevel,
+                    meetingPos.getX() + 0.5,
+                    meetingPos.getY() + 1.0,
+                    meetingPos.getZ() + 0.5,
+                    player.getYRot(),
+                    player.getXRot()
+                );
+                playerComp.setJoinedMeeting(true, player);
+                transportedPlayers.add(player);
+                player.displayClientMessage(Component.translatable("message.dnf.vote.teleported_to_meeting")
+                        .withStyle(ChatFormatting.AQUA), false);
+            }
+            
+            if (!transportedPlayers.isEmpty()) {
+                reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
+                        Component.translatable("message.dnf.vote.players_joined_meeting", transportedPlayers.size())
+                                .withStyle(ChatFormatting.YELLOW),
+                        false);
+                startMainVote(reporter, transportedPlayers);
+            } else {
+                reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
+                        Component.translatable("message.dnf.vote.meeting_cancelled")
+                                .withStyle(ChatFormatting.GRAY),
+                        false);
+                world.setMeetingActive(false);
+            }
+        }, 10 * 20); // 10 秒延迟
+        
+        return InteractionResult.SUCCESS;
     }
 
     private static void beginChatFocus(ServerPlayer player, ServerPlayer target) {
@@ -889,16 +880,18 @@ public class DNF {
                 .syncInterval(20)
                 .targetPlayers(eligibleVoters)
                 .callback(session -> {
-                    world.setMeetingActive(false);
+                        world.setMeetingActive(false);
                     var top = session.getTopResults();
-                    if (top == null || top.isEmpty() || top.size() != 1 || top.get(0).getValue().count() <= 0) {
+                    if (top == null || top.isEmpty() || top.get(0).getValue().count() <= 0) {
                         reporter.serverLevel().getServer().getPlayerList().broadcastSystemMessage(
                                 Component.translatable("message.dnf.vote.no_target").withStyle(ChatFormatting.GRAY),
                                 false);
                         world.setVotedTarget(null);
                         return;
                     }
-                    String resultId = top.get(0).getKey();
+                    var winner = top.size() == 1 ? top.get(0)
+                            : top.get(reporter.getRandom().nextInt(top.size()));
+                    String resultId = winner.getKey();
                     try {
                         UUID targetId = UUID.fromString(resultId);
                         world.setVotedTarget(targetId);
@@ -1029,5 +1022,7 @@ public class DNF {
     public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher,
             CommandBuildContext registryAccess, CommandSelection environment) {
         ClueSystemCommand.register(dispatcher);
+        io.wifi.events.day_night_fight.commands.TimePauseCommand.register();
+        io.wifi.events.day_night_fight.commands.TimeSkipCommand.register();
     }
 }

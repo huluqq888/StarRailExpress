@@ -35,6 +35,8 @@ public class DNFDailyTaskComponent implements RoleComponent {
     private int foodTakenToday;
     // 新增：跟踪玩家每天是否使用过饮水机
     private boolean waterDispenserUsedToday;
+    // 新增：跟踪玩家每天发起投票的次数
+    private int votesInitiatedToday;
 
     public DNFDailyTaskComponent(Player player) {
         this.player = player;
@@ -72,6 +74,7 @@ public class DNFDailyTaskComponent implements RoleComponent {
         this.chefInitialFoodSeeded = false;
         this.foodTakenToday = 0;
         this.waterDispenserUsedToday = false;
+        this.votesInitiatedToday = 0;
     }
 
     @Override
@@ -246,6 +249,19 @@ public class DNFDailyTaskComponent implements RoleComponent {
         this.waterDispenserUsedToday = waterDispenserUsedToday;
     }
 
+    // 新增方法：获取和设置投票次数
+    public int getVotesInitiatedToday() {
+        return votesInitiatedToday;
+    }
+
+    public void setVotesInitiatedToday(int votesInitiatedToday) {
+        this.votesInitiatedToday = votesInitiatedToday;
+    }
+
+    public void incrementVotesInitiatedToday() {
+        this.votesInitiatedToday++;
+    }
+
     // 在NBT读写方法中添加foodTakenToday字段的处理
     @Override
     public void readFromNbt(CompoundTag tag, HolderLookup.Provider registryLookup) {
@@ -272,6 +288,8 @@ public class DNFDailyTaskComponent implements RoleComponent {
         this.foodTakenToday = tag.getInt("foodTakenToday");
         // 读取waterDispenserUsedToday字段
         this.waterDispenserUsedToday = tag.getBoolean("waterDispenserUsedToday");
+        // 读取votesInitiatedToday字段
+        this.votesInitiatedToday = tag.getInt("votesInitiatedToday");
     }
 
     @Override
@@ -297,5 +315,7 @@ public class DNFDailyTaskComponent implements RoleComponent {
         tag.putInt("foodTakenToday", this.foodTakenToday);
         // 写入waterDispenserUsedToday字段
         tag.putBoolean("waterDispenserUsedToday", this.waterDispenserUsedToday);
+        // 写入votesInitiatedToday字段
+        tag.putInt("votesInitiatedToday", this.votesInitiatedToday);
     }
 }
