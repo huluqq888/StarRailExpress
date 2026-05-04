@@ -14,6 +14,10 @@ import net.minecraft.world.item.ItemStack;
 import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.role.ModRoles;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 /**
  * 喷气背包
  * - 穿在身上（渲染为铁胸甲）
@@ -33,6 +37,9 @@ public class JetpackItem extends ArmorItem {
     
     /** 耐久消耗计时器（1秒 = 20 tick） */
     private int durabilityTickCounter = 0;
+    
+    /** 玩家是否在上一次检测时处于蹲下状态 */
+    private static final Map<UUID, Boolean> wasSneaking = new HashMap<>();
 
     public JetpackItem(Holder<ArmorMaterial> holder, Type type, Properties properties) {
         super(holder, type, properties);
@@ -153,13 +160,20 @@ public class JetpackItem extends ArmorItem {
                 }
             }
         } else {
-            // 玩家没有蹲下，清除漂浮效果
-            if (player.hasEffect(MobEffects.LEVITATION)) {
-                MobEffectInstance levitation = player.getEffect(MobEffects.LEVITATION);
-                if (levitation != null && levitation.getDuration() > 100) { // 长时间持续的是喷气背包给的
-                    player.removeEffect(MobEffects.LEVITATION);
+            // 玩家没有蹲下，只在从蹲下变为不蹲下的瞬间清除一次漂浮效果
+            Boolean prevSneaking = wasSneaking.getOrDefault(player.getUUID(), false);
+            if (prevSneaking) {
+                // 刚从蹲下变为不蹲下，清除一次漂浮效果
+                if (player.hasEffect(MobEffects.LEVITATION)) {
+                    MobEffectInstance levitation = player.getEffect(MobEffects.LEVITATION);
+                    if (levitation != null && levitation.getDuration() > 100) { // 长时间持续的是喷气背包给的
+                        player.removeEffect(MobEffects.LEVITATION);
+                    }
                 }
+                wasSneaking.put(player.getUUID(), false);
             }
         }
+        // 更新蹲下状态记录
+        wasSneaking.put(player.getUUID(), player.isShiftKeyDown());
     }
 }
