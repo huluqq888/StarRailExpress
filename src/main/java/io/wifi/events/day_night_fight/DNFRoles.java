@@ -75,7 +75,7 @@ public class DNFRoles {
 
 
     public static SRERole DNF_GHOST =
-            TMMRoles.registerRole(new NormalRole(
+            TMMRoles.registerRole(new DNFNormalRole(
             GHOST_ID,
             new Color(120, 0, 0).getRGB(),
             false,
@@ -101,7 +101,7 @@ public class DNFRoles {
                                       }
                                   }
             ).setCanBeRandomedByOtherRoles(false);
-    public static SRERole DNF_ABYSS = TMMRoles.registerRole(new NormalRole(
+    public static SRERole DNF_ABYSS = TMMRoles.registerRole(new DNFNormalRole(
             DNF_ABYSS_ID,
             new Color(120, 0, 0).getRGB(),
             false,
