@@ -17,6 +17,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Inventory;
@@ -35,6 +37,7 @@ import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.role.ModRoles;
 import io.wifi.starrailexpress.game.roles.SpecialGameModeRoles;
 import io.wifi.events.day_night_fight.DNFRoles;
+import org.agmas.noellesroles.role.RedHouseRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
 import pro.fazeclan.river.stupid_express.StupidExpress;
 import pro.fazeclan.river.stupid_express.constants.SEModifiers;
@@ -282,6 +285,8 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
             else
                 playerShopComponent.setBalance(200);
 
+
+            // 角色添加初始特性
             // 组件等数据初始化
             if (role == ModRoles.IMITATOR) {
                // 模仿者初始化：随机3个技能，目前没有合适的公有修改方法
@@ -299,6 +304,18 @@ public class SREEvilWarGameMode extends WTLooseEndsGameMode {
                     imitatorPlayerComponent.filledSlots++;
                 }
                 imitatorPlayerComponent.sync();
+            }
+            // 蕾米莉亚开局获得20分钟速度3
+            else if (role == RedHouseRoles.REMILIA) {
+                player.removeEffect(MobEffects.MOVEMENT_SPEED);
+                player.addEffect(
+                        new MobEffectInstance(
+                                MobEffects.MOVEMENT_SPEED,  // 速度效果
+                                20 * 120,                  // 持续时间（tick）
+                                3,
+                                false,                // 是否显示粒子效果
+                                false                  // 是否显示图标
+                        ));
             }
         }
         curBalanceTick = 0;
