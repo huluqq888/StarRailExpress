@@ -300,7 +300,8 @@ public class EntityInteractionBlockScreen extends Screen {
             case DEATH -> Component.translatable("condition.death", condition.stringValue != null ? condition.stringValue : "*").getString();
             case USE_ITEM -> Component.translatable("condition.use_item.count_display", (int) condition.value).getString();
             case SPEAK -> Component.translatable("condition.speak.count_display", (int) condition.value).getString();
-            case COIN_AMOUNT -> Component.translatable("condition.coin_amount", (int) condition.value).getString();
+            case COIN_AMOUNT -> Component.translatable("condition.coin_amount", (int) condition.value,
+                    Component.translatable("comparison." + condition.comparison.name().toLowerCase())).getString();
             case ROLE_IS -> Component.translatable("condition.role_is", condition.stringValue).getString();
             case ROLE_TEAM -> Component.translatable("condition.role_team",
                     Component.translatable("team." + condition.teamType.name().toLowerCase())).getString();
@@ -727,10 +728,15 @@ public class EntityInteractionBlockScreen extends Screen {
                     if (valueInput != null) {
                         valueInput.setFilter(s -> s.matches("[0-9]*"));
                     }
-                    y += 22;
-                    addRenderableWidget(Button.builder(
-                            Component.translatable("gui.entity_interaction_block.coin_amount_desc"), b -> {})
-                            .bounds(centerX - 100, y, 200, 15).build());
+
+                    y += 25;
+                    addRenderableWidget(CycleButton.<EntityInteractionBlockEntity.ComparisonType>builder(comp ->
+                                    Component.translatable("comparison." + comp.name().toLowerCase()))
+                            .withValues(EntityInteractionBlockEntity.ComparisonType.values())
+                            .withInitialValue(selectedComparison)
+                            .create(centerX - 100, y, 200, 20,
+                                    Component.translatable("gui.entity_interaction_block.comparison"),
+                                    (b, comp) -> selectedComparison = comp));
                 }
                 case ROLE_TEAM -> {
                     // 阵营
@@ -1106,6 +1112,7 @@ public class EntityInteractionBlockScreen extends Screen {
         private EditBox secondsInput;
         private String selectedTaskType = "random";
         private boolean addTimeMode = true; // true=增加，false=减少
+        private boolean setMoodIsSet = true; // true=直接设置，false=增减
         private boolean narratorInterrupt = false; // 语音播报是否打断
         private boolean clearTasks = true; // ADD_CUSTOM_TASK是否清空当前任务
         private int scrollY = 0;
@@ -1462,6 +1469,32 @@ public class EntityInteractionBlockScreen extends Screen {
                             Component.translatable("gui.entity_interaction_block.clear_entities_desc"), b -> {})
                             .bounds(centerX - 100, y, 200, 15).build());
                 }
+                case SET_MOOD -> {
+                    // 设置心情值 - 直接设置或增减
+                    addRenderableWidget(CycleButton.<Boolean>builder(isSet ->
+                                    Component.translatable(isSet ?
+                                            "gui.entity_interaction_block.set_mood_mode_set" :
+                                            "gui.entity_interaction_block.set_mood_mode_add"))
+                            .withValues(true, false)
+                            .withInitialValue(setMoodIsSet)
+                            .create(centerX - 100, y, 200, 20,
+                                    Component.translatable("gui.entity_interaction_block.set_mood_mode"),
+                                    (b, isSet) -> setMoodIsSet = isSet));
+
+                    y += 25;
+                    // 心情值输入
+                    addRenderableWidget(new EditBox(this.font, centerX - 50, y, 100, 20,
+                            Component.translatable("gui.entity_interaction_block.set_mood_hint")));
+                    valueInput = findAndAttachInput(Component.translatable("gui.entity_interaction_block.set_mood_hint"));
+                    if (valueInput != null) {
+                        valueInput.setFilter(s -> s.matches("-?[0-9.]*"));
+                        valueInput.setValue("0.5");
+                    }
+                    y += 22;
+                    addRenderableWidget(Button.builder(
+                            Component.translatable("gui.entity_interaction_block.set_mood_desc"), b -> {})
+                            .bounds(centerX - 100, y, 200, 15).build());
+                }
                 case ADD_CUSTOM_TASK -> {
                     // 任务名称
                     addRenderableWidget(new EditBox(this.font, centerX - 150, y, 300, 20,
@@ -1652,6 +1685,11 @@ public class EntityInteractionBlockScreen extends Screen {
                 if (stringInput != null) {
                     action.customTaskId = stringInput.getValue();
                 }
+            }
+
+            // 保存设置心情值参数
+            if (selectedType == EntityInteractionBlockEntity.ActionType.SET_MOOD) {
+                action.stringValue = setMoodIsSet ? null : "add";
             }
 
             // 保存额外任务参数
