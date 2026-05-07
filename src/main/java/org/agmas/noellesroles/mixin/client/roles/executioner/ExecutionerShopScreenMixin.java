@@ -61,7 +61,7 @@ public abstract class ExecutionerShopScreenMixin extends LimitedHandledScreen<In
                         return true;
                     if (!GameUtils.isPlayerAliveAndSurvival(e))
                         return true;
-                    return ExecutionerPlayerComponent.judgeRole(gameWorldComponent.getRole(e));
+                    return ExecutionerPlayerComponent.judgeRole(player.level(), gameWorldComponent.getRole(e));
                 });
 
                 int apart = 36;
