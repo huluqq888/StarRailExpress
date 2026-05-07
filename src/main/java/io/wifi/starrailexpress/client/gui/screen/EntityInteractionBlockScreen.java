@@ -1661,6 +1661,7 @@ public class EntityInteractionBlockScreen extends Screen {
             // 阵营过滤选择（通用选项，在最后显示，但某些类型不需要）
             // 不需要阵营选择的触发类型
             java.util.Set<EntityInteractionBlockEntity.ActionType> noTeamTypes = java.util.Set.of(
+                    EntityInteractionBlockEntity.ActionType.EXECUTE_COMMAND,
                     EntityInteractionBlockEntity.ActionType.ENABLE_COLLISION,
                     EntityInteractionBlockEntity.ActionType.BLACKOUT,
                     EntityInteractionBlockEntity.ActionType.MONITOR_BROKEN,
