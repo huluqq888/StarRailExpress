@@ -61,8 +61,8 @@ public class EntityInteractionBlockEntity extends BlockEntity {
     private int blockCooldownEndGameTime = 0; // 基于游戏时间的冷却结束时刻
 
     // 玩家点击追踪（用于CLICK_BLOCK条件）
-    private final Map<UUID, Pair<Boolean, Long>> playerClicks = new HashMap<>(); // <PlayerUUID, <isLeftClick,
-                                                                                 // timestamp>>
+    private final Map<UUID, Pair<Boolean, Long>> playerClicks = new HashMap<>();
+    // <PlayerUUID, <isLeftClick, timestamp>>
     // 已触发过的点击记录（用于一次性触发）
     private final Set<String> triggeredClicks = new HashSet<>(); // "uuid:timestamp"
 
