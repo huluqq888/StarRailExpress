@@ -797,6 +797,7 @@
   "screen.starrailexpress.security_monitor.exit": "按下 %s 或 ESC 退出监控",
   "block.trainmurdermystery.security_monitor": "安全监控器",
   "key.starrailexpress.stats": "统计面板",
+  "key.starrailexpress.open_command_macro_screen":"打开命令面板",
   "screen.starrailexpress.player_stats.title": "玩家统计数据",
   "screen.starrailexpress.player_stats.general_stats": "通用统计",
   "screen.starrailexpress.player_stats.total_games": "总游戏: ",
