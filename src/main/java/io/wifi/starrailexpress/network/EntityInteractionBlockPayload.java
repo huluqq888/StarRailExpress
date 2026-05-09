@@ -2,7 +2,6 @@ package io.wifi.starrailexpress.network;
 
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -13,7 +12,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -23,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 实体交互方块的网络通信
+ * 实体交互方块的网络通信 - Payload 定义和注册
+ * 只包含服务端逻辑，客户端相关代码应放在 EntityInteractionBlockClientNetwork 中
  */
 public class EntityInteractionBlockPayload {
 
@@ -72,11 +71,16 @@ public class EntityInteractionBlockPayload {
         }
     }
 
+    /**
+     * 服务端初始化：注册 Payload 类型和处理器
+     */
     public static void register() {
+        // S2C: 服务端 -> 客户端
         PayloadTypeRegistry.playS2C().register(OpenUI.TYPE, OpenUI.CODEC);
+        // C2S: 客户端 -> 服务端
         PayloadTypeRegistry.playC2S().register(SaveConfig.TYPE, SaveConfig.CODEC);
-        // SyncBlockEntity 的注册在 registerClientReceiver() 中处理（需要客户端初始化上下文）
 
+        // 处理客户端发来的 SaveConfig 包
         ServerPlayNetworking.registerGlobalReceiver(SaveConfig.TYPE, (payload, context) -> {
             context.server().execute(() -> {
                 ServerPlayer player = context.player();
@@ -88,14 +92,14 @@ public class EntityInteractionBlockPayload {
                     List<EntityInteractionBlockEntity.TriggerAction> actions = new ArrayList<>();
 
                     if (data.contains("Conditions", ListTag.TAG_LIST)) {
-                        ListTag list = data.getList("Conditions", ListTag.TAG_COMPOUND);
+                        ListTag list = data.getList("Conditions", ListTag.TAG_LIST);
                         for (int i = 0; i < list.size(); i++) {
                             conditions.add(EntityInteractionBlockEntity.TriggerCondition.fromNbt(list.getCompound(i)));
                         }
                     }
 
                     if (data.contains("Actions", ListTag.TAG_LIST)) {
-                        ListTag list = data.getList("Actions", ListTag.TAG_COMPOUND);
+                        ListTag list = data.getList("Actions", ListTag.TAG_LIST);
                         for (int i = 0; i < list.size(); i++) {
                             actions.add(EntityInteractionBlockEntity.TriggerAction.fromNbt(list.getCompound(i)));
                         }
@@ -147,8 +151,9 @@ public class EntityInteractionBlockPayload {
         });
     }
 
-
-
+    /**
+     * 服务端发送 OpenUI 包给玩家
+     */
     public static void sendOpenUI(ServerPlayer player, BlockPos pos, EntityInteractionBlockEntity entity) {
         CompoundTag data = new CompoundTag();
 
@@ -184,8 +189,7 @@ public class EntityInteractionBlockPayload {
     }
 
     /**
-     * 发送 BlockEntity 同步数据包到指定玩家
-     * 不打开 UI，只同步数据
+     * 服务端发送 SyncBlockEntity 包给玩家（不打开UI，只同步数据）
      */
     public static void sendSyncBlockEntity(ServerPlayer player, BlockPos pos, EntityInteractionBlockEntity entity) {
         CompoundTag data = new CompoundTag();
@@ -206,26 +210,17 @@ public class EntityInteractionBlockPayload {
         ServerPlayNetworking.send(player, new SyncBlockEntity(pos, data));
     }
 
-    public static void sendSaveConfig(BlockPos pos, List<EntityInteractionBlockEntity.TriggerCondition> conditions,
-                                      List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown) {
-        sendSaveConfig(pos, conditions, actions, cooldown, false, -1, false, 0xFFFFFF,
-                EntityInteractionBlockEntity.TaskHighlightCondition.NONE, "*", "", 100);
-    }
-
-    public static void sendSaveConfig(BlockPos pos, List<EntityInteractionBlockEntity.TriggerCondition> conditions,
-                                      List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
-                                      boolean isTeleportPoint, int teleportPointId) {
-        sendSaveConfig(pos, conditions, actions, cooldown, isTeleportPoint, teleportPointId, false, 0xFFFFFF,
-                EntityInteractionBlockEntity.TaskHighlightCondition.NONE, "*", "", 100);
-    }
-
-    public static void sendSaveConfig(BlockPos pos, List<EntityInteractionBlockEntity.TriggerCondition> conditions,
-                                      List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
-                                      boolean isTeleportPoint, int teleportPointId,
-                                      boolean isTaskMarker, int taskMarkerColor,
-                                      EntityInteractionBlockEntity.TaskHighlightCondition taskHighlightCondition,
-                                      String taskHighlightTaskType, String taskHighlightCustomTaskId,
-                                      int taskInstinctId) {
+    /**
+     * 构建 SaveConfig 的 NBT 数据（客户端和服务端共用）
+     */
+    public static CompoundTag buildSaveConfigData(BlockPos pos,
+                                                  List<EntityInteractionBlockEntity.TriggerCondition> conditions,
+                                                  List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
+                                                  boolean isTeleportPoint, int teleportPointId,
+                                                  boolean isTaskMarker, int taskMarkerColor,
+                                                  EntityInteractionBlockEntity.TaskHighlightCondition taskHighlightCondition,
+                                                  String taskHighlightTaskType, String taskHighlightCustomTaskId,
+                                                  int taskInstinctId) {
         CompoundTag data = new CompoundTag();
 
         ListTag conditionsTag = new ListTag();
@@ -254,6 +249,6 @@ public class EntityInteractionBlockPayload {
         data.putString("TaskHighlightCustomTaskId", taskHighlightCustomTaskId != null ? taskHighlightCustomTaskId : "");
         data.putInt("TaskInstinctId", taskInstinctId);
 
-        ClientPlayNetworking.send(new SaveConfig(pos, data));
+        return data;
     }
 }

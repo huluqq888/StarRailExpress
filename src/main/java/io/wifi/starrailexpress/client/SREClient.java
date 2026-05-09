@@ -701,54 +701,8 @@ public class SREClient implements ClientModInitializer {
             NoellesrolesClient.isTaskInstinctEnabled = false;
             // isInstinctToggleEnabled = false;
         });
-        // 注册 EntityInteractionBlock 同步数据包的客户端接收器
-        registerClientReceiver();
-        // 实体交互方块UI
-        ClientPlayNetworking.registerGlobalReceiver(EntityInteractionBlockPayload.OpenUI.TYPE, (payload, context) -> {
-            context.client().execute(() -> {
-                if (context.client().level == null) return;
-                var data = payload.data();
-                java.util.List<io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TriggerCondition> conditions = new java.util.ArrayList<>();
-                java.util.List<io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TriggerAction> actions = new java.util.ArrayList<>();
-
-                if (data.contains("Conditions", net.minecraft.nbt.ListTag.TAG_LIST)) {
-                    var list = data.getList("Conditions", net.minecraft.nbt.ListTag.TAG_COMPOUND);
-                    for (int i = 0; i < list.size(); i++) {
-                        conditions.add(io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TriggerCondition.fromNbt(list.getCompound(i)));
-                    }
-                }
-
-                if (data.contains("Actions", net.minecraft.nbt.ListTag.TAG_LIST)) {
-                    var list = data.getList("Actions", net.minecraft.nbt.ListTag.TAG_COMPOUND);
-                    for (int i = 0; i < list.size(); i++) {
-                        actions.add(io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TriggerAction.fromNbt(list.getCompound(i)));
-                    }
-                }
-
-                int cooldown = data.getInt("CooldownTicks");
-                boolean isTeleportPoint = data.getBoolean("IsTeleportPoint");
-                int teleportPointId = data.getInt("TeleportPointId");
-
-                // 任务路标相关数据
-                boolean isTaskMarker = data.getBoolean("IsTaskMarker");
-                int taskMarkerColor = data.contains("TaskMarkerColor") ? data.getInt("TaskMarkerColor") : 0xFFFFFF;
-                io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TaskHighlightCondition taskHighlightCondition =
-                        io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TaskHighlightCondition.NONE;
-                if (data.contains("TaskHighlightCondition")) {
-                    taskHighlightCondition = io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity.TaskHighlightCondition.valueOf(
-                            data.getString("TaskHighlightCondition"));
-                }
-                String taskHighlightTaskType = data.getString("TaskHighlightTaskType");
-                if (taskHighlightTaskType == null || taskHighlightTaskType.isEmpty()) taskHighlightTaskType = "*";
-                String taskHighlightCustomTaskId = data.getString("TaskHighlightCustomTaskId");
-                if (taskHighlightCustomTaskId == null) taskHighlightCustomTaskId = "";
-                int taskInstinctId = data.contains("TaskInstinctId") ? data.getInt("TaskInstinctId") : 100;
-
-                context.client().setScreen(new io.wifi.starrailexpress.client.gui.screen.EntityInteractionBlockScreen(
-                        payload.pos(), conditions, actions, cooldown, isTeleportPoint, teleportPointId,
-                        isTaskMarker, taskMarkerColor, taskHighlightCondition, taskHighlightTaskType, taskHighlightCustomTaskId, taskInstinctId));
-            });
-        });
+        // 注册实体交互方块的客户端网络接收器
+        io.wifi.starrailexpress.client.network.EntityInteractionBlockClientNetwork.register();
         // Chat Dialogue
         ClientPlayNetworking.registerGlobalReceiver(
                 net.exmo.sre.client.chat.OpenChatDialoguePayload.ID, (payload, context) -> {
@@ -851,38 +805,7 @@ public class SREClient implements ClientModInitializer {
             }
         });
     }
-    /**
-     * 在客户端初始化时注册 SyncBlockEntity 数据包的接收器
-     * 这个方法需要在客户端初始化代码（SREClient.java）中调用
-     */
-    public static void registerClientReceiver() {
-        PayloadTypeRegistry.playS2C().register(EntityInteractionBlockPayload.SyncBlockEntity.TYPE, EntityInteractionBlockPayload.SyncBlockEntity.CODEC);
-        ClientPlayNetworking.registerGlobalReceiver(EntityInteractionBlockPayload.SyncBlockEntity.TYPE, (payload, context) -> {
-            context.client().execute(() -> {
-                Level clientLevel = Minecraft.getInstance().level;
-                if (clientLevel != null) {
-                    BlockEntity be = clientLevel.getBlockEntity(payload.pos());
-                    if (be instanceof EntityInteractionBlockEntity entity) {
-                        CompoundTag data = payload.data();
-                        // 直接更新 BlockEntity 的数据，不打开 UI
-                        entity.setTeleportPoint(data.getBoolean("IsTeleportPoint"));
-                        entity.setTeleportPointId(data.getInt("TeleportPointId"));
-                        entity.setTaskMarker(data.getBoolean("IsTaskMarker"));
-                        entity.setTaskMarkerColor(data.contains("TaskMarkerColor") ? data.getInt("TaskMarkerColor") : 0xFFFFFF);
-                        if (data.contains("TaskHighlightCondition")) {
-                            entity.setTaskHighlightCondition(EntityInteractionBlockEntity.TaskHighlightCondition.valueOf(data.getString("TaskHighlightCondition")));
-                        }
-                        entity.setTaskHighlightTaskType(data.getString("TaskHighlightTaskType"));
-                        entity.setTaskHighlightCustomTaskId(data.getString("TaskHighlightCustomTaskId"));
-                        entity.setTaskInstinctId(data.contains("TaskInstinctId") ? data.getInt("TaskInstinctId") : 100);
 
-                        // 手动调用 setChanged 通知客户端 BlockEntity 已更新
-                        entity.setChanged();
-                    }
-                }
-            });
-        });
-    }
     private static void updateInstinctCache(Minecraft client) {
         HashSet<UUID> toRemove = new HashSet<>();
         for (var entry : cachedHighLightMap.entrySet()) {

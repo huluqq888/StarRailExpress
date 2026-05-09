@@ -3,7 +3,7 @@ package io.wifi.starrailexpress.client.gui.screen;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.client.SREClient;
 import io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity;
-import io.wifi.starrailexpress.network.EntityInteractionBlockPayload;
+import io.wifi.starrailexpress.client.network.EntityInteractionBlockClientNetwork;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -491,7 +491,7 @@ public class EntityInteractionBlockScreen extends Screen {
             cooldownTicks = 40;
         }
 
-        EntityInteractionBlockPayload.sendSaveConfig(blockPos, conditions, actions, cooldownTicks, isTeleportPoint, teleportPointId,
+        EntityInteractionBlockClientNetwork.sendSaveConfig(blockPos, conditions, actions, cooldownTicks, isTeleportPoint, teleportPointId,
                 isTaskMarker, taskMarkerColor, taskHighlightCondition, taskHighlightTaskType, taskHighlightCustomTaskId, taskInstinctId);
         this.onClose();
     }
