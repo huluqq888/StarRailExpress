@@ -3,13 +3,14 @@ package io.wifi.starrailexpress.client.network;
 import io.wifi.starrailexpress.content.block_entity.EntityInteractionBlockEntity;
 import io.wifi.starrailexpress.network.EntityInteractionBlockPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 实体交互方块的客户端网络处理
@@ -21,11 +22,10 @@ public class EntityInteractionBlockClientNetwork {
      * 在客户端初始化时注册所有相关数据包的接收器
      */
     public static void register() {
-        // 注册 SyncBlockEntity 数据包（服务端推送的同步数据）
-        PayloadTypeRegistry.playS2C().register(
-                EntityInteractionBlockPayload.SyncBlockEntity.TYPE,
-                EntityInteractionBlockPayload.SyncBlockEntity.CODEC
-        );
+        // 注意：Payload 类型已在 SRE.registerPayloadTypes() 中注册，此处不再重复注册
+        // 只注册接收器（ClientPlayNetworking）
+
+        // 注册 SyncBlockEntity 接收器
         ClientPlayNetworking.registerGlobalReceiver(EntityInteractionBlockPayload.SyncBlockEntity.TYPE, (payload, context) -> {
             context.client().execute(() -> {
                 var clientLevel = Minecraft.getInstance().level;
@@ -33,9 +33,36 @@ public class EntityInteractionBlockClientNetwork {
                     BlockEntity be = clientLevel.getBlockEntity(payload.pos());
                     if (be instanceof EntityInteractionBlockEntity entity) {
                         CompoundTag data = payload.data();
-                        // 直接更新 BlockEntity 的数据，不打开 UI
+                        // 同步传送点数据
                         entity.setTeleportPoint(data.getBoolean("IsTeleportPoint"));
                         entity.setTeleportPointId(data.getInt("TeleportPointId"));
+
+                        // 同步 Conditions
+                        List<EntityInteractionBlockEntity.TriggerCondition> conditions = new ArrayList<>();
+                        if (data.contains("Conditions", ListTag.TAG_LIST)) {
+                            var list = data.getList("Conditions", ListTag.TAG_LIST);
+                            for (int i = 0; i < list.size(); i++) {
+                                conditions.add(EntityInteractionBlockEntity.TriggerCondition.fromNbt(list.getCompound(i)));
+                            }
+                        }
+                        entity.getConditions().clear();
+                        entity.getConditions().addAll(conditions);
+
+                        // 同步 Actions
+                        List<EntityInteractionBlockEntity.TriggerAction> actions = new ArrayList<>();
+                        if (data.contains("Actions", ListTag.TAG_LIST)) {
+                            var list = data.getList("Actions", ListTag.TAG_LIST);
+                            for (int i = 0; i < list.size(); i++) {
+                                actions.add(EntityInteractionBlockEntity.TriggerAction.fromNbt(list.getCompound(i)));
+                            }
+                        }
+                        entity.getActions().clear();
+                        entity.getActions().addAll(actions);
+
+                        // 同步冷却
+                        entity.setCooldownTicks(data.getInt("CooldownTicks"));
+
+                        // 同步任务路标数据
                         entity.setTaskMarker(data.getBoolean("IsTaskMarker"));
                         entity.setTaskMarkerColor(data.contains("TaskMarkerColor") ? data.getInt("TaskMarkerColor") : 0xFFFFFF);
                         if (data.contains("TaskHighlightCondition")) {
@@ -52,7 +79,7 @@ public class EntityInteractionBlockClientNetwork {
             });
         });
 
-        // 注册 OpenUI 数据包（打开配置界面）
+        // 注册 OpenUI 接收器
         ClientPlayNetworking.registerGlobalReceiver(EntityInteractionBlockPayload.OpenUI.TYPE, (payload, context) -> {
             context.client().execute(() -> {
                 if (context.client().level == null) return;
@@ -60,15 +87,15 @@ public class EntityInteractionBlockClientNetwork {
                 var conditions = new ArrayList<EntityInteractionBlockEntity.TriggerCondition>();
                 var actions = new ArrayList<EntityInteractionBlockEntity.TriggerAction>();
 
-                if (data.contains("Conditions", net.minecraft.nbt.ListTag.TAG_LIST)) {
-                    var list = data.getList("Conditions", net.minecraft.nbt.ListTag.TAG_LIST);
+                if (data.contains("Conditions", ListTag.TAG_LIST)) {
+                    var list = data.getList("Conditions", ListTag.TAG_LIST);
                     for (int i = 0; i < list.size(); i++) {
                         conditions.add(EntityInteractionBlockEntity.TriggerCondition.fromNbt(list.getCompound(i)));
                     }
                 }
 
-                if (data.contains("Actions", net.minecraft.nbt.ListTag.TAG_LIST)) {
-                    var list = data.getList("Actions", net.minecraft.nbt.ListTag.TAG_LIST);
+                if (data.contains("Actions", ListTag.TAG_LIST)) {
+                    var list = data.getList("Actions", ListTag.TAG_LIST);
                     for (int i = 0; i < list.size(); i++) {
                         actions.add(EntityInteractionBlockEntity.TriggerAction.fromNbt(list.getCompound(i)));
                     }
@@ -104,23 +131,23 @@ public class EntityInteractionBlockClientNetwork {
      * 发送保存配置的请求到服务端
      */
     public static void sendSaveConfig(BlockPos pos,
-                                       java.util.List<EntityInteractionBlockEntity.TriggerCondition> conditions,
-                                       java.util.List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown) {
+                                       List<EntityInteractionBlockEntity.TriggerCondition> conditions,
+                                       List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown) {
         sendSaveConfig(pos, conditions, actions, cooldown, false, -1, false, 0xFFFFFF,
                 EntityInteractionBlockEntity.TaskHighlightCondition.NONE, "*", "", 100);
     }
 
     public static void sendSaveConfig(BlockPos pos,
-                                       java.util.List<EntityInteractionBlockEntity.TriggerCondition> conditions,
-                                       java.util.List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
+                                       List<EntityInteractionBlockEntity.TriggerCondition> conditions,
+                                       List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
                                        boolean isTeleportPoint, int teleportPointId) {
         sendSaveConfig(pos, conditions, actions, cooldown, isTeleportPoint, teleportPointId, false, 0xFFFFFF,
                 EntityInteractionBlockEntity.TaskHighlightCondition.NONE, "*", "", 100);
     }
 
     public static void sendSaveConfig(BlockPos pos,
-                                       java.util.List<EntityInteractionBlockEntity.TriggerCondition> conditions,
-                                       java.util.List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
+                                       List<EntityInteractionBlockEntity.TriggerCondition> conditions,
+                                       List<EntityInteractionBlockEntity.TriggerAction> actions, int cooldown,
                                        boolean isTeleportPoint, int teleportPointId,
                                        boolean isTaskMarker, int taskMarkerColor,
                                        EntityInteractionBlockEntity.TaskHighlightCondition taskHighlightCondition,

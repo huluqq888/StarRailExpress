@@ -1,7 +1,6 @@
 package io.wifi.starrailexpress.content.vote.client;
 
 import io.wifi.starrailexpress.content.vote.network.VoteSyncS2CPacket;
-import io.wifi.events.day_night_fight.DNF;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 

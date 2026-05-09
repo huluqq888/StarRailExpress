@@ -6,7 +6,7 @@ import io.wifi.starrailexpress.content.entity.PlayerBodyEntity;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMBlockEntities;
-import io.wifi.starrailexpress.network.EntityInteractionBlockPayload;
+import io.wifi.starrailexpress.network.EntityInteractionBlockServerNetwork;
 import io.wifi.starrailexpress.network.packet.CustomNarratorPacket;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import com.mojang.datafixers.util.Pair;
@@ -183,7 +183,7 @@ public class EntityInteractionBlockEntity extends BlockEntity {
 
     // 打开UI
     public void openUI(ServerPlayer player) {
-        EntityInteractionBlockPayload.sendOpenUI(player, this.worldPosition, this);
+        EntityInteractionBlockServerNetwork.sendOpenUI(player, this.worldPosition, this);
     }
 
     // 记录玩家点击（用于CLICK_BLOCK条件）
@@ -1650,23 +1650,22 @@ public class EntityInteractionBlockEntity extends BlockEntity {
         public double value; // 数值参数
         public String stringValue; // 字符串参数
         public ComparisonType comparison = ComparisonType.EQUALS;
-        public TeamType teamType;
+        public TeamType teamType = TeamType.CIVILIAN; // 默认值，确保序列化安全
         public LogicOperator logicOperator = LogicOperator.AND; // 与下一个条件的逻辑关系
         public WorldTimeType worldTimeType; // 世界时间类型（用于WORLD_TIME条件）
         public int entityCount; // 实体数量（用于ENTITY_COUNT条件）
         public boolean checkAnyCount; // 是否检查任意数量（*表示不检查数量）
-        public LineDirection lineDirection; // 直线范围方向（用于PROXIMITY_LINE条件）
+        public LineDirection lineDirection = LineDirection.ALL; // 默认值，确保序列化安全
         public boolean triggerOnce = false; // 是否一次性触发（触发后不再触发，用于CLICK_BLOCK等）
 
         public CompoundTag toNbt() {
             CompoundTag tag = new CompoundTag();
-            tag.putString("Type", type.name());
+            tag.putString("Type", type != null ? type.name() : "PASS_THROUGH");
             tag.putDouble("Value", value);
             tag.putString("StringValue", stringValue != null ? stringValue : "");
-            tag.putString("Comparison", comparison.name());
-            if (teamType != null)
-                tag.putString("TeamType", teamType.name());
-            tag.putString("LogicOperator", logicOperator.name());
+            tag.putString("Comparison", comparison != null ? comparison.name() : ComparisonType.EQUALS.name());
+            tag.putString("TeamType", teamType != null ? teamType.name() : TeamType.CIVILIAN.name());
+            tag.putString("LogicOperator", logicOperator != null ? logicOperator.name() : LogicOperator.AND.name());
             if (worldTimeType != null)
                 tag.putString("WorldTimeType", worldTimeType.name());
             tag.putInt("EntityCount", entityCount);
@@ -1728,7 +1727,7 @@ public class EntityInteractionBlockEntity extends BlockEntity {
 
         public CompoundTag toNbt() {
             CompoundTag tag = new CompoundTag();
-            tag.putString("Type", type.name());
+            tag.putString("Type", type != null ? type.name() : ActionType.EXECUTE_COMMAND.name());
             tag.putDouble("Value", value);
             tag.putString("StringValue", stringValue != null ? stringValue : "");
             tag.putString("TaskType", taskType != null ? taskType : "");
@@ -1739,7 +1738,7 @@ public class EntityInteractionBlockEntity extends BlockEntity {
             tag.putString("NarratorText", narratorText != null ? narratorText : "");
             tag.putBoolean("NarratorInterrupt", narratorInterrupt);
             tag.putBoolean("ClearTasks", clearTasks);
-            tag.putString("TargetTeamType", targetTeamType.name());
+            tag.putString("TargetTeamType", targetTeamType != null ? targetTeamType.name() : TeamType.ALL.name());
             tag.putInt("TeleportTarget", teleportTarget);
             return tag;
         }
@@ -1801,7 +1800,9 @@ public class EntityInteractionBlockEntity extends BlockEntity {
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registryLookup) {
-        return this.saveWithoutMetadata(registryLookup);
+        CompoundTag tag = new CompoundTag();
+        saveAdditional(tag, registryLookup);
+        return tag;
     }
 
     @Override

@@ -414,7 +414,9 @@ public class SRE extends StarRailExpressID implements ModInitializer {
                 io.wifi.starrailexpress.content.mail.MailMarkReadC2SPayload.CODEC);
 
         // 实体交互方块数据包
-        EntityInteractionBlockPayload.register();
+        PayloadTypeRegistry.playS2C().register(EntityInteractionBlockPayload.OpenUI.TYPE, EntityInteractionBlockPayload.OpenUI.CODEC);
+        PayloadTypeRegistry.playS2C().register(EntityInteractionBlockPayload.SyncBlockEntity.TYPE, EntityInteractionBlockPayload.SyncBlockEntity.CODEC);
+        PayloadTypeRegistry.playC2S().register(EntityInteractionBlockPayload.SaveConfig.TYPE, EntityInteractionBlockPayload.SaveConfig.CODEC);
     }
 
     private void registerGlobalReceivers() {
@@ -438,7 +440,8 @@ public class SRE extends StarRailExpressID implements ModInitializer {
                     io.wifi.starrailexpress.network.VoteForMapPayload.Handler.handle(payload, context.player());
                 });
 
-        // 实体交互方块保存配置已由 EntityInteractionBlockPayload.register() 处理
+        // 实体交互方块服务端网络处理
+        EntityInteractionBlockServerNetwork.register();
         ServerPlayNetworking.registerGlobalReceiver(SecurityCameraExitRequestPayload.ID,
                 new SecurityCameraExitRequestPayload.ServerReceiver());
         ServerPlayNetworking.registerGlobalReceiver(JoinSpecGroupPayload.ID, (payload, context) -> {
