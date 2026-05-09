@@ -265,9 +265,9 @@ public class ModRolesInitialEventRegister {
             }
             // 巫毒师角色初始化 - 开局75秒冷却
             if (role.equals(ModRoles.VOODOO)) {
-                abilityPlayerComponent.cooldown = 75 * 20; // 75秒冷却
+                abilityPlayerComponent.cooldown = 100 * 20; 
                 abilityPlayerComponent.sync();
-                return; // 阻止后面的 generalCooldownTicks 覆盖
+                return; 
             }
             if (role.equals(ModRoles.BOMBER)) {
                 if (role.equals(ModRoles.MONITOR)) {
