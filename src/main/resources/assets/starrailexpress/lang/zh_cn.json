@@ -1949,7 +1949,7 @@
   "starrailexpress.drawing_board.opened": "画板已打开",
   "starrailexpress.drawing_board.recognize.success": "识别成功！",
   "starrailexpress.drawing_board.recognize.fail": "无法识别该图案",
-  "starrailexpress.drawing_board.recognize.success_with": "识别成功！生成物品: %s",
+  "starrailexpress.drawing_board.recognize.success_with": "识别成功！",
   "starrailexpress.drawing_board.recognize.unknown": "未知物品",
   "starrailexpress.drawing_board.consumed": "画板已消耗"
 }

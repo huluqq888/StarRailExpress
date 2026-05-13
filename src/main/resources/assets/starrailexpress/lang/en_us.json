@@ -1947,7 +1947,7 @@
   "starrailexpress.drawing_board.opened": "Drawing board opened",
   "starrailexpress.drawing_board.recognize.success": "Recognition successful!",
   "starrailexpress.drawing_board.recognize.fail": "Could not recognize the pattern",
-  "starrailexpress.drawing_board.recognize.success_with": "Recognition successful! Generated item: %s",
+  "starrailexpress.drawing_board.recognize.success_with": "Recognition successful!",
   "starrailexpress.drawing_board.recognize.unknown": "Unknown item",
   "starrailexpress.drawing_board.consumed": "Drawing board consumed"
 }
