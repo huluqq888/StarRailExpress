@@ -194,6 +194,47 @@ public class SimpleKNN {
     }
 
     /**
+     * 将字节矩阵转换为特征向量，支持将指定颜色视为透明
+     * @param matrix 输入矩阵
+     * @param transparentAsZero 如果为 true，则将白色（索引1）视为透明
+     * @return 归一化后的 double 数组
+     */
+    public static double[] matrixToFeature(byte[][] matrix, boolean transparentAsZero) {
+        if (matrix == null || matrix.length == 0) return new double[0];
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        
+        if (transparentAsZero) {
+            // 真正忽略透明像素：将透明像素设为-1，归一化后为-1/255≈-0.004
+            double[] feature = new double[rows * cols];
+            int idx = 0;
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    int val = matrix[i][j] & 0xFF;
+                    // 白色(1)视为透明，设为-1
+                    if (val == 1) {
+                        feature[idx++] = -1.0 / 255.0;
+                    } else {
+                        feature[idx++] = val / 255.0;
+                    }
+                }
+            }
+            return feature;
+        } else {
+            // 不使用透明处理
+            double[] feature = new double[rows * cols];
+            int idx = 0;
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    int val = matrix[i][j] & 0xFF;
+                    feature[idx++] = val / 255.0;
+                }
+            }
+            return feature;
+        }
+    }
+
+    /**
      * 将字节矩阵转为原始整数值特征向量（不归一化）
      */
     public static double[] matrixToFeatureRaw(byte[][] matrix) {

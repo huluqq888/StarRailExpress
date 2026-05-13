@@ -633,7 +633,7 @@ public class DrawingBoardRecognizer {
         for (int y = 2; y < 12; y++) p[y][8] = 10;  // 针身 - 灰色
         p[12][8] = 2; p[13][8] = 2;  // 针尖 - 红色
         for (int y = 2; y < 6; y++) {
-            for (int x = 7; x < 10; x++) p[y][x] = 1;  // 针筒 - 白色
+            for (int x = 7; x < 10; x++) p[y][x] = 11;  // 针筒 - 淡灰色
         }
         return p;
     }
@@ -643,7 +643,7 @@ public class DrawingBoardRecognizer {
         for (int y = 3; y < 11; y++) p[y][7] = 10;  // 针身 - 灰色
         p[11][7] = 2; p[12][7] = 2;  // 针尖 - 红色
         for (int y = 3; y < 7; y++) {
-            for (int x = 6; x < 9; x++) p[y][x] = 1;  // 针筒 - 白色
+            for (int x = 6; x < 9; x++) p[y][x] = 11;  // 针筒 - 淡灰色
         }
         return p;
     }
@@ -1121,7 +1121,7 @@ public class DrawingBoardRecognizer {
             for (int x = 6; x < 10; x++) p[y][x] = 11;  // 瓶颈 - 淡灰色
         }
         for (int y = 7; y < 14; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 1;  // 瓶身 - 白色
+            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 瓶身 - 淡灰色
         }
         return p;
     }
@@ -1133,27 +1133,33 @@ public class DrawingBoardRecognizer {
             for (int x = 6; x < 10; x++) p[y][x] = 11;  // 瓶颈 - 淡灰色
         }
         for (int y = 6; y < 13; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 1;  // 瓶身 - 白色
+            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 瓶身 - 淡灰色
         }
         return p;
     }
 
+    // 薄荷糖 - 绿色圆形
     private byte[][] createMintCandiesPattern() {
         byte[][] p = new byte[16][16];
-        for (int y = 5; y < 12; y++) {
-            for (int x = 4; x < 12; x++) p[y][x] = 11;  // 包装 - 淡灰色
+        int cx = 8, cy = 8;
+        for (int y = 3; y < 13; y++) {
+            for (int x = 3; x < 13; x++) {
+                double dist = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                if (dist < 5) p[y][x] = 3;  // 圆形主体 - 绿色
+            }
         }
-        p[6][6] = 1; p[6][7] = 1; p[7][6] = 1; p[7][7] = 1;  // 糖果 - 白色
-        p[9][8] = 1; p[9][9] = 1; p[10][8] = 1; p[10][9] = 1;  // 糖果 - 白色
         return p;
     }
 
     private byte[][] createMintCandiesPattern2() {
         byte[][] p = new byte[16][16];
-        for (int y = 6; y < 11; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 包装 - 淡灰色
+        int cx = 8, cy = 8;
+        for (int y = 4; y < 12; y++) {
+            for (int x = 4; x < 12; x++) {
+                double dist = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                if (dist < 4) p[y][x] = 3;  // 圆形主体 - 绿色
+            }
         }
-        p[7][7] = 1; p[7][8] = 1; p[8][7] = 1; p[8][8] = 1;  // 糖果 - 白色
         return p;
     }
 
@@ -1349,7 +1355,7 @@ public class DrawingBoardRecognizer {
         for (int y = 4; y < 13; y++) {
             for (int x = 4; x < 13; x++) {
                 double dist = Math.sqrt((x - c) * (x - c) + (y - c) * (y - c));
-                if (dist < 4.5) p[y][x] = 1;  // 表盘 - 白色
+                if (dist < 4.5) p[y][x] = 11;  // 表盘 - 淡灰色
             }
         }
         p[8][8] = 0; p[5][8] = 0; p[8][11] = 0;  // 表针 - 黑色
@@ -1369,7 +1375,7 @@ public class DrawingBoardRecognizer {
         for (int y = 5; y < 12; y++) {
             for (int x = 5; x < 12; x++) {
                 double dist = Math.sqrt((x - c) * (x - c) + (y - c) * (y - c));
-                if (dist < 3.5) p[y][x] = 1;  // 表盘 - 白色
+                if (dist < 3.5) p[y][x] = 11;  // 表盘 - 淡灰色
             }
         }
         p[7][8] = 0; p[5][8] = 0; p[8][10] = 0;  // 表针 - 黑色
@@ -1493,7 +1499,7 @@ public class DrawingBoardRecognizer {
     private byte[][] createPassbookPattern() {
         byte[][] p = new byte[16][16];
         for (int y = 3; y < 13; y++) {
-            for (int x = 4; x < 12; x++) p[y][x] = 1;  // 封面 - 白色
+            for (int x = 4; x < 12; x++) p[y][x] = 11;  // 封面 - 淡灰色
         }
         for (int y = 4; y < 6; y++) {
             for (int x = 5; x < 11; x++) p[y][x] = 10;  // 装饰 - 灰色
@@ -1504,7 +1510,7 @@ public class DrawingBoardRecognizer {
     private byte[][] createPassbookPattern2() {
         byte[][] p = new byte[16][16];
         for (int y = 4; y < 12; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 1;  // 封面 - 白色
+            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 封面 - 淡灰色
         }
         for (int y = 5; y < 7; y++) {
             for (int x = 6; x < 10; x++) p[y][x] = 10;  // 装饰 - 灰色
@@ -2030,7 +2036,7 @@ public class DrawingBoardRecognizer {
             for (int x = 6; x < 10; x++) p[y][x] = 11;  // 瓶颈 - 淡灰色
         }
         for (int y = 8; y < 13; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 1;  // 瓶身 - 白色
+            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 瓶身 - 淡灰色
         }
         return p;
     }
@@ -2129,7 +2135,7 @@ public class DrawingBoardRecognizer {
         for (int y = 5; y < 12; y++) {
             for (int x = 5; x < 12; x++) {
                 double dist = Math.sqrt((x - c) * (x - c) + (y - c) * (y - c));
-                if (dist < 3.5) p[y][x] = 1;  // 表盘 - 白色
+                if (dist < 3.5) p[y][x] = 11;  // 表盘 - 淡灰色
             }
         }
         p[8][8] = 0; p[5][8] = 0;  // 表针 - 黑色
@@ -2197,7 +2203,7 @@ public class DrawingBoardRecognizer {
     private byte[][] createPassbookPattern3() {
         byte[][] p = new byte[16][16];
         for (int y = 4; y < 12; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 1;  // 封面 - 白色
+            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 封面 - 淡灰色
         }
         for (int y = 5; y < 7; y++) {
             for (int x = 6; x < 10; x++) p[y][x] = 10;  // 装饰 - 灰色
@@ -2228,11 +2234,13 @@ public class DrawingBoardRecognizer {
 
     private byte[][] createMintCandiesPattern3() {
         byte[][] p = new byte[16][16];
-        for (int y = 6; y < 11; y++) {
-            for (int x = 5; x < 11; x++) p[y][x] = 11;  // 包装 - 淡灰色
+        int cx = 8, cy = 8;
+        for (int y = 5; y < 11; y++) {
+            for (int x = 5; x < 11; x++) {
+                double dist = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                if (dist < 3) p[y][x] = 3;  // 圆形主体 - 绿色
+            }
         }
-        p[7][6] = 1; p[7][7] = 1; p[8][6] = 1; p[8][7] = 1;  // 糖果 - 白色
-        p[9][8] = 1; p[9][9] = 1;  // 糖果 - 白色
         return p;
     }
 
@@ -2254,10 +2262,13 @@ public class DrawingBoardRecognizer {
     private static final int COLOR_BLACK = 0;
     private static final int COLOR_WHITE = 1;
     private static final int COLOR_RED = 2;
+    private static final int COLOR_GREEN = 3;
     private static final int COLOR_BLUE = 4;
+    private static final int COLOR_YELLOW = 5;
     private static final int COLOR_GRAY = 10;
     private static final int COLOR_LIGHT_GRAY = 11;
     private static final int COLOR_DARK_RED = 12;
+    private static final int COLOR_DARK_GREEN = 13;
     private static final int COLOR_DARK_BLUE = 14;
 
     // ==================== 识别方法 ====================
@@ -2287,7 +2298,8 @@ public class DrawingBoardRecognizer {
         
         // 复制像素数据以避免修改原始数据
         byte[][] normalizedPixels = normalizeColors(pixels);
-        double[] features = SimpleKNN.matrixToFeature(normalizedPixels);
+        // 将白色转换为透明（黑色），只关注有颜色的部分
+        double[] features = SimpleKNN.matrixToFeature(normalizedPixels, true);
         // 提高阈值到 0.7，减少误识别
         return knn.predictWithThreshold(features, 0.7);
     }
@@ -2297,6 +2309,7 @@ public class DrawingBoardRecognizer {
      * - 灰色和淡灰色互通
      * - 蓝色和深蓝色互通
      * - 红色和深红色互通
+     * - 绿色和深绿色互通
      * - 白色保持不变
      */
     private byte[][] normalizeColors(byte[][] pixels) {
@@ -2318,6 +2331,10 @@ public class DrawingBoardRecognizer {
                 // 深蓝色 -> 蓝色
                 else if (color == COLOR_DARK_BLUE) {
                     normalized = COLOR_BLUE;
+                }
+                // 深绿色 -> 绿色
+                else if (color == COLOR_DARK_GREEN) {
+                    normalized = COLOR_GREEN;
                 }
                 // 白色保持不变
                 
