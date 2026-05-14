@@ -8833,8 +8833,8 @@ public class DrawingBoardRecognizer {
         }
 
         // 只有票数达到最低要求才返回结果
-        // 权重总和21，最低要求3票（约14%）和得票率25%
-        if (bestCount < 3 || bestVoteRatio < 0.25) {
+        // K=3，最大63票（3×21权重），最低要求12票（约19%）和得票率20%
+        if (bestCount < 12 || bestVoteRatio < 0.20) {
             // 所有pattern得票率都很低，返回不在识别范围的消息
             return new RecognizeResult(UNKNOWN, UNKNOWN, "starrailexpress.drawing_board.hint.out_of_range", bestCount, totalVoteWeight);
         }
