@@ -180,7 +180,7 @@ public class DrawingBoardRecognizer {
     }
 
     private DrawingBoardRecognizer() {
-        this.knn = new SimpleKNN(7);  // 提高 K 值使投票更稳定
+        this.knn = new SimpleKNN(3);  // K=3，每个算法最多3票
         initializeTrainingData();
         initializeMoreTrainingVariants();
     }
@@ -8765,39 +8765,39 @@ public class DrawingBoardRecognizer {
         Map<Integer, Integer> votes = new java.util.HashMap<>();
 
         // euclidean（权重6）- 最严格，逐像素精确匹配
-        int result1 = knn.predictWithThresholdByAlgorithm(features, 0.75, "euclidean");
-        if (result1 != -1) {
-            votes.put(result1, votes.getOrDefault(result1, 0) + 6);
+        Map<Integer, Integer> euclideanVotes = knn.getVotesByAlgorithm(features, "euclidean");
+        for (Map.Entry<Integer, Integer> entry : euclideanVotes.entrySet()) {
+            votes.put(entry.getKey(), votes.getOrDefault(entry.getKey(), 0) + entry.getValue() * 6);
         }
 
         // histogram（权重5）- 颜色直方图
-        int result2 = knn.predictWithThresholdByAlgorithm(features, 0.60, "histogram");
-        if (result2 != -1) {
-            votes.put(result2, votes.getOrDefault(result2, 0) + 5);
+        Map<Integer, Integer> histogramVotes = knn.getVotesByAlgorithm(features, "histogram");
+        for (Map.Entry<Integer, Integer> entry : histogramVotes.entrySet()) {
+            votes.put(entry.getKey(), votes.getOrDefault(entry.getKey(), 0) + entry.getValue() * 5);
         }
 
         // colorCount（权重4）- 色块数量
-        int result3 = knn.predictWithThresholdByAlgorithm(features, 0.50, "colorCount");
-        if (result3 != -1) {
-            votes.put(result3, votes.getOrDefault(result3, 0) + 4);
+        Map<Integer, Integer> colorCountVotes = knn.getVotesByAlgorithm(features, "colorCount");
+        for (Map.Entry<Integer, Integer> entry : colorCountVotes.entrySet()) {
+            votes.put(entry.getKey(), votes.getOrDefault(entry.getKey(), 0) + entry.getValue() * 4);
         }
 
         // shape（权重3）- 宽松形状匹配，考虑颜色
-        int result4 = knn.predictWithThresholdByAlgorithm(features, 0.60, "shape");
-        if (result4 != -1) {
-            votes.put(result4, votes.getOrDefault(result4, 0) + 3);
+        Map<Integer, Integer> shapeVotes = knn.getVotesByAlgorithm(features, "shape");
+        for (Map.Entry<Integer, Integer> entry : shapeVotes.entrySet()) {
+            votes.put(entry.getKey(), votes.getOrDefault(entry.getKey(), 0) + entry.getValue() * 3);
         }
 
         // pureShape（权重2）- 忽略颜色只看轮廓
-        int result5 = knn.predictWithThresholdByAlgorithm(features, 0.45, "pureShape");
-        if (result5 != -1) {
-            votes.put(result5, votes.getOrDefault(result5, 0) + 2);
+        Map<Integer, Integer> pureShapeVotes = knn.getVotesByAlgorithm(features, "pureShape");
+        for (Map.Entry<Integer, Integer> entry : pureShapeVotes.entrySet()) {
+            votes.put(entry.getKey(), votes.getOrDefault(entry.getKey(), 0) + entry.getValue() * 2);
         }
 
         // centroid（权重1）- 最宽松，只看位置和数量
-        int result6 = knn.predictByAlgorithmWithDims(features, "centroid", 16, 16);
-        if (result6 != -1) {
-            votes.put(result6, votes.getOrDefault(result6, 0) + 1);
+        Map<Integer, Integer> centroidVotes = knn.getVotesByAlgorithm(features, "centroid", 16, 16);
+        for (Map.Entry<Integer, Integer> entry : centroidVotes.entrySet()) {
+            votes.put(entry.getKey(), votes.getOrDefault(entry.getKey(), 0) + entry.getValue() * 1);
         }
 
         // 计算总投票权重
@@ -8833,8 +8833,8 @@ public class DrawingBoardRecognizer {
         }
 
         // 只有票数达到最低要求才返回结果
-        // 权重总和21，最低要求5票（约24%）和得票率30%
-        if (bestCount < 5 || bestVoteRatio < 0.3) {
+        // 权重总和21，最低要求3票（约14%）和得票率25%
+        if (bestCount < 3 || bestVoteRatio < 0.25) {
             // 所有pattern得票率都很低，返回不在识别范围的消息
             return new RecognizeResult(UNKNOWN, UNKNOWN, "starrailexpress.drawing_board.hint.out_of_range", bestCount, totalVoteWeight);
         }

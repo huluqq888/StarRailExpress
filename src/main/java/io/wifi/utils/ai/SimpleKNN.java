@@ -848,4 +848,47 @@ public class SimpleKNN {
         int noiseResult = knn.predictWithThreshold(noiseFeat, 0.6);
         System.out.println("\n随机噪声预测结果: " + (noiseResult == -1 ? "无法识别" : "类别 " + noiseResult));
     }
+
+    /**
+     * 获取K近邻中每个类别的具体票数（用于加权投票）
+     * @param features 特征向量
+     * @param algorithm 算法名称
+     * @param width 宽度（centroid算法需要）
+     * @param height 高度（centroid算法需要）
+     * @return Map<类别, 票数>
+     */
+    public Map<Integer, Integer> getVotesByAlgorithm(double[] features, String algorithm, int width, int height) {
+        Map<Integer, Integer> labelCount = new HashMap<>();
+
+        if (samples.isEmpty()) {
+            return labelCount;
+        }
+
+        // 构建距离堆
+        PriorityQueue<Neighbor> heap = new PriorityQueue<>(Comparator.comparingDouble(n -> n.distance));
+        for (Sample s : samples) {
+            double dist;
+            if (algorithm.equals("centroid")) {
+                dist = calculateDistanceWithDims(features, s.features, algorithm, width, height);
+            } else {
+                dist = calculateDistance(features, s.features, algorithm);
+            }
+            heap.offer(new Neighbor(dist, s.label));
+        }
+
+        // 获取K近邻并统计票数
+        for (int i = 0; i < k && !heap.isEmpty(); i++) {
+            Neighbor neighbor = heap.poll();
+            labelCount.put(neighbor.label, labelCount.getOrDefault(neighbor.label, 0) + 1);
+        }
+
+        return labelCount;
+    }
+
+    /**
+     * 获取K近邻中每个类别的具体票数（不带尺寸参数的重载版本）
+     */
+    public Map<Integer, Integer> getVotesByAlgorithm(double[] features, String algorithm) {
+        return getVotesByAlgorithm(features, algorithm, 16, 16);
+    }
 }
