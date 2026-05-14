@@ -8686,6 +8686,7 @@ public class DrawingBoardRecognizer {
     private static final int COLOR_DARK_RED = 12;
     private static final int COLOR_DARK_GREEN = 13;
     private static final int COLOR_DARK_BLUE = 14;
+    private static final int COLOR_BROWN = 15;
 
     // ==================== 识别方法 ====================
 
@@ -8757,8 +8758,8 @@ public class DrawingBoardRecognizer {
             return UNKNOWN;
         }
 
-        // 像素级校验：检查输入是否符合pattern的约束
-        if (!validatePixelConstraints(pixels, bestLabel)) {
+        // 像素级校验：使用规范化后的像素进行检查（颜色互通生效）
+        if (!validatePixelConstraints(normalizedPixels, bestLabel)) {
             return UNKNOWN; // 超过阈值，拒绝识别
         }
 
@@ -8769,6 +8770,7 @@ public class DrawingBoardRecognizer {
      * 像素级校验：检查输入是否符合pattern的约束
      * - pattern中透明位置被画上颜色的比例不超过35%
      * - pattern中有色位置被画成透明的比例不超过40%
+     * - 如果原始位置校验失败，允许将pattern向四个方向偏移1-2像素后再次校验
      * @param input 输入像素矩阵（原始）
      * @param label 识别的类别
      * @return true 表示通过校验，false 表示被否决
@@ -8779,10 +8781,63 @@ public class DrawingBoardRecognizer {
             return true; // 没有pattern数据，默认通过
         }
 
+        // 先尝试原始位置校验
+        if (validatePixelConstraintsAtOffset(input, pattern, 0, 0)) {
+            return true;
+        }
+
+        // 原始位置校验失败，尝试四个方向的偏移
+        for (int offset = 1; offset <= 2; offset++) {
+            // 左
+            if (validatePixelConstraintsAtOffset(input, pattern, -offset, 0)) {
+                return true;
+            }
+            // 右
+            if (validatePixelConstraintsAtOffset(input, pattern, offset, 0)) {
+                return true;
+            }
+            // 上
+            if (validatePixelConstraintsAtOffset(input, pattern, 0, -offset)) {
+                return true;
+            }
+            // 下
+            if (validatePixelConstraintsAtOffset(input, pattern, 0, offset)) {
+                return true;
+            }
+            // 左上
+            if (validatePixelConstraintsAtOffset(input, pattern, -offset, -offset)) {
+                return true;
+            }
+            // 右上
+            if (validatePixelConstraintsAtOffset(input, pattern, offset, -offset)) {
+                return true;
+            }
+            // 左下
+            if (validatePixelConstraintsAtOffset(input, pattern, -offset, offset)) {
+                return true;
+            }
+            // 右下
+            if (validatePixelConstraintsAtOffset(input, pattern, offset, offset)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 在指定偏移量下校验像素约束
+     * @param input 输入像素矩阵
+     * @param pattern pattern矩阵
+     * @param xOffset 水平偏移量（负数向左，正数向右）
+     * @param yOffset 垂直偏移量（负数向上，正数向下）
+     * @return true 表示通过校验
+     */
+    private boolean validatePixelConstraintsAtOffset(byte[][] input, byte[][] pattern, int xOffset, int yOffset) {
         // 透明阈值：pattern中透明位置被画上颜色的比例不超过此值
-        final double EXTRA_PIXEL_THRESHOLD = 0.35;  // 35%
+        final double EXTRA_PIXEL_THRESHOLD = 0.40;  // 放宽到40%
         // 遗漏阈值：pattern中有色位置被画成透明的比例不超过此值
-        final double MISSING_PIXEL_THRESHOLD = 0.40; // 40%
+        final double MISSING_PIXEL_THRESHOLD = 0.45; // 放宽到45%
 
         int patternTransparentCount = 0; // pattern中透明位置总数
         int extraColorCount = 0;          // pattern中透明位置被画上颜色的数量
@@ -8792,7 +8847,23 @@ public class DrawingBoardRecognizer {
 
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < 16; x++) {
-                int patternColor = pattern[y][x] & 0xFF;
+                // 计算pattern中的对应位置（应用偏移）
+                int patternX = x - xOffset;
+                int patternY = y - yOffset;
+
+                // 边界检查：超出范围视为透明
+                if (patternX < 0 || patternX >= 16 || patternY < 0 || patternY >= 16) {
+                    // 超出边界的pattern位置算作透明
+                    int inputColor = input[y][x] & 0xFF;
+                    boolean inputIsTransparent = inputColor == 0 || inputColor == 16;
+                    patternTransparentCount++;
+                    if (!inputIsTransparent) {
+                        extraColorCount++;
+                    }
+                    continue;
+                }
+
+                int patternColor = pattern[patternY][patternX] & 0xFF;
                 int inputColor = input[y][x] & 0xFF;
 
                 // 判断是否为透明/背景色（索引为0或等于16）
@@ -8819,7 +8890,7 @@ public class DrawingBoardRecognizer {
         if (patternTransparentCount > 0) {
             double extraRatio = (double) extraColorCount / patternTransparentCount;
             if (extraRatio > EXTRA_PIXEL_THRESHOLD) {
-                return false; // 超过35%阈值，拒绝
+                return false; // 超过阈值，拒绝
             }
         }
 
@@ -8827,7 +8898,7 @@ public class DrawingBoardRecognizer {
         if (patternColoredCount > 0) {
             double missingRatio = (double) missingColorCount / patternColoredCount;
             if (missingRatio > MISSING_PIXEL_THRESHOLD) {
-                return false; // 超过40%阈值，拒绝
+                return false; // 超过阈值，拒绝
             }
         }
 
@@ -8859,9 +8930,9 @@ public class DrawingBoardRecognizer {
                 else if (color == COLOR_GRAY) {
                     normalized = COLOR_LIGHT_GRAY;
                 }
-                // 深红色 -> 红色
+                // 深红色 -> 棕色
                 else if (color == COLOR_DARK_RED) {
-                    normalized = COLOR_RED;
+                    normalized = COLOR_BROWN;
                 }
                 // 深蓝色 -> 蓝色
                 else if (color == COLOR_DARK_BLUE) {
