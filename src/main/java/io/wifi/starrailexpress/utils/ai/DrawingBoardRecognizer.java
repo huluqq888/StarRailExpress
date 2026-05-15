@@ -175,7 +175,6 @@ public class DrawingBoardRecognizer {
         CATEGORY_TO_ITEM.put(DELIVERY_BOX, findItem("noellesroles", "delivery_box"));
         CATEGORY_TO_ITEM.put(HALLUCINATION, findItem("noellesroles", "hallucination_bottle"));
         CATEGORY_TO_ITEM.put(MINT_CANDIES, findItem("noellesroles", "mint_candies"));
-        CATEGORY_TO_ITEM.put(BOMB, findItem("noellesroles", "bomb"));
         CATEGORY_TO_ITEM.put(WHEELCHAIR, findItem("noellesroles", "wheelchair"));
         CATEGORY_TO_ITEM.put(SHORT_SHOTGUN, findItem("noellesroles", "short_shotgun"));
         CATEGORY_TO_ITEM.put(BATON, findItem("noellesroles", "baton"));
@@ -400,11 +399,7 @@ public class DrawingBoardRecognizer {
         knn.addSample(SimpleKNN.matrixToFeature(createMintCandiesPattern2()), MINT_CANDIES);
         categoryPatterns.put(MINT_CANDIES, mintCandies);
 
-        // 炸弹
-        byte[][] bomb = createBombPattern();
-        knn.addSample(SimpleKNN.matrixToFeature(bomb), BOMB);
-        knn.addSample(SimpleKNN.matrixToFeature(createBombPattern2()), BOMB);
-        categoryPatterns.put(BOMB, bomb);
+
 
         // 轮椅
         byte[][] wheelchair = createWheelchairPattern();
@@ -593,7 +588,6 @@ public class DrawingBoardRecognizer {
 
         // 盒子 - 更多变体
         knn.addSample(SimpleKNN.matrixToFeature(createDeliveryBoxPattern3()), DELIVERY_BOX);
-        knn.addSample(SimpleKNN.matrixToFeature(createBombPattern3()), BOMB);
         knn.addSample(SimpleKNN.matrixToFeature(createHallucinationPattern3()), HALLUCINATION);
 
         // 轮椅 - 更多变体
@@ -8872,30 +8866,36 @@ public class DrawingBoardRecognizer {
             pixelValidationPassed = validationResult.passed;
         }
 
-        // 根据超标程度减少票数：取透明超标与遗漏超标中的最大值决定减少量
-        // 透明超标（extra）导致更大的减少，遗漏超标（missing）减少较少
+        // 根据超标程度减少票数（放宽策略）：取透明超标与遗漏超标中的最大值决定减少量
+        // - 透明超标影响更大，但缩减系数降低以避免过度严格
+        // - 遗漏超标影响较小
+        // - 缩减量不会把票数降到低于可预测最低标准（2票）
         if (validationResult != null && !pixelValidationPassed && bestCount >= 2) {
-            double extra = validationResult.extraPixelRatio;   // 透明超标程度（超过阈值的部分）
-            double missing = validationResult.missingPixelRatio; // 遗漏超标程度
+            double extra = validationResult.extraPixelRatio;
+            double missing = validationResult.missingPixelRatio;
             double major = Math.max(extra, missing);
 
+            // 更温和的缩减系数：透明 10x，遗漏 5x
             int reduction;
             if (extra >= missing) {
-                // 透明超标更严重时，放大系数更高
-                reduction = (int) Math.ceil(extra * 40.0);
+                reduction = (int) Math.ceil(extra * 10.0);
             } else {
-                // 遗漏超标影响较小
-                reduction = (int) Math.ceil(missing * 20.0);
+                reduction = (int) Math.ceil(missing * 5.0);
             }
 
-            // 如果超标已经比较严重，直接降到可预测的最低标准（2票），以避免过度误判
-            if (major >= 0.25) {
-                bestCount = 2;
-            } else {
-                if (reduction <= 0 && major > 0) reduction = 1; // 保证有超标时至少减少1票
-                bestCount = Math.max(2, bestCount - reduction);
+            if (reduction <= 0 && major > 0) reduction = 1; // 有超标时至少减少1票
+
+            int minPredict = 2;
+            int maxReductionAllowed = Math.max(0, bestCount - minPredict);
+            // 限制缩减量不超过可允许的最大值
+            reduction = Math.min(reduction, maxReductionAllowed);
+
+            // 严重超标时允许更大的缩减，但仍不低于 minPredict
+            if (major >= 0.50 && maxReductionAllowed > 0) {
+                reduction = Math.max(reduction, Math.min(2, maxReductionAllowed));
             }
 
+            bestCount = Math.max(minPredict, bestCount - reduction);
             bestVoteRatio = totalVoteWeight > 0 ? (double) bestCount / totalVoteWeight : 0.0;
         }
 
