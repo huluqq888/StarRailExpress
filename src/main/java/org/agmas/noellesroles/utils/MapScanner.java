@@ -3,6 +3,8 @@ package org.agmas.noellesroles.utils;
 import io.wifi.starrailexpress.SRE;
 import io.wifi.starrailexpress.cca.AreasWorldComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
+import io.wifi.starrailexpress.cca.SREPlayerTaskComponent.CatTask;
+import io.wifi.starrailexpress.cca.SREPlayerTaskComponent.ExerciseTask;
 import io.wifi.starrailexpress.cca.SREPlayerTaskComponent.Task;
 import io.wifi.starrailexpress.content.block.*;
 import io.wifi.starrailexpress.content.block.api.TaskInstinctShowableInterface;
@@ -81,7 +83,7 @@ public class MapScanner {
                         GameUtils.taskBlocks.put(blockPos6, 11);
                     } else if (blockState.is(Blocks.NOTE_BLOCK)) {
                         GameUtils.taskBlocks.put(blockPos6, 10);
-                    } else if (blockState.is(Blocks.BLACK_CONCRETE)) {
+                    } else if (blockState.is(ExerciseTask.TRIGGER_BLOCK)) {
                         BlockPos blockPos7 = new BlockPos(m, l + 1, k);
                         var blockState2 = localLevel.getBlockState(blockPos7);
                         if (blockState2.is(BlockTags.WOOL_CARPETS) || blockState2.is(BlockTags.AIR)) {
@@ -126,10 +128,7 @@ public class MapScanner {
                         GameUtils.taskBlocks.put(blockPos6, 3);
                     } else if (blockState.getBlock() instanceof TaskInstinctShowableInterface it) {
                         GameUtils.taskBlocks.put(blockPos6, it.taskInstinctId());
-                    } else if (blockState.getBlock() == BuiltInRegistries.BLOCK
-                            .get((ResourceLocation.fromNamespaceAndPath("yuushya", "black_cat")))
-                            || blockState.getBlock() == BuiltInRegistries.BLOCK
-                                    .get((ResourceLocation.fromNamespaceAndPath("yuushya", "white_cat")))) {
+                    } else if (CatTask.CAT_BLOCKS.contains(blockState.getBlock())) {
                         GameUtils.taskBlocks.put(blockPos6, Task.CAT.ordinal()); // 13
                     }
                 }

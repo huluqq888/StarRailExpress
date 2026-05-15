@@ -630,6 +630,7 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
 
     public static class ExerciseTask implements TrainTask {
         public int timer;
+        public static final Block TRIGGER_BLOCK = Blocks.DEAD_TUBE_CORAL_BLOCK; // 用于检测玩家是否在跑步的方块
 
         public ExerciseTask(int time) {
             this.timer = time;
@@ -639,7 +640,7 @@ public class SREPlayerTaskComponent implements RoleComponent, ServerTickingCompo
         public void tick(@NotNull Player player) {
             // 玩家必须在跑步状态下才能完成锻炼任务
             if (player.level().getBlockState(player.blockPosition().offset(0, -1, 0))
-                    .getBlock() == Blocks.BLACK_CONCRETE && this.timer > 0) {
+                    .getBlock() == TRIGGER_BLOCK && this.timer > 0) {
                 this.timer--;
             }
         }
