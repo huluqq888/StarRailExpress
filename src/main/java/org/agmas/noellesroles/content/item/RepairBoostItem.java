@@ -35,6 +35,7 @@ public class RepairBoostItem extends Item {
             return InteractionResult.PASS;
         }
         if (station.addProgress(boost) && context.getPlayer() instanceof ServerPlayer player) {
+            RepairModeState.awardCoins(player, 12, "repair_coin_source.boost");
             SREPlayerShopComponent.KEY.get(player).addToBalance(12);
             player.displayClientMessage(Component.translatable("message.noellesroles.repair.boosted", boost,
                     station.getProgress()), true);

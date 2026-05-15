@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.game.modes.repair.RepairModeState;
+import org.agmas.noellesroles.game.modes.repair.RepairEventSystem;
 import org.agmas.noellesroles.game.modes.repair.RepairGameplayEffects;
 import org.agmas.noellesroles.content.block_entity.RepairStationBlockEntity;
 
@@ -45,6 +46,14 @@ public record RepairStationActionC2SPacket(BlockPos blockPos, boolean greatHit) 
             if ("mechanic".equals(activeRole)) {
                 amount += payload.greatHit() ? 3 : 2;
             }
+            amount += RepairEventSystem.repairProgressBonus((net.minecraft.server.level.ServerLevel) player.level());
+            if (station.addProgress(amount)) {
+                int reward = (payload.greatHit() ? 8 : 3)
+                        + RepairEventSystem.repairCoinBonus((net.minecraft.server.level.ServerLevel) player.level());
+                if (station.isCompleted()) {
+                    reward += 75;
+                }
+                RepairModeState.awardCoins(player, reward, payload.greatHit() ? "repair_coin_source.perfect" : "repair_coin_source.calibration");
             if (station.addProgress(amount)) {
                 int reward = payload.greatHit() ? 8 : 3;
                 if (station.isCompleted()) {

@@ -1,6 +1,7 @@
 package org.agmas.noellesroles.component;
 
 import io.wifi.starrailexpress.api.RoleComponent;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class RepairRolePlayerComponent implements RoleComponent {
     public final Set<String> ownedRoles = new LinkedHashSet<>();
@@ -23,6 +25,20 @@ public class RepairRolePlayerComponent implements RoleComponent {
     public int neutralTaskProgress = 0;
     public boolean neutralTaskCompleted = false;
     public long selectionEndTick = 0L;
+    public boolean downed = false;
+    public UUID carriedBy = null;
+    public UUID carrying = null;
+    public int carryBlockedTicks = 0;
+    public BlockPosTag trialStand = BlockPosTag.NONE;
+    public int completedStations = 0;
+    public boolean gatesPowered = false;
+    public int downedAllies = 0;
+    public int activeTrialPrisoners = 0;
+    public int nearestTrialProgress = 0;
+    public String currentEventKey = "";
+    public String currentEventRewardKey = "";
+    public int currentEventTicks = 0;
+    public int currentEventDanger = 0;
     private final Player player;
 
     public RepairRolePlayerComponent(Player player) {
@@ -41,6 +57,20 @@ public class RepairRolePlayerComponent implements RoleComponent {
         neutralTaskProgress = 0;
         neutralTaskCompleted = false;
         selectionEndTick = 0L;
+        downed = false;
+        carriedBy = null;
+        carrying = null;
+        carryBlockedTicks = 0;
+        trialStand = BlockPosTag.NONE;
+        completedStations = 0;
+        gatesPowered = false;
+        downedAllies = 0;
+        activeTrialPrisoners = 0;
+        nearestTrialProgress = 0;
+        currentEventKey = "";
+        currentEventRewardKey = "";
+        currentEventTicks = 0;
+        currentEventDanger = 0;
         ensureStarterRoles();
         sync();
     }
@@ -122,6 +152,20 @@ public class RepairRolePlayerComponent implements RoleComponent {
         tag.putInt("NeutralTaskProgress", neutralTaskProgress);
         tag.putBoolean("NeutralTaskCompleted", neutralTaskCompleted);
         tag.putLong("SelectionEndTick", selectionEndTick);
+        tag.putBoolean("Downed", downed);
+        if (carriedBy != null) tag.putUUID("CarriedBy", carriedBy);
+        if (carrying != null) tag.putUUID("Carrying", carrying);
+        tag.putInt("CarryBlockedTicks", carryBlockedTicks);
+        trialStand.write(tag, "TrialStand");
+        tag.putInt("CompletedStations", completedStations);
+        tag.putBoolean("GatesPowered", gatesPowered);
+        tag.putInt("DownedAllies", downedAllies);
+        tag.putInt("ActiveTrialPrisoners", activeTrialPrisoners);
+        tag.putInt("NearestTrialProgress", nearestTrialProgress);
+        tag.putString("CurrentEventKey", currentEventKey);
+        tag.putString("CurrentEventRewardKey", currentEventRewardKey);
+        tag.putInt("CurrentEventTicks", currentEventTicks);
+        tag.putInt("CurrentEventDanger", currentEventDanger);
     }
 
     private void readData(CompoundTag tag) {
@@ -144,5 +188,47 @@ public class RepairRolePlayerComponent implements RoleComponent {
         neutralTaskProgress = tag.getInt("NeutralTaskProgress");
         neutralTaskCompleted = tag.getBoolean("NeutralTaskCompleted");
         selectionEndTick = tag.getLong("SelectionEndTick");
+        downed = tag.getBoolean("Downed");
+        carriedBy = tag.hasUUID("CarriedBy") ? tag.getUUID("CarriedBy") : null;
+        carrying = tag.hasUUID("Carrying") ? tag.getUUID("Carrying") : null;
+        carryBlockedTicks = tag.getInt("CarryBlockedTicks");
+        trialStand = BlockPosTag.read(tag, "TrialStand");
+        completedStations = tag.getInt("CompletedStations");
+        gatesPowered = tag.getBoolean("GatesPowered");
+        downedAllies = tag.getInt("DownedAllies");
+        activeTrialPrisoners = tag.getInt("ActiveTrialPrisoners");
+        nearestTrialProgress = tag.getInt("NearestTrialProgress");
+        currentEventKey = tag.getString("CurrentEventKey");
+        currentEventRewardKey = tag.getString("CurrentEventRewardKey");
+        currentEventTicks = tag.getInt("CurrentEventTicks");
+        currentEventDanger = tag.getInt("CurrentEventDanger");
+    }
+
+    public record BlockPosTag(int x, int y, int z, boolean present) {
+        public static final BlockPosTag NONE = new BlockPosTag(0, 0, 0, false);
+
+        public static BlockPosTag of(BlockPos pos) {
+            return new BlockPosTag(pos.getX(), pos.getY(), pos.getZ(), true);
+        }
+
+        public BlockPos toBlockPos() {
+            return new BlockPos(x, y, z);
+        }
+
+        public void write(CompoundTag tag, String prefix) {
+            tag.putBoolean(prefix + "Present", present);
+            if (present) {
+                tag.putInt(prefix + "X", x);
+                tag.putInt(prefix + "Y", y);
+                tag.putInt(prefix + "Z", z);
+            }
+        }
+
+        public static BlockPosTag read(CompoundTag tag, String prefix) {
+            if (!tag.getBoolean(prefix + "Present")) {
+                return NONE;
+            }
+            return new BlockPosTag(tag.getInt(prefix + "X"), tag.getInt(prefix + "Y"), tag.getInt(prefix + "Z"), true);
+        }
     }
 }
