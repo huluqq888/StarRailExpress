@@ -54,6 +54,7 @@ public class ModItems {
             new RepairBoostItem(8, "item.noellesroles.spare_parts.tooltip", new Item.Properties().stacksTo(16)),
             "spare_parts");
     public static final Item RESCUE_FLARE = register(
+            new RescueFlareItem(new Item.Properties().stacksTo(4)),
             new Item(new Item.Properties().stacksTo(4)) {
                 @Override
                 public void appendHoverText(ItemStack stack, TooltipContext context,

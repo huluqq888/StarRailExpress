@@ -72,6 +72,10 @@ public class ModPackets {
                 OpenVendingMachinesScreenS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenRepairStationScreenS2CPacket.ID,
                 OpenRepairStationScreenS2CPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(RepairCoinRewardS2CPacket.ID,
+                RepairCoinRewardS2CPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(RepairCombatFeedbackS2CPacket.ID,
+                RepairCombatFeedbackS2CPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(RepairStationActionC2SPacket.ID,
                 RepairStationActionC2SPacket.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(RepairStationActionC2SPacket.ID, RepairStationActionC2SPacket::handle);

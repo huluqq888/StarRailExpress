@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import org.agmas.noellesroles.game.modes.repair.RepairGameplayEffects;
+import org.agmas.noellesroles.game.modes.repair.RepairModeState;
 
 import java.util.List;
 
@@ -25,6 +26,13 @@ public class SmokePelletItem extends Item {
         if (level instanceof ServerLevel serverLevel) {
             RepairGameplayEffects.burst(serverLevel, player.getX(), player.getY() + 0.8D, player.getZ(), 1);
             RepairGameplayEffects.disorientHunters(serverLevel, player.getX(), player.getY(), player.getZ(), 5.5D, 90);
+            for (net.minecraft.server.level.ServerPlayer hunter : serverLevel.players()) {
+                if (RepairModeState.isHunter(hunter) && hunter.distanceToSqr(player) <= 6.5D * 6.5D) {
+                    RepairModeState.blockHunterCarry(hunter, 20 * 8);
+                    hunter.displayClientMessage(Component.translatable("message.noellesroles.repair.carry_jammed")
+                            .withStyle(ChatFormatting.RED), true);
+                }
+            }
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);
             }

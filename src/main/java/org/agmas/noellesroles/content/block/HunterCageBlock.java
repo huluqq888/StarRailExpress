@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import org.agmas.noellesroles.content.block_entity.HunterCageBlockEntity;
 import org.agmas.noellesroles.component.ModComponents;
+import org.agmas.noellesroles.game.modes.repair.RepairModeState;
 import org.agmas.noellesroles.init.ModItems;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,6 +74,7 @@ public class HunterCageBlock extends BaseEntityBlock {
             boolean released = cage.addRescueProgress(amount);
             if (player instanceof ServerPlayer serverPlayer) {
                 int reward = released ? 55 : 6;
+                RepairModeState.awardCoins(serverPlayer, reward, released ? "repair_coin_source.rescue" : "repair_coin_source.rescuing");
                 SREPlayerShopComponent.KEY.get(serverPlayer).addToBalance(reward);
                 serverPlayer.displayClientMessage(Component.translatable(
                         released ? "message.noellesroles.repair.rescued" : "message.noellesroles.repair.rescuing",

@@ -15,6 +15,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.item.ItemStack;
+import org.agmas.noellesroles.component.ModComponents;
+import org.agmas.noellesroles.content.block_entity.HunterCageBlockEntity;
 import net.minecraft.world.item.ItemStack;
 import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.init.ModItems;
@@ -48,6 +52,7 @@ public class RepairEscapeGameMode extends GameMode {
     public void initializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> players) {
         RepairModeState.reset(serverWorld);
+        RepairEventSystem.reset(serverWorld);
         rolesFinalized = false;
         selectionEndTick = serverWorld.getGameTime() + 40 * 20L;
         ArrayList<ServerPlayer> shuffled = new ArrayList<>(players);
@@ -115,6 +120,13 @@ public class RepairEscapeGameMode extends GameMode {
             finalizeSelectedRoles(serverWorld, gameWorldComponent);
         }
         applyRoleTickEffects(serverWorld, gameWorldComponent);
+        if (rolesFinalized) {
+            RepairEventSystem.tick(serverWorld);
+        }
+        tickDownedAndCarriedPlayers(serverWorld);
+        if (serverWorld.getGameTime() % 20 == 0) {
+            updateRepairHudState(serverWorld, gameWorldComponent);
+        }
         GameUtils.WinStatus winStatus = GameUtils.WinStatus.NONE;
         int activeSurvivors = 0;
         int escapedSurvivors = 0;
@@ -236,6 +248,85 @@ public class RepairEscapeGameMode extends GameMode {
         }
     }
 
+    private void tickDownedAndCarriedPlayers(ServerLevel serverWorld) {
+        for (ServerPlayer player : serverWorld.players()) {
+            var component = ModComponents.REPAIR_ROLES.get(player);
+            if (component.carryBlockedTicks > 0) {
+                component.carryBlockedTicks--;
+                if (component.carryBlockedTicks == 0) {
+                    component.sync();
+                }
+            }
+            if (component.carrying != null) {
+                if (serverWorld.getPlayerByUUID(component.carrying) instanceof ServerPlayer carried
+                        && ModComponents.REPAIR_ROLES.get(carried).downed) {
+                    carried.teleportTo(player.getX() - Math.sin(Math.toRadians(player.getYRot())) * 0.75D,
+                            player.getY(), player.getZ() + Math.cos(Math.toRadians(player.getYRot())) * 0.75D);
+                    carried.setPose(Pose.SWIMMING);
+                    player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 10, 1, false, false, true));
+                    player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 10, 4, false, false, true));
+                } else {
+                    component.carrying = null;
+                    component.sync();
+                }
+            }
+            if (component.downed) {
+                player.setPose(Pose.SWIMMING);
+                player.setHealth(Math.max(1.0F, player.getHealth()));
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 8, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 3, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 80, 0, false, false, true));
+            }
+        }
+    }
+
+    private void updateRepairHudState(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        int completed = RepairModeState.getCompletedStationCount(serverWorld);
+        boolean gatesPowered = RepairModeState.areExitGatesPowered(serverWorld);
+        int activeTrialPrisoners = 0;
+        for (ServerPlayer player : serverWorld.players()) {
+            if (ModComponents.REPAIR_ROLES.get(player).trialStand.present()) {
+                activeTrialPrisoners++;
+            }
+        }
+        for (ServerPlayer player : serverWorld.players()) {
+            var component = ModComponents.REPAIR_ROLES.get(player);
+            component.completedStations = completed;
+            component.gatesPowered = gatesPowered;
+            component.activeTrialPrisoners = activeTrialPrisoners;
+            component.downedAllies = countDownedAllies(serverWorld, gameWorldComponent, player);
+            component.nearestTrialProgress = component.trialStand.present()
+                    && serverWorld.getBlockEntity(component.trialStand.toBlockPos()) instanceof HunterCageBlockEntity cage
+                            ? cage.getProgress(player.getUUID())
+                            : 0;
+            component.sync();
+        }
+    }
+
+    private static int countDownedAllies(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
+            ServerPlayer viewer) {
+        boolean viewerHunter = RepairModeState.isHunter(viewer);
+        int count = 0;
+        for (ServerPlayer other : serverWorld.players()) {
+            if (other == viewer || GameUtils.isPlayerEliminated(other)) {
+                continue;
+            }
+            var otherComponent = ModComponents.REPAIR_ROLES.get(other);
+            if (!otherComponent.downed) {
+                continue;
+            }
+            boolean otherHunter = RepairModeState.isHunter(other);
+            if (viewerHunter == otherHunter || (!viewerHunter && !otherHunter)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public void stopGame(ServerLevel world) {
+        RepairModeState.reset(world);
+        RepairEventSystem.reset(world);
     @Override
     public void stopGame(ServerLevel world) {
         RepairModeState.reset(world);

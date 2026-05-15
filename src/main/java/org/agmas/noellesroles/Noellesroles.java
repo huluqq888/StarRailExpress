@@ -160,6 +160,7 @@ public class Noellesroles implements ModInitializer {
         // 注册事件处理器
         ModEventsRegister.registerEvents();
         org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaEventHandler.register();
+        org.agmas.noellesroles.game.modes.repair.RepairCombatEvents.register();
 
         // 注册命令
         BroadcastCommand.register();
