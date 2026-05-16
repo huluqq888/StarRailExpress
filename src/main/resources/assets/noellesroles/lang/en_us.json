@@ -1683,6 +1683,8 @@
   "=========== Wheelchair Race ===========": "",
   "announcement.star.wheelgame.win.star.rank": "Player %s reached the finish line! Rank %s",
   "announcement.star.wheelgame.win.star.prefix": "[Wheelchair Race] ",
+  "game.win.star.chair_wheel_race": "Wheelchair Race finished!",
+  "game.win.star.chair_wheel_race.subtitle": "Champion revealed!",
   "=========== Clockmaker ===========": "",
   "hud.noellesroles.clockmaker.already_using": "Skill in use...",
   "hud.noellesroles.clockmaker.use": "Press %s to spend 125 coins to speed up game time!",
