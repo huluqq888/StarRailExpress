@@ -51,6 +51,101 @@ public class NoellesRolesConfig implements ConfigData {
     public int chanceOfTouhouRoles = 40;
     public int chanceOfEggRoles = 15;
 
+    // ==================== 角色刷新概率配置 ====================
+    // 普通概率配置（0-100，百分比）
+
+    /**
+     * 建筑师刷新概率（%）
+     */
+    public int chanceOfBuilder = 70;
+
+    /**
+     * 布谷鸟刷新概率（%）
+     */
+    public int chanceOfCuckoo = 45;
+
+    /**
+     * 苦力怕刷新概率（%）
+     */
+    public int chanceOfCreeper = 20;
+
+    /**
+     * 画家刷新概率（%）
+     */
+    public int chanceOfPainter = 50;
+
+    /**
+     * 雇佣兵刷新概率（%）
+     */
+    public int chanceOfMercenary = 20;
+
+    /**
+     * 愚者刷新概率（%）
+     */
+    public int chanceOfTheFool = 30;
+
+    /**
+     * 红尘客刷新概率（%）
+     */
+    public int chanceOfWayfarer = 25;
+
+    /**
+     * 毒师刷新概率（%）
+     */
+    public int chanceOfPoisoner = 55;
+
+    /**
+     * 魔术师刷新概率（%）
+     */
+    public int chanceOfMagician = 25;
+
+    /**
+     * 监察员刷新概率（%）
+     */
+    public int chanceOfMonitor = 75;
+
+    /**
+     * 年兽刷新概率（%）
+     */
+    public int chanceOfNianShou = 20;
+
+    /**
+     * 作家刷新概率（%）
+     */
+    public int chanceOfWriter = 2;
+
+    /**
+     * 棒球员刷新概率（%）
+     */
+    public int chanceOfBaseballPlayer = 2;
+
+    /**
+     * 电报员刷新概率（%）
+     */
+    public int chanceOfTelegrapher = 2;
+
+    /**
+     * 猫死灵法师刷新概率（%）
+     */
+    public int chanceOfCatNecromancer = 10;
+
+    // 小概率配置（0-10000，基于10000的概率）
+
+    /**
+     * 更好的义警刷新概率（0-10000，0.1% = 10）
+     */
+    public int chanceOfBestVigilante = 10;
+
+    /**
+     * 特殊警卫配置
+     */
+    public int chanceOfPatroller = 80;
+    public int chanceOfMartialArtsInstructor = 60;
+    public int chanceOfElf = 70;
+    public int chanceOfSwast = 70;
+    public int chanceOfDoublePatroller = 20;
+    public int chanceOfDoubleElf = 10;
+
     /**
      * Modifier - The chance of Lovers
      */

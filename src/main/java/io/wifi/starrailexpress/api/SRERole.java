@@ -49,6 +49,7 @@ public abstract class SRERole {
     private boolean canIgnoreBlackout = false;
     public int maxCount = -1;
     public int enableChance = -1;
+    public int enableRareChance = -1;
     public int enableNeedPlayerCount = -1;
     private int occupiedRoleCount = 1;
     public BiConsumer<ServerPlayer, SREGameWorldComponent> serverTickEvent = null;
@@ -648,6 +649,12 @@ public abstract class SRERole {
                 return 0;
             }
         }
+        if (this.enableRareChance >= 0) {
+            int nchance = random.nextInt(0, 10000);
+            if (nchance > enableRareChance) {
+                return 0;
+            }
+        }
         return this.maxCount;
     }
 
@@ -670,6 +677,25 @@ public abstract class SRERole {
     public SRERole setEnableChance(int chance) {
         enableChance = chance;
         return this;
+    }
+
+    /**
+     * 小概率启用（基于10000的概率）
+     * 
+     * @param chance 概率值（0-10000），例如10表示0.1%
+     * @return
+     */
+    public SRERole setEnableRareChance(int chance) {
+        enableRareChance = chance;
+        return this;
+    }
+
+    /**
+     * 获取小概率启用值
+     * @return
+     */
+    public int getEnableRareChance() {
+        return enableRareChance;
     }
 
     /**

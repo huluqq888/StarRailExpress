@@ -282,6 +282,8 @@ public class InitModRolesMax {
             if (!Harpymodloader.isMojangVerify) {
                 return;
             }
+            // 从配置应用角色概率
+            applyRoleChanceFromConfig();
             autoRoleMaxCount(serverLevel, gameWorldComponent, players);
             autoModifierMaxCount(serverLevel, gameWorldComponent, players);
 
@@ -325,6 +327,10 @@ public class InitModRolesMax {
             }
             // 动态大小
             Random random = new Random();
+
+            // 获取配置
+            NoellesRolesConfig config = NoellesRolesConfig.HANDLER.instance();
+
             if (players_count >= 12 && random.nextInt(0, 100) < TOUHOU_CHANCE) {
                 Harpymodloader.setRoleMaximum(RedHouseRoles.BAKA_ID, 1);
                 Harpymodloader.setRoleMaximum(RedHouseRoles.PACHURI, 1);
@@ -342,16 +348,21 @@ public class InitModRolesMax {
                 Harpymodloader.setRoleMaximum(RedHouseRoles.REMILIA, 0);
                 Harpymodloader.setRoleMaximum(RedHouseRoles.FURANDORU, 0);
             }
-            if (players_count >= 10 && random.nextInt(0, 100) >= 25) {
+
+            // 红尘客 - 从配置读取概率 (100 - 配置值 = 不刷新的概率)
+            if (players_count >= 10 && random.nextInt(0, 100) >= (100 - config.chanceOfWayfarer)) {
                 Harpymodloader.setRoleMaximum(ModRoles.WAYFARER_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.WAYFARER_ID, 0);
             }
-            if (players_count >= 12 && random.nextInt(0, 100) < 55) {
+
+            // 毒师 - 从配置读取概率
+            if (players_count >= 12 && random.nextInt(0, 100) < config.chanceOfPoisoner) {
                 Harpymodloader.setRoleMaximum(ModRoles.POISONER_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.POISONER_ID, 0);
             }
+
             if (players_count >= 12 && random.nextInt(0, 100) <= EGGS_CHANCE) {
                 Harpymodloader.setRoleMaximum(ModRoles.DIO, 1);
                 Harpymodloader.setRoleMaximum(RedHouseRoles.MAID_SAKUYA, 1);
@@ -359,23 +370,30 @@ public class InitModRolesMax {
                 Harpymodloader.setRoleMaximum(ModRoles.DIO, 0);
                 Harpymodloader.setRoleMaximum(RedHouseRoles.MAID_SAKUYA, 0);
             }
-            if (players_count >= 16 && random.nextInt(0, 100) <= 25) {
+
+            // 魔术师 - 从配置读取概率
+            if (players_count >= 16 && random.nextInt(0, 100) <= config.chanceOfMagician) {
                 Harpymodloader.setRoleMaximum(ModRoles.MAGICIAN_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.MAGICIAN_ID, 0);
             }
-            // 死灵法师数量 - 仅在12人以上对局出现
+
+            // 死灵法师数量 - 仅在12人以上对局出现，50%概率
             if (players_count >= 12 && random.nextInt(0, 100) <= 50) {
                 Harpymodloader.setRoleMaximum(SERoles.NECROMANCER, 1);
             } else {
                 Harpymodloader.setRoleMaximum(SERoles.NECROMANCER, 0);
             }
-            if (random.nextInt(0, 100) <= 75) {
+
+            // 监察员 - 从配置读取概率
+            if (random.nextInt(0, 100) <= config.chanceOfMonitor) {
                 Harpymodloader.setRoleMaximum(ModRoles.MONITOR_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.MONITOR_ID, 0);
             }
-            if (random.nextInt(0, 100) < 20) {
+
+            // 年兽 - 从配置读取概率
+            if (random.nextInt(0, 100) < config.chanceOfNianShou) {
                 Harpymodloader.setRoleMaximum(ModRoles.NIAN_SHOU_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.NIAN_SHOU_ID, 0);
@@ -431,7 +449,7 @@ public class InitModRolesMax {
                     Harpymodloader.setRoleMaximum(ModRoles.MA_CHEN_XU, 0);
                 }
             }
-            // 特殊警卫数量
+            // 特殊警卫刷新逻辑
             {
                 int allSpecialPoliceCount = 0;
 
@@ -449,28 +467,28 @@ public class InitModRolesMax {
                     allSpecialPoliceCount = 0;
                 }
 
-                // 基础角色：巡警、武术教官、游侠各有概率生成
+                // 基础角色：巡警、武术教官、游侠各有概率生成（从配置读取）
                 int PATROLLER_COUNT = 0;
                 int MARTIAL_ARTS_INSTRUCTOR_COUNT = 0;
                 int ELF_COUNT = 0;
 
-                // 巡警：80%概率生成，其中20%概率生成两个
-                if (random.nextInt(0, 100) < 80) {
+                // 巡警：从配置读取概率，其中一定概率生成两个
+                if (random.nextInt(0, 100) < config.chanceOfPatroller) {
                     PATROLLER_COUNT = 1;
-                    if (random.nextInt(0, 100) < 20) {
+                    if (random.nextInt(0, 100) < config.chanceOfDoublePatroller) {
                         PATROLLER_COUNT = 2;
                     }
                 }
 
-                // 武术教官：60%概率生成
-                if (random.nextInt(0, 100) < 60) {
+                // 武术教官：从配置读取概率
+                if (random.nextInt(0, 100) < config.chanceOfMartialArtsInstructor) {
                     MARTIAL_ARTS_INSTRUCTOR_COUNT = 1;
                 }
 
-                // 游侠：70%概率生成，其中10%概率生成两个
-                if (random.nextInt(0, 100) < 70) {
+                // 游侠：从配置读取概率，其中一定概率生成两个
+                if (random.nextInt(0, 100) < config.chanceOfElf) {
                     ELF_COUNT = 1;
-                    if (random.nextInt(0, 100) < 10) {
+                    if (random.nextInt(0, 100) < config.chanceOfDoubleElf) {
                         ELF_COUNT = 2;
                     }
                 }
@@ -501,9 +519,9 @@ public class InitModRolesMax {
                     isSwastMap = swastMaps.contains(currentMap);
                 }
 
-                // 如果是特警可用地图且有可用警卫位置，70%概率随机替换一个为特警
+                // 如果是特警可用地图且有可用警卫位置，从配置读取概率随机替换一个为特警
                 if (isSwastMap && currentTotal > 0 && currentTotal >= allSpecialPoliceCount - 1
-                        && random.nextInt(0, 100) < 70) {
+                        && random.nextInt(0, 100) < config.chanceOfSwast) {
                     SWAST_COUNT = 1;
                     // 随机选择替换的角色
                     int replaceTarget = random.nextInt(3);
@@ -522,9 +540,9 @@ public class InitModRolesMax {
                     }
                 }
 
-                // 更好的义警符合条件时（0.1%概率），随机替换一个为更好的义警
+                // 更好的义警符合条件时，从配置读取概率（基于10000），随机替换一个为更好的义警
                 int totalRoles = PATROLLER_COUNT + MARTIAL_ARTS_INSTRUCTOR_COUNT + ELF_COUNT + SWAST_COUNT;
-                if (random.nextInt(0, 10000) < 10 && totalRoles > 0) {
+                if (random.nextInt(0, 10000) < config.chanceOfBestVigilante && totalRoles > 0) {
                     BEST_VIGILANTE_COUNT = 1;
                     // 随机选择替换的角色
                     int replaceTarget = random.nextInt(4);
@@ -593,17 +611,22 @@ public class InitModRolesMax {
                     Harpymodloader.setRoleMaximum(ModRoles.SHADOW_FALCON_ID, 0);
                 }
             }
-            // WRITER (作家) - 0.2%概率生成
-            if (random.nextInt(0, 100) <= 2) {
+            // WRITER (作家) - 从配置读取概率
+            if (random.nextInt(0, 100) <= config.chanceOfWriter) {
                 Harpymodloader.setRoleMaximum(ModRoles.WRITER_ID, 1);
-                Harpymodloader.setRoleMaximum(ModRoles.BASEBALL_PLAYER_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.WRITER_ID, 0);
+            }
+
+            // 棒球员 - 从配置读取概率
+            if (random.nextInt(0, 100) <= config.chanceOfBaseballPlayer) {
+                Harpymodloader.setRoleMaximum(ModRoles.BASEBALL_PLAYER_ID, 1);
+            } else {
                 Harpymodloader.setRoleMaximum(ModRoles.BASEBALL_PLAYER_ID, 0);
             }
 
-            // TELEGRAPHER (电报员) - 0.5%概率生成（与作家相同）
-            if (random.nextInt(0, 100) <= 2) {
+            // TELEGRAPHER (电报员) - 从配置读取概率
+            if (random.nextInt(0, 100) <= config.chanceOfTelegrapher) {
                 Harpymodloader.setRoleMaximum(ModRoles.TELEGRAPHER_ID, 1);
             } else {
                 Harpymodloader.setRoleMaximum(ModRoles.TELEGRAPHER_ID, 0);
@@ -632,6 +655,38 @@ public class InitModRolesMax {
             }
         }
     }
+
+    /**
+     * 从配置应用角色概率设置
+     */
+    private static void applyRoleChanceFromConfig() {
+        NoellesRolesConfig config = NoellesRolesConfig.HANDLER.instance();
+
+        // 建筑师 - 70%概率，12人以上
+        ModRoles.BUILDER.setEnableChance(config.chanceOfBuilder).setEnableNeededPlayerCount(12);
+
+        // 杜鹃 - 45%概率
+        ModRoles.CUCKOO.setEnableChance(config.chanceOfCuckoo);
+
+        // 苦力怕 - 20%概率
+        ModRoles.CREEPER.setEnableChance(config.chanceOfCreeper);
+
+        // 画家 - 50%概率
+        ModRoles.PAINTER.setEnableChance(config.chanceOfPainter);
+
+        // 雇佣兵 - 10%概率，12人以上
+        ModRoles.MERCENARY.setEnableChance(config.chanceOfMercenary).setEnableNeededPlayerCount(12);
+
+        // 愚者 - 30%概率，12人以上
+        ModRoles.THE_FOOL.setEnableChance(config.chanceOfTheFool).setEnableNeededPlayerCount(12);
+
+        // 猫死灵法师 - 10%概率，12人以上
+        ModRoles.CAT_NECROMANCER.setEnableChance(config.chanceOfCatNecromancer).setEnableNeededPlayerCount(12);
+
+        // 更好的义警 - 小概率（基于10000）
+        ModRoles.BEST_VIGILANTE.setEnableRareChance(config.chanceOfBestVigilante);
+    }
+
     public static void initModifiersCount(int players) {
         Random random = new Random();
         // LOVERS

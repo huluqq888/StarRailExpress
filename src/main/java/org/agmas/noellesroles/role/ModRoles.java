@@ -403,7 +403,7 @@ public class ModRoles {
             SRERole.MoodType.REAL, // 真实心情
             TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
             false // 不隐藏计分板
-    )).setCanSeeCoin(true).setComponentKey(ModComponents.BUILDER).setEnableChance(70).setOccupiedRoleCount(1);
+    )).setCanSeeCoin(true).setComponentKey(ModComponents.BUILDER).setOccupiedRoleCount(1);
 
     public static SRERole GUEST_GHOST = TMMRoles.registerRole(new NormalRole(
             GUEST_GHOST_ID, // 角色 ID
@@ -565,7 +565,7 @@ public class ModRoles {
             new NormalRole(CUCKOO_ID, new Color(200, 170, 60).getRGB(),
                     false, false, SRERole.MoodType.FAKE,
                     Integer.MAX_VALUE, true))
-            .setCanSeeCoin(true).setComponentKey(ModComponents.CUCKOO).setCanBeRandomedByOtherRoles(false).setCanUseInstinct(true).setNeutrals(true).setOccupiedRoleCount(1).setEnableChance(45);
+            .setCanSeeCoin(true).setComponentKey(ModComponents.CUCKOO).setCanBeRandomedByOtherRoles(false).setCanUseInstinct(true).setNeutrals(true).setOccupiedRoleCount(1);
     public static SRERole JESTER = TMMRoles
             .registerRole(new NormalRole(JESTER_ID, new Color(186, 85, 211).getRGB(), false,
                     false, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true) {
@@ -711,7 +711,7 @@ public class ModRoles {
         public int getMoodColor() {
             return PUPPETEER_COLOR.getOrRandomColor();
         }
-    }).setComponentKey(ModComponents.CREEPER).setEnableChance(20).setCanBeRandomedByOtherRoles(false);
+    }).setComponentKey(ModComponents.CREEPER).setCanBeRandomedByOtherRoles(false);
 
     /**
      * 作家角色
@@ -1357,7 +1357,7 @@ public class ModRoles {
             SRERole.MoodType.REAL, // 真实心情
             TMMRoles.CIVILIAN.getMaxSprintTime(), // 标准冲刺时间
             false // 不隐藏计分板
-    )).setComponentKey(PainterPlayerComponent.KEY).setCanSeeCoin(true).setEnableChance(50).setOccupiedRoleCount(1);
+    )).setComponentKey(PainterPlayerComponent.KEY).setCanSeeCoin(true).setOccupiedRoleCount(1);
 
     // 杀手阵营角色
     /**
@@ -1643,7 +1643,7 @@ public class ModRoles {
             SRERole.MoodType.FAKE,
             Integer.MAX_VALUE,
             true)).setComponentKey(MercenaryPlayerComponent.KEY).setCanSeeCoin(true).setNeutrals(true)
-            .setCanSeeTeammateKiller(false).setCanUseInstinct(false).setEnableChance(10).setEnableNeededPlayerCount(12);
+            .setCanSeeTeammateKiller(false).setCanUseInstinct(false);
 
     /**
      * 秉烛人角色 - 中立阵营
@@ -1800,8 +1800,6 @@ public class ModRoles {
     )).setComponentKey(org.agmas.noellesroles.game.roles.Innocent.fool.FoolPlayerComponent.KEY).setCanSeeCoin(true)
             .setCanPickUpRevolver(true)
             .setMax(1)
-            .setEnableChance(30)
-            .setEnableNeededPlayerCount(12)
             .setCanBeRandomedByOtherRoles(false);
 
     /**
@@ -1925,7 +1923,7 @@ public class ModRoles {
             Integer.MAX_VALUE, // 标准冲刺时间
             true // 不显示计分板
     )).setCanSeeTime(true).setCanSeeCoin(true)
-            .setEnableNeededPlayerCount(12).setEnableChance(10).setMax(1);
+            .setMax(1);
 
     // ==================== 其他变量定义 ====================
     public static ArrayList<SRERole> SHOW_MONEY_ROLES = new ArrayList<>();
