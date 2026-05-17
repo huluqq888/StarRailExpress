@@ -164,7 +164,7 @@ public class TraitorAndModifiers {
             null, null, false, false));
     
     // 侏儒 - 尺寸缩小50%
-    private static final AttributeModifier DWARF_MODIFIER = new AttributeModifier(
+    public static final AttributeModifier DWARF_MODIFIER = new AttributeModifier(
             Noellesroles.id("dwarf_modifier"), 
             -0.5, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     public static SREModifier DWARF = HMLModifiers.registerModifier(new SREModifier(
@@ -276,19 +276,17 @@ public class TraitorAndModifiers {
                 player.getAttribute(Attributes.KNOCKBACK_RESISTANCE).addPermanentModifier(STRONG_KNOCKBACK_RESIST_MODIFIER);
             }
             
-            // 侏儒 - 缩小50%（同时移除高大修饰符）
+            // 侏儒 - 缩小50%（同时移除高大/矮小修饰符）
             if (modifier.equals(DWARF)) {
                 // 移除高大修饰符（如果存在）
                 if (worldModifierComponent.isModifier(player.getUUID(), SEModifiers.TALL)) {
                     worldModifierComponent.removeModifier(player.getUUID(), SEModifiers.TALL);
-                    player.getAttribute(Attributes.SCALE).removeModifier(
-                            new AttributeModifier(StupidExpress.id("tall_modifier"), 0.0763, AttributeModifier.Operation.ADD_VALUE));
+                    player.getAttribute(Attributes.SCALE).removeModifier(SEModifiers.TALL_MODIFIER);
                 }
                 // 移除矮小修饰符（如果之前有）
                 if (worldModifierComponent.isModifier(player.getUUID(), SEModifiers.TINY)) {
                     worldModifierComponent.removeModifier(player.getUUID(), SEModifiers.TINY);
-                    player.getAttribute(Attributes.SCALE).removeModifier(
-                            new AttributeModifier(StupidExpress.id("tiny_modifier"), -0.0763, AttributeModifier.Operation.ADD_VALUE));
+                    player.getAttribute(Attributes.SCALE).removeModifier(SEModifiers.TINY_MODIFIER);
                 }
                 player.getAttribute(Attributes.SCALE).removeModifier(DWARF_MODIFIER);
                 player.getAttribute(Attributes.SCALE).addPermanentModifier(DWARF_MODIFIER);

@@ -2544,6 +2544,7 @@
   "info.screen.modifier.hemophobia": "修飾符\n當你目睹他人死亡時（30格範圍內，與巡警視野相同），獲得2秒的緩慢III和惡心I。\n（僅對平民陣營玩家生效）",
   "info.screen.modifier.vegetarian": "修飾符\n吃肉（生/熟牛肉、豬肉、雞肉、兔子肉、羊肉、鱈魚、三文魚、熱帶魚、河豚、腐肉、蜘蛛眼、兔子燉菜）會獲得2秒的黑暗和緩慢I。\n吃非肉類食物會獲得2秒的速度I和跳躍提升I。",
   "info.screen.modifier.dwarf": "修飾符\n你的體型縮小50%%。",
+  "info.screen.modifier.money_grubber": "修飾符\n死亡後，擊殺你的人會被扣除40%%的金幣。",
   "info.screen.modifier.stingy": "修飾符\n每次從商店購買物品時，20%%的價格會被返還。",
   "info.screen.modifier.corrupted": "修飾符\n死亡後，你的屍體直接變成骷髅（直接下沉到完全階段）。",
   "info.screen.modifier.flexible": "修飾符\n你的潛行速度增加40%%。",
