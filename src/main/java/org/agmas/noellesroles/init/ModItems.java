@@ -62,6 +62,12 @@ public class ModItems {
     public static final Item HUNTER_WEAPON = register(
             new HunterWeaponItem(new Item.Properties().stacksTo(1).durability(96)),
             "hunter_weapon");
+    public static final Item HUNTER_HAMMER = register(
+            new HunterWeaponItem("hammer", new Item.Properties().stacksTo(1).durability(84)),
+            "hunter_hammer");
+    public static final Item HUNTER_HOOK = register(
+            new HunterWeaponItem("hook", new Item.Properties().stacksTo(1).durability(88)),
+            "hunter_hook");
     public static final Item HUNTER_PLUGIN_LACERATION = register(
             new HunterAttackPluginItem("laceration", new Item.Properties().stacksTo(4)),
             "hunter_plugin_laceration");
@@ -94,6 +100,24 @@ public class ModItems {
     public static final Item ESCAPE_GRAPPLE = register(
             new EscapeGrappleItem(new Item.Properties().stacksTo(1).durability(3)),
             "escape_grapple");
+    public static final Item REPAIR_AREA_KEY = register(
+            new RepairRouteItem("area_key", new Item.Properties().stacksTo(8)),
+            "repair_area_key");
+    public static final Item REPAIR_OLD_KEY = register(
+            new RepairRouteItem("old_key", new Item.Properties().stacksTo(4)),
+            "repair_old_key");
+    public static final Item REPAIR_FUSE = register(
+            new RepairRouteItem("fuse", new Item.Properties().stacksTo(4)),
+            "repair_fuse");
+    public static final Item REPAIR_GEAR_HANDLE = register(
+            new RepairRouteItem("gear_handle", new Item.Properties().stacksTo(4)),
+            "repair_gear_handle");
+    public static final Item REPAIR_CROWBAR = register(
+            new RepairRouteItem("crowbar", new Item.Properties().stacksTo(1).durability(24)),
+            "repair_crowbar");
+    public static final Item REPAIR_PRESET_WAND = register(
+            new RepairPresetWandItem(new Item.Properties().stacksTo(1)),
+            "repair_preset_wand");
     public static final Item PILL = register(
             new PillItem((new Item.Properties()).stacksTo(16)
                     .food((new FoodProperties.Builder()).nutrition(1).saturationModifier(0.1F)

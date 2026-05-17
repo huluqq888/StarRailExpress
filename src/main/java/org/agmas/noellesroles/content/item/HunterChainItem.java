@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.content.block_entity.HunterCageBlockEntity;
 import org.agmas.noellesroles.game.modes.repair.RepairGameplayEffects;
+import org.agmas.noellesroles.game.modes.repair.RepairArenaBuilder;
 import org.agmas.noellesroles.game.modes.repair.RepairModeState;
 import org.agmas.noellesroles.init.ModBlocks;
 
@@ -104,6 +105,7 @@ public class HunterChainItem extends Item {
                 return InteractionResult.FAIL;
             }
             BlockState state = ModBlocks.HUNTER_CAGE.defaultBlockState();
+            RepairArenaBuilder.trackGameplayPlacement(level, cagePos);
             level.setBlockAndUpdate(cagePos, state);
             if (level.getBlockEntity(cagePos) instanceof HunterCageBlockEntity created) {
                 cage = created;

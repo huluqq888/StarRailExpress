@@ -52,10 +52,7 @@ import org.agmas.noellesroles.game.roles.killer.shadow_falcon.ShadowFalconPlayer
 import org.agmas.noellesroles.game.roles.neutral.admirer.AdmirerPlayerComponent;
 import org.agmas.noellesroles.game.roles.neutral.puppeteer.PuppeteerPlayerComponent;
 import org.agmas.noellesroles.game.roles.neutral.slippery_ghost.SlipperyGhostPlayerComponent;
-import org.agmas.noellesroles.init.FunnyItems;
-import org.agmas.noellesroles.init.ModEffects;
-import org.agmas.noellesroles.init.ModEntities;
-import org.agmas.noellesroles.init.ModItems;
+import org.agmas.noellesroles.init.*;
 import org.agmas.noellesroles.packet.*;
 import org.agmas.noellesroles.packet.Loot.*;
 import org.agmas.noellesroles.role.ModRoles;
@@ -168,6 +165,7 @@ public class RicesRoleRhapsody implements ModInitializer {
 
         // 4. 注册实体
         ModEntities.init();
+        ModMenus.initialize();
 
         // 5. 注册 ScreenHandlers
         ModScreenHandlers.init();

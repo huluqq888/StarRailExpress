@@ -1,5 +1,6 @@
 package org.agmas.noellesroles.game.modes.repair;
 
+import io.wifi.starrailexpress.game.data.MapConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +35,14 @@ public final class RepairArenaBuilder {
         ArenaState state = new ArenaState();
         ARENAS.put(level, state);
         buildSelectionRoom(level, state, players);
-        buildGameplayStructures(level, state);
+        MapConfig.RepairConfig repairConfig = RepairMapRuntimeConfig.current(level).orElse(null);
+        if (repairConfig != null) {
+            buildConfiguredGameplay(level, state, repairConfig);
+        } else {
+            buildGameplayStructures(level, state);
+        }
+        RepairLootSpawner.prepare(level, repairConfig);
+        RepairLockedDoorState.prepare(level, repairConfig);
         placePlayers(level, state, players);
     }
 
@@ -83,6 +91,15 @@ public final class RepairArenaBuilder {
         }
         finishSelection(level, state);
         restoreBlocks(level, state.gameplayBlocks);
+        RepairLootSpawner.reset(level);
+        RepairLockedDoorState.reset(level);
+    }
+
+    public static void trackGameplayPlacement(ServerLevel level, BlockPos pos) {
+        ArenaState state = ARENAS.get(level);
+        if (state != null) {
+            snapshot(level, state.gameplayBlocks, pos);
+        }
     }
 
     private static void finishSelection(ServerLevel level, ArenaState state) {
@@ -177,7 +194,7 @@ public final class RepairArenaBuilder {
     private static void buildGameplayStructures(ServerLevel level, ArenaState state) {
         BlockPos center = level.getSharedSpawnPos();
         int[][] stationOffsets = {
-                { 0, -18 }, { 17, -7 }, { 14, 16 }, { -14, 16 }, { -17, -7 }
+                { 0, -18 }, { 17, -7 }, { -17, -7 }
         };
         for (int[] offset : stationOffsets) {
             BlockPos pos = surface(level, center.getX() + offset[0], center.getZ() + offset[1]);
@@ -209,7 +226,7 @@ public final class RepairArenaBuilder {
         };
         for (int[] offset : supplyOffsets) {
             BlockPos pos = surface(level, center.getX() + offset[0], center.getZ() + offset[1]);
-            placeGameplay(level, state, pos, ModBlocks.REPAIR_SUPPLY_CRATE.defaultBlockState());
+            placeGameplay(level, state, pos, ModBlocks.HOTBAR_STORAGE.defaultBlockState());
         }
 
         int[][] palletOffsets = {
@@ -224,6 +241,57 @@ public final class RepairArenaBuilder {
             BlockPos wall = surface(level, center.getX() + i * 4, center.getZ());
             placeGameplay(level, state, wall, Blocks.STONE_BRICKS.defaultBlockState());
             placeGameplay(level, state, wall.above(), Blocks.MOSSY_STONE_BRICKS.defaultBlockState());
+        }
+    }
+
+    private static void buildConfiguredGameplay(ServerLevel level, ArenaState state, MapConfig.RepairConfig config) {
+        for (MapConfig.CloneEntry clone : config.cloneEntries) {
+            cloneBlocks(level, state, clone.source.toBlockPos(), clone.target.toBlockPos(), clone.size.toBlockPos());
+        }
+        for (MapConfig.Pos pos : config.repairStations) {
+            placeGameplay(level, state, pos.toBlockPos(), ModBlocks.REPAIR_STATION.defaultBlockState());
+        }
+        for (MapConfig.Pos pos : config.trialStands) {
+            placeGameplay(level, state, pos.toBlockPos(), ModBlocks.HUNTER_CAGE.defaultBlockState());
+        }
+        for (MapConfig.LootPointEntry point : config.lootPoints) {
+            BlockPos pos = point.pos.toBlockPos();
+            if (level.getBlockState(pos).canBeReplaced()) {
+                placeGameplay(level, state, pos, ModBlocks.HOTBAR_STORAGE.defaultBlockState());
+            } else {
+                snapshot(level, state.gameplayBlocks, pos);
+            }
+        }
+    }
+
+    private static void cloneBlocks(ServerLevel level, ArenaState state, BlockPos source, BlockPos target, BlockPos size) {
+        int dx = Math.max(1, Math.abs(size.getX()));
+        int dy = Math.max(1, Math.abs(size.getY()));
+        int dz = Math.max(1, Math.abs(size.getZ()));
+        for (int x = 0; x < dx; x++) {
+            for (int y = 0; y < dy; y++) {
+                for (int z = 0; z < dz; z++) {
+                    BlockPos src = source.offset(x, y, z);
+                    BlockPos dst = target.offset(x, y, z);
+                    snapshot(level, state.gameplayBlocks, dst);
+                    BlockState blockState = level.getBlockState(src);
+                    CompoundTag blockEntityTag = null;
+                    BlockEntity sourceEntity = level.getBlockEntity(src);
+                    if (sourceEntity != null) {
+                        blockEntityTag = sourceEntity.saveWithFullMetadata(level.registryAccess());
+                    }
+                    level.setBlock(dst, blockState, Block.UPDATE_ALL);
+                    if (blockEntityTag != null && level.getBlockEntity(dst) instanceof BlockEntity targetEntity) {
+                        CompoundTag tag = blockEntityTag.copy();
+                        tag.putInt("x", dst.getX());
+                        tag.putInt("y", dst.getY());
+                        tag.putInt("z", dst.getZ());
+                        targetEntity.loadWithComponents(tag, level.registryAccess());
+                        targetEntity.setChanged();
+                    }
+                    level.getLightEngine().checkBlock(dst);
+                }
+            }
         }
     }
 

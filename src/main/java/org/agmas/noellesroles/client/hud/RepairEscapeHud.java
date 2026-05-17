@@ -16,7 +16,10 @@ import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.component.RepairRolePlayerComponent;
 import org.agmas.noellesroles.game.modes.repair.RepairModeState;
 import org.agmas.noellesroles.game.modes.repair.RepairRoleDefinition;
+import org.agmas.noellesroles.init.ModBlocks;
 import org.agmas.noellesroles.role.ModRoles;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +60,7 @@ public final class RepairEscapeHud {
 
         renderMainPanel(graphics, player, component, 8, Math.max(8, height - MAIN_H - 50), tick);
         renderEventPanel(graphics, component, Mth.clamp(width / 2 - EVENT_W / 2, 8, width - EVENT_W - 8), 8);
+        renderSearchAndLockPrompt(graphics, player, component, width, height, tick);
         renderCombatCues(graphics, width, height, tick);
         renderCoinToasts(graphics, width, height, tick);
     }
@@ -149,6 +153,32 @@ public final class RepairEscapeHud {
         graphics.drawString(client.font, Component.literal(Math.max(0, component.currentEventTicks / 20) + "s"),
                 x + EVENT_W - 30, y + 6, 0xFFFFC857);
         drawPixelBar(graphics, x + 8, y + 18, EVENT_W - 16, 4, danger / 100.0F, 0xFF251007, accent);
+    }
+
+    private static void renderSearchAndLockPrompt(FakeGuiGraphics graphics, LocalPlayer player,
+            RepairRolePlayerComponent component, int width, int height, long tick) {
+        Minecraft client = Minecraft.getInstance();
+        Font font = client.font;
+        int centerX = width / 2;
+        int centerY = height / 2;
+        if (component.searchTarget.present() && component.searchTotalTicks > 0) {
+            float pct = Mth.clamp((tick - component.searchStartTick) / (float) component.searchTotalTicks, 0.0F, 1.0F);
+            drawPixelBar(graphics, centerX - 42, centerY - 31, 84, 6, pct, 0xDD1A0C05, 0xFFFFC857);
+            drawFitted(graphics, font, Component.translatable(component.searchPromptKey), centerX - 44,
+                    centerY - 43, 88, 0xFFFFE6A3);
+            return;
+        }
+        if (component.lockPromptKey != null && !component.lockPromptKey.isEmpty()) {
+            drawFitted(graphics, font, Component.literal(component.lockPromptKey), centerX - 64, centerY + 20,
+                    128, 0xFFFF8A80);
+            return;
+        }
+        if (client.hitResult instanceof BlockHitResult blockHit && client.hitResult.getType() == HitResult.Type.BLOCK
+                && client.level != null && client.level.getBlockState(blockHit.getBlockPos()).is(ModBlocks.HOTBAR_STORAGE)
+                && player.distanceToSqr(blockHit.getBlockPos().getCenter()) <= 4.8D * 4.8D) {
+            drawFitted(graphics, font, Component.translatable("hud.noellesroles.repair.search_hint"),
+                    centerX + 10, centerY + 8, 104, 0xFFFFE6A3);
+        }
     }
 
     private static int skillCooldown(RepairRolePlayerComponent component, long tick) {

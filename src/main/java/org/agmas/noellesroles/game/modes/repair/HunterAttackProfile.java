@@ -30,6 +30,10 @@ public record HunterAttackProfile(
         ParticleOptions hitParticle,
         SoundEvent hitSound) {
     public static HunterAttackProfile of(String roleId, String pluginId) {
+        return of(roleId, pluginId, "blade");
+    }
+
+    public static HunterAttackProfile of(String roleId, String pluginId, String weaponId) {
         HunterAttackProfile profile = switch (roleId) {
             case "brute" -> new HunterAttackProfile("brute", 15, 55, 20 * 26, 2.9D, 4.0F, 65, 2, 0.9D,
                     ParticleTypes.EXPLOSION, SoundEvents.GENERIC_EXPLODE.value());
@@ -40,7 +44,7 @@ public record HunterAttackProfile(
             default -> new HunterAttackProfile("basic", 15, 45, 20 * 20, 3.2D, 3.0F, 50, 1, 0.55D,
                     ParticleTypes.SWEEP_ATTACK, SoundEvents.PLAYER_ATTACK_STRONG);
         };
-        return switch (pluginId) {
+        profile = switch (pluginId) {
             case "laceration" -> new HunterAttackProfile(profile.id + "_laceration", profile.windupTicks,
                     profile.cooldownTicks + 5, profile.secondHitWindowTicks + 20, profile.reach, profile.damage + 1.0F,
                     profile.slowTicks, profile.slowAmplifier, profile.knockback, ParticleTypes.DAMAGE_INDICATOR,
@@ -57,6 +61,19 @@ public record HunterAttackProfile(
                     profile.cooldownTicks, profile.secondHitWindowTicks + 40, profile.reach, profile.damage,
                     profile.slowTicks + 10, profile.slowAmplifier, profile.knockback, ParticleTypes.ENCHANT,
                     SoundEvents.ANVIL_PLACE);
+            default -> profile;
+        };
+        return switch (weaponId) {
+            case "hammer" -> new HunterAttackProfile(profile.id + "_hammer", 15,
+                    Math.max(profile.cooldownTicks + 14, 64), profile.secondHitWindowTicks + 40,
+                    2.65D, profile.damage + 1.2F, profile.slowTicks + 25,
+                    Math.max(profile.slowAmplifier + 1, 2), profile.knockback + 0.35D,
+                    ParticleTypes.EXPLOSION, SoundEvents.ANVIL_LAND);
+            case "hook" -> new HunterAttackProfile(profile.id + "_hook", 15,
+                    Math.max(42, profile.cooldownTicks + 4), profile.secondHitWindowTicks,
+                    4.35D, Math.max(2.0F, profile.damage - 0.4F), profile.slowTicks,
+                    profile.slowAmplifier, Math.max(0.25D, profile.knockback - 0.15D),
+                    ParticleTypes.SCULK_SOUL, SoundEvents.CHAIN_PLACE);
             default -> profile;
         };
     }

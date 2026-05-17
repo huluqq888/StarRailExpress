@@ -129,8 +129,11 @@ public record RepairPrimarySkillC2SPacket() implements CustomPacketPayload {
     }
 
     private static void runnerSkill(ServerLevel level, ServerPlayer player) {
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20 * 7, 2, false, true, true));
-        player.addEffect(new MobEffectInstance(MobEffects.JUMP, 20 * 7, 1, false, true, true));
+        Vec3 look = player.getLookAngle().normalize();
+        Vec3 current = player.getDeltaMovement();
+        player.setDeltaMovement(look.x * 2.15D, Math.max(current.y, 0.22D), look.z * 2.15D);
+        player.hurtMarked = true;
+        player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 20 * 2, 0, false, true, true));
         start(level, player, 20 * 26, "runner_vault", SoundEvents.TRIDENT_RIPTIDE_1.value(), ParticleTypes.CLOUD);
     }
 

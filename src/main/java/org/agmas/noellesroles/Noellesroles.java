@@ -161,6 +161,7 @@ public class Noellesroles implements ModInitializer {
         ModEventsRegister.registerEvents();
         org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaEventHandler.register();
         org.agmas.noellesroles.game.modes.repair.RepairCombatEvents.register();
+        org.agmas.noellesroles.game.modes.repair.RepairWorldInteractions.register();
 
         // 注册命令
         BroadcastCommand.register();
@@ -180,6 +181,7 @@ public class Noellesroles implements ModInitializer {
         EggClearCommand.register();
         RepairShopCommand.register();
         RepairRoleCommand.register();
+        RepairPresetCommand.register();
 
         // 加载预设配置
         Preset.PresetManager.loadPresets();

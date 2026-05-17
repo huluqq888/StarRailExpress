@@ -40,6 +40,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -109,6 +110,7 @@ import static org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKille
 public class NoellesrolesClient implements ClientModInitializer {
     public static boolean hasInitStatusBar = false;
     public static int insanityTime = 0;
+    private static BlockPos repairHeldSearchTarget = null;
     public static KeyMapping roleIntroClientBind = KeyBindingHelper
             .registerKeyBinding(new KeyMapping("key." + Noellesroles.MOD_ID + ".role_intro",
                     InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.starrailexpress.keybinds"));
@@ -255,7 +257,7 @@ public class NoellesrolesClient implements ClientModInitializer {
             return true;
         });
         CommonClientHudRenderer.registerRenderersEvent();
-
+        MenuScreens.register(ModMenus.HOTBAR_STORAGE, HotbarStorageScreen::new);
         WorldRenderEvents.AFTER_TRANSLUCENT.register((renderContext) -> {
             TaskBlockOverlayRenderer.render(renderContext);
         });
@@ -930,6 +932,7 @@ public class NoellesrolesClient implements ClientModInitializer {
                     ClientPlayNetworking.send(new org.agmas.noellesroles.packet.RepairCarryStruggleC2SPacket("right"));
                 }
             }
+            handleRepairSearchInput(client);
             if (client.player.isCreative()) {
                 if (foolPrayerBind.consumeClick()) {
                     ClientPlayNetworking
@@ -1349,5 +1352,25 @@ public class NoellesrolesClient implements ClientModInitializer {
             return entry != null && entry.getGameMode() == GameType.ADVENTURE;
         }
         return false;
+    }
+
+    private static void handleRepairSearchInput(Minecraft client) {
+        if (client.player == null || client.level == null || client.screen != null) {
+            return;
+        }
+        if (!(client.hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit)
+                || !client.level.getBlockState(blockHit.getBlockPos()).is(ModBlocks.HOTBAR_STORAGE)
+                || !client.options.keyUse.isDown()) {
+            if (repairHeldSearchTarget != null) {
+                ClientPlayNetworking.send(new RepairSearchCancelC2SPacket());
+                repairHeldSearchTarget = null;
+            }
+            return;
+        }
+        BlockPos pos = blockHit.getBlockPos();
+        if (!pos.equals(repairHeldSearchTarget)) {
+            repairHeldSearchTarget = pos;
+            ClientPlayNetworking.send(new RepairSearchBeginC2SPacket(pos));
+        }
     }
 }

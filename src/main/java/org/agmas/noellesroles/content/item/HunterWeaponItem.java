@@ -1,7 +1,8 @@
 package org.agmas.noellesroles.content.item;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.particles.ParticleTypes;
+import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.game.ServerTaskInfoClasses;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -9,7 +10,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,8 +34,15 @@ import org.agmas.noellesroles.packet.RepairCombatFeedbackS2CPacket;
 import java.util.List;
 
 public class HunterWeaponItem extends Item {
+    private final String weaponId;
+
     public HunterWeaponItem(Properties properties) {
+        this("blade", properties);
+    }
+
+    public HunterWeaponItem(String weaponId, Properties properties) {
         super(properties);
+        this.weaponId = weaponId;
     }
 
     @Override
@@ -48,43 +55,73 @@ public class HunterWeaponItem extends Item {
                 return InteractionResultHolder.fail(stack);
             }
         }
-        player.startUsingItem(hand);
-        return InteractionResultHolder.consume(stack);
+        if (!(player instanceof ServerPlayer hunter) || !(level instanceof ServerLevel serverLevel)) {
+            return InteractionResultHolder.consume(stack);
+        }
+        var hunterComponent = ModComponents.REPAIR_ROLES.get(hunter);
+        HunterAttackProfile profile = HunterAttackProfile.of(hunterComponent.activeRole,
+                hunterComponent.activeAttackPlugin, weaponId);
+        hunter.getCooldowns().addCooldown(this, profile.cooldownTicks());
+        hunter.addEffect(new net.minecraft.world.effect.MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
+                profile.windupTicks() + 4, 9, false, false, true));
+        level.playSound(null, hunter.blockPosition(), windupSound(), SoundSource.PLAYERS, 0.8F, 0.8F);
+        RepairModeState.broadcastCombatFeedback(serverLevel, RepairCombatFeedbackS2CPacket.ATTACK, hunter,
+                hunter.getX(), hunter.getY() + 1.0D, hunter.getZ(), 24.0D);
+        GameUtils.serverTaskQueue.add(new ServerTaskInfoClasses.SchedulerTask(profile.windupTicks(), () ->
+                executeDelayedAttack(hunter, stack, profile)));
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
-    @Override
-    public void releaseUsing(ItemStack stack, Level level, LivingEntity livingEntity, int timeLeft) {
-        if (!(livingEntity instanceof ServerPlayer hunter) || !(level instanceof ServerLevel serverLevel)) {
+    private void executeDelayedAttack(ServerPlayer hunter, ItemStack stack, HunterAttackProfile profile) {
+        if (!(hunter.level() instanceof ServerLevel serverLevel)) {
             return;
         }
         var hunterComponent = ModComponents.REPAIR_ROLES.get(hunter);
-        HunterAttackProfile profile = HunterAttackProfile.of(hunterComponent.activeRole, hunterComponent.activeAttackPlugin);
-        int charged = getUseDuration(stack, hunter) - timeLeft;
-        if (charged < profile.windupTicks() || !RepairModeState.canUseHunterUtility(hunter)
-                || hunterComponent.carrying != null
-                || hunter.getCooldowns().isOnCooldown(this)) {
+        if (!RepairModeState.canUseHunterUtility(hunter) || hunterComponent.carrying != null) {
             return;
         }
-
         hunter.swing(hunter.getUsedItemHand(), true);
-        hunter.getCooldowns().addCooldown(this, profile.cooldownTicks());
-        level.playSound(null, hunter.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9F, 0.85F);
-        RepairModeState.broadcastCombatFeedback(serverLevel, RepairCombatFeedbackS2CPacket.ATTACK, hunter,
-                hunter.getX(), hunter.getY() + 1.0D, hunter.getZ(), 24.0D);
-
+        serverLevel.playSound(null, hunter.blockPosition(), releaseSound(), SoundSource.PLAYERS, 0.95F, 0.85F);
         ServerPlayer target = findTarget(hunter, serverLevel, profile.reach());
+        String plugin = hunterComponent.activeAttackPlugin;
         hunterComponent.activeAttackPlugin = "";
         hunterComponent.sync();
         if (target == null) {
-            level.playSound(null, hunter.blockPosition(), SoundEvents.PLAYER_ATTACK_NODAMAGE, SoundSource.PLAYERS, 0.8F, 0.7F);
+            serverLevel.playSound(null, hunter.blockPosition(), SoundEvents.PLAYER_ATTACK_NODAMAGE, SoundSource.PLAYERS,
+                    0.8F, 0.7F);
             return;
         }
-
-        if (profile.applyHit(hunter, target)) {
-            if (!hunter.getAbilities().instabuild) {
-                stack.hurtAndBreak(1, hunter, LivingEntity.getSlotForHand(hunter.getUsedItemHand()));
+        boolean hit = profile.applyHit(hunter, target);
+        if ("hammer".equals(weaponId)) {
+            for (ServerPlayer splash : serverLevel.players()) {
+                if (splash != target && splash.distanceToSqr(target) <= 2.4D * 2.4D && isValidVictim(hunter, splash)) {
+                    profile.applyHit(hunter, splash);
+                }
             }
+        } else if ("hook".equals(weaponId)) {
+            Vec3 pull = hunter.position().subtract(target.position()).normalize();
+            target.push(pull.x * 0.85D, 0.08D, pull.z * 0.85D);
+            target.hurtMarked = true;
         }
+        if (hit && !hunter.getAbilities().instabuild) {
+            stack.hurtAndBreak(1, hunter, LivingEntity.getSlotForHand(hunter.getUsedItemHand()));
+        }
+    }
+
+    private net.minecraft.sounds.SoundEvent windupSound() {
+        return switch (weaponId) {
+            case "hammer" -> SoundEvents.ANVIL_PLACE;
+            case "hook" -> SoundEvents.CHAIN_PLACE;
+            default -> SoundEvents.PLAYER_ATTACK_SWEEP;
+        };
+    }
+
+    private net.minecraft.sounds.SoundEvent releaseSound() {
+        return switch (weaponId) {
+            case "hammer" -> SoundEvents.ANVIL_LAND;
+            case "hook" -> SoundEvents.CHAIN_BREAK;
+            default -> SoundEvents.PLAYER_ATTACK_SWEEP;
+        };
     }
 
     private ServerPlayer findTarget(ServerPlayer hunter, ServerLevel level, double reach) {

@@ -80,6 +80,8 @@ public class RoleShopHandler {
   private static void registerRepairModeShops() {
     var hunterCommon = new ArrayList<ShopEntry>();
     hunterCommon.add(new ShopEntry(ModItems.HUNTER_WEAPON.getDefaultInstance(), 45, ShopEntry.Type.WEAPON));
+    hunterCommon.add(new ShopEntry(ModItems.HUNTER_HAMMER.getDefaultInstance(), 70, ShopEntry.Type.WEAPON));
+    hunterCommon.add(new ShopEntry(ModItems.HUNTER_HOOK.getDefaultInstance(), 65, ShopEntry.Type.WEAPON));
     hunterCommon.add(new ShopEntry(ModItems.HUNTER_CHAIN.getDefaultInstance(), 55, ShopEntry.Type.TOOL));
     hunterCommon.add(new ShopEntry(new ItemStack(ModBlocks.HUNTER_SNARE.asItem(), 2), 35, ShopEntry.Type.TOOL));
     hunterCommon.add(new ShopEntry(ModItems.HUNTER_PLUGIN_LACERATION.getDefaultInstance(), 32, ShopEntry.Type.TOOL));
@@ -106,6 +108,8 @@ public class RoleShopHandler {
     var mechanic = new ArrayList<ShopEntry>();
     mechanic.add(new ShopEntry(ModItems.REPAIR_TOOLBOX.getDefaultInstance(), 45, ShopEntry.Type.TOOL));
     mechanic.add(new ShopEntry(new ItemStack(ModItems.SPARE_PARTS, 4), 30, ShopEntry.Type.TOOL));
+    mechanic.add(new ShopEntry(ModItems.REPAIR_CROWBAR.getDefaultInstance(), 40, ShopEntry.Type.TOOL));
+    mechanic.add(new ShopEntry(ModItems.REPAIR_FUSE.getDefaultInstance(), 55, ShopEntry.Type.TOOL));
     mechanic.add(new ShopEntry(ModItems.SMOKE_PELLET.getDefaultInstance(), 25, ShopEntry.Type.TOOL));
     ShopContent.customEntries.put(ModRoles.REPAIR_MECHANIC_ID, mechanic);
 
@@ -120,12 +124,14 @@ public class RoleShopHandler {
     runner.add(new ShopEntry(ModItems.ESCAPE_GRAPPLE.getDefaultInstance(), 45, ShopEntry.Type.TOOL));
     runner.add(new ShopEntry(ModItems.DECOY_BEACON.getDefaultInstance(), 35, ShopEntry.Type.TOOL));
     runner.add(new ShopEntry(ModItems.SMOKE_PELLET.getDefaultInstance(), 30, ShopEntry.Type.TOOL));
+    runner.add(new ShopEntry(ModItems.REPAIR_OLD_KEY.getDefaultInstance(), 60, ShopEntry.Type.TOOL));
     runner.add(new ShopEntry(new ItemStack(ModItems.SPARE_PARTS, 3), 28, ShopEntry.Type.TOOL));
     ShopContent.customEntries.put(ModRoles.REPAIR_RUNNER_ID, runner);
 
     var archivist = new ArrayList<ShopEntry>();
     archivist.add(new ShopEntry(new ItemStack(ModItems.SPARE_PARTS, 5), 35, ShopEntry.Type.TOOL));
     archivist.add(new ShopEntry(ModItems.REPAIR_TOOLBOX.getDefaultInstance(), 50, ShopEntry.Type.TOOL));
+    archivist.add(new ShopEntry(ModItems.REPAIR_AREA_KEY.getDefaultInstance(), 45, ShopEntry.Type.TOOL));
     archivist.add(new ShopEntry(ModItems.RESCUE_FLARE.getDefaultInstance(), 45, ShopEntry.Type.TOOL));
     ShopContent.customEntries.put(ModRoles.REPAIR_ARCHIVIST_ID, archivist);
 
@@ -137,6 +143,7 @@ public class RoleShopHandler {
 
     var collector = new ArrayList<ShopEntry>();
     collector.add(new ShopEntry(new ItemStack(ModItems.SPARE_PARTS, 4), 28, ShopEntry.Type.TOOL));
+    collector.add(new ShopEntry(ModItems.REPAIR_GEAR_HANDLE.getDefaultInstance(), 50, ShopEntry.Type.TOOL));
     collector.add(new ShopEntry(ModItems.RESCUE_FLARE.getDefaultInstance(), 45, ShopEntry.Type.TOOL));
     collector.add(new ShopEntry(ModItems.DECOY_BEACON.getDefaultInstance(), 35, ShopEntry.Type.TOOL));
     collector.add(new ShopEntry(new ItemStack(ModItems.SMOKE_PELLET, 2), 40, ShopEntry.Type.TOOL));

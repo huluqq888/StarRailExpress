@@ -6,9 +6,11 @@ import io.wifi.starrailexpress.cca.SREGameTimeComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerShopComponent;
 import io.wifi.starrailexpress.game.GameUtils;
+import io.wifi.starrailexpress.game.data.MapConfig;
 import io.wifi.starrailexpress.network.original.AnnounceWelcomePayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -135,6 +137,8 @@ public class RepairEscapeGameMode extends GameMode {
         switch (faction) {
             case HUNTER -> {
                 player.addItem(new ItemStack(ModItems.HUNTER_WEAPON));
+                player.addItem(new ItemStack(ModItems.HUNTER_HAMMER));
+                player.addItem(new ItemStack(ModItems.HUNTER_HOOK));
                 player.addItem(new ItemStack(ModItems.HUNTER_CHAIN));
                 player.addItem(new ItemStack(ModItems.ROPE));
                 player.addItem(new ItemStack(ModBlocks.HUNTER_SNARE.asItem(), 2));
@@ -179,6 +183,7 @@ public class RepairEscapeGameMode extends GameMode {
         applyRoleTickEffects(serverWorld, gameWorldComponent);
         if (rolesFinalized) {
             RepairEventSystem.tick(serverWorld);
+            RepairSearchState.tick(serverWorld);
         }
         tickDownedAndCarriedPlayers(serverWorld);
         if (serverWorld.getGameTime() % 20 == 0) {
@@ -269,6 +274,9 @@ public class RepairEscapeGameMode extends GameMode {
     private void finalizeSelectedRoles(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         rolesFinalized = true;
         RepairArenaBuilder.finishSelection(serverWorld);
+        MapConfig.RepairConfig repairConfig = RepairMapRuntimeConfig.current(serverWorld).orElse(null);
+        int hunterSpawnIndex = 0;
+        int survivorSpawnIndex = 0;
         for (ServerPlayer player : serverWorld.players()) {
             var component = ModComponents.REPAIR_ROLES.get(player);
             RepairRoleDefinition.Faction faction = gameWorldComponent.isRole(player, ModRoles.REPAIR_HUNTER)
@@ -285,11 +293,25 @@ public class RepairEscapeGameMode extends GameMode {
             component.sync();
             gameWorldComponent.addRole(player, role.sreRole(), false);
             giveRoleSkillItem(player, role);
+            if (role.faction == RepairRoleDefinition.Faction.HUNTER) {
+                teleportToConfiguredSpawn(player, repairConfig == null ? null : repairConfig.hunterSpawns, hunterSpawnIndex++);
+            } else {
+                teleportToConfiguredSpawn(player, repairConfig == null ? null : repairConfig.survivorSpawns, survivorSpawnIndex++);
+            }
             player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
             player.displayClientMessage(Component.translatable("message.noellesroles.repair.role_locked", role.displayName())
                     .withStyle(ChatFormatting.GREEN), false);
         }
         gameWorldComponent.syncRoles();
+    }
+
+    private static void teleportToConfiguredSpawn(ServerPlayer player, List<MapConfig.Pos> spawns, int index) {
+        if (spawns == null || spawns.isEmpty()) {
+            return;
+        }
+        BlockPos pos = spawns.get(Math.floorMod(index, spawns.size())).toBlockPos();
+        player.teleportTo(player.serverLevel(), pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D,
+                player.getYRot(), player.getXRot());
     }
 
     private static int neutralTaskGoal(String roleId) {
@@ -307,8 +329,14 @@ public class RepairEscapeGameMode extends GameMode {
                 player.addItem(new ItemStack(ModItems.HUNTER_JAMMER));
                 player.addItem(new ItemStack(ModBlocks.HUNTER_SNARE.asItem(), 2));
             }
-            case "brute" -> player.addItem(new ItemStack(ModItems.HUNTER_BLINK));
-            case "tracker" -> player.addItem(new ItemStack(ModItems.HUNTER_PULSE));
+            case "brute" -> {
+                player.addItem(new ItemStack(ModItems.HUNTER_BLINK));
+                player.addItem(new ItemStack(ModItems.HUNTER_HAMMER));
+            }
+            case "tracker" -> {
+                player.addItem(new ItemStack(ModItems.HUNTER_PULSE));
+                player.addItem(new ItemStack(ModItems.HUNTER_HOOK));
+            }
             case "mechanic" -> player.addItem(new ItemStack(ModItems.REPAIR_TOOLBOX));
             case "medic" -> player.addItem(new ItemStack(ModItems.RESCUE_FLARE));
             case "runner" -> player.addItem(new ItemStack(ModItems.ESCAPE_GRAPPLE));
@@ -324,11 +352,10 @@ public class RepairEscapeGameMode extends GameMode {
         for (ServerPlayer player : serverWorld.players()) {
             String active = ModComponents.REPAIR_ROLES.get(player).activeRole;
             if ("runner".equals(active)) {
-                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
                 if (serverWorld.getGameTime() % 8 == 0) {
                     serverWorld.sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
                             player.getX(), player.getY() + 0.1D, player.getZ(),
-                            3, 0.15D, 0.05D, 0.15D, 0.01D);
+                            1, 0.08D, 0.02D, 0.08D, 0.005D);
                 }
             } else if ("brute".equals(active)) {
                 player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
@@ -456,6 +483,8 @@ public class RepairEscapeGameMode extends GameMode {
     @Override
     public void stopGame(ServerLevel world) {
         RepairArenaBuilder.restoreAll(world);
+        RepairLootSpawner.reset(world);
+        RepairLockedDoorState.reset(world);
         RepairModeState.reset(world);
         RepairEventSystem.reset(world);
         RepairForcedRoleState.clearAll();

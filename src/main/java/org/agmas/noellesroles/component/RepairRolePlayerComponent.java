@@ -50,6 +50,12 @@ public class RepairRolePlayerComponent implements RoleComponent {
     public long lastStruggleTick = -1000L;
     public String activeAttackPlugin = "";
     public String forcedRole = "";
+    public BlockPosTag searchTarget = BlockPosTag.NONE;
+    public long searchStartTick = 0L;
+    public int searchTotalTicks = 0;
+    public String searchPromptKey = "";
+    public String lockPromptKey = "";
+    public String escapedRouteId = "";
     private final Player player;
 
     public RepairRolePlayerComponent(Player player) {
@@ -93,6 +99,12 @@ public class RepairRolePlayerComponent implements RoleComponent {
         lastStruggleTick = -1000L;
         activeAttackPlugin = "";
         forcedRole = "";
+        searchTarget = BlockPosTag.NONE;
+        searchStartTick = 0L;
+        searchTotalTicks = 0;
+        searchPromptKey = "";
+        lockPromptKey = "";
+        escapedRouteId = "";
         ensureStarterRoles();
         sync();
     }
@@ -201,6 +213,12 @@ public class RepairRolePlayerComponent implements RoleComponent {
             tag.putString("ActiveAttackPlugin", activeAttackPlugin);
             tag.putString("ForcedRole", forcedRole);
         }
+        searchTarget.write(tag, "SearchTarget");
+        tag.putLong("SearchStartTick", searchStartTick);
+        tag.putInt("SearchTotalTicks", searchTotalTicks);
+        tag.putString("SearchPromptKey", searchPromptKey);
+        tag.putString("LockPromptKey", lockPromptKey);
+        tag.putString("EscapedRouteId", escapedRouteId);
     }
 
     private void readData(CompoundTag tag, boolean includeRoundOnly) {
@@ -248,6 +266,12 @@ public class RepairRolePlayerComponent implements RoleComponent {
         lastStruggleTick = tag.getLong("LastStruggleTick");
         activeAttackPlugin = includeRoundOnly ? tag.getString("ActiveAttackPlugin") : "";
         forcedRole = includeRoundOnly ? tag.getString("ForcedRole") : "";
+        searchTarget = BlockPosTag.read(tag, "SearchTarget");
+        searchStartTick = tag.getLong("SearchStartTick");
+        searchTotalTicks = tag.getInt("SearchTotalTicks");
+        searchPromptKey = tag.getString("SearchPromptKey");
+        lockPromptKey = tag.getString("LockPromptKey");
+        escapedRouteId = tag.getString("EscapedRouteId");
     }
 
     public record BlockPosTag(int x, int y, int z, boolean present) {

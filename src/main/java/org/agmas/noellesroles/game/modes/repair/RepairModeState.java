@@ -27,7 +27,7 @@ import java.util.WeakHashMap;
 public final class RepairModeState {
     public static final String ESCAPED_TAG = "noellesroles_repair_escaped";
     public static final String NEUTRAL_WIN_TAG = "noellesroles_repair_neutral_win";
-    public static final int REQUIRED_REPAIRED_STATIONS = 5;
+    public static final int REQUIRED_REPAIRED_STATIONS = 3;
     public static final int REPAIR_STATION_MAX_PROGRESS = 500;
     public static final int TRIAL_EXECUTION_TICKS = 20 * 75;
     public static final float REVIVE_HEALTH = 8.0F;
@@ -67,6 +67,12 @@ public final class RepairModeState {
             component.lastStruggleTick = -1000L;
             component.activeAttackPlugin = "";
             component.forcedRole = "";
+            component.searchTarget = org.agmas.noellesroles.component.RepairRolePlayerComponent.BlockPosTag.NONE;
+            component.searchStartTick = 0L;
+            component.searchTotalTicks = 0;
+            component.searchPromptKey = "";
+            component.lockPromptKey = "";
+            component.escapedRouteId = "";
             player.setPose(Pose.STANDING);
             player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
             player.removeEffect(MobEffects.WEAKNESS);
@@ -261,6 +267,11 @@ public final class RepairModeState {
         component.lastStruggleSide = "";
         component.lastStruggleTick = -1000L;
         component.activeAttackPlugin = "";
+        component.searchTarget = org.agmas.noellesroles.component.RepairRolePlayerComponent.BlockPosTag.NONE;
+        component.searchStartTick = 0L;
+        component.searchTotalTicks = 0;
+        component.searchPromptKey = "";
+        component.lockPromptKey = "";
         player.setPose(Pose.STANDING);
         player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
         player.removeEffect(MobEffects.WEAKNESS);
