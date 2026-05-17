@@ -1,7 +1,6 @@
 package org.agmas.noellesroles.content.item;
 
 import io.wifi.starrailexpress.SRE;
-import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMSounds;
 import io.wifi.starrailexpress.network.PacketTracker;
 import io.wifi.starrailexpress.network.original.ShootMuzzleS2CPayload;
@@ -17,11 +16,11 @@ import net.minecraft.world.item.ItemStack;
 import org.agmas.noellesroles.init.ModItems;
 import org.jetbrains.annotations.NotNull;
 
-public record ZeroOneFiveShootPayload(int target) implements CustomPacketPayload {
+public record ZeroOneFiveShootPayload(int target, boolean isAutoSecondShot) implements CustomPacketPayload {
     public static final Type<ZeroOneFiveShootPayload> ID = new Type<>(SRE.id("zero_one_five_shoot"));
     public static final StreamCodec<FriendlyByteBuf, ZeroOneFiveShootPayload> CODEC = StreamCodec.composite(
-            ByteBufCodecs.INT,
-            ZeroOneFiveShootPayload::target,
+            ByteBufCodecs.INT, ZeroOneFiveShootPayload::target,
+            ByteBufCodecs.BOOL, ZeroOneFiveShootPayload::isAutoSecondShot,
             ZeroOneFiveShootPayload::new
     );
 
@@ -36,15 +35,17 @@ public record ZeroOneFiveShootPayload(int target) implements CustomPacketPayload
             ServerPlayer player = context.player();
             ItemStack mainHandStack = player.getMainHandItem();
 
-            if (player.getCooldowns().isOnCooldown(mainHandStack.getItem()))
+            // 自动第二枪不受冷却影响
+            if (!payload.isAutoSecondShot() && player.getCooldowns().isOnCooldown(mainHandStack.getItem())) {
                 return;
+            }
 
             // 检查是否是零一五枪
             if (!mainHandStack.is(ModItems.ZERO_ONE_FIVE_GUN)) {
                 return;
             }
 
-            // 检查目标
+            // 检查目标并处理命中
             boolean hit = false;
             if (player.serverLevel().getEntity(payload.target()) instanceof ServerPlayer target
                     && target.distanceToSqr(player) < 30 * 30) {
@@ -53,8 +54,18 @@ public record ZeroOneFiveShootPayload(int target) implements CustomPacketPayload
                 hit = true;
             }
 
-            // 无论是否命中，第一枪后立即触发冷却（但不影响自动第二枪）
-            player.getCooldowns().addCooldown(ModItems.ZERO_ONE_FIVE_GUN, ZeroOneFiveGunItem.getCooldown());
+            // 第一枪（不是自动第二枪）触发冷却
+            if (!payload.isAutoSecondShot()) {
+                player.getCooldowns().addCooldown(ModItems.ZERO_ONE_FIVE_GUN, ZeroOneFiveGunItem.getCooldown());
+            }
+
+            // 第一枪时发送第二枪计时器数据包给客户端
+            if (!payload.isAutoSecondShot()) {
+                for (ServerPlayer tracking : PlayerLookup.tracking(player)) {
+                    PacketTracker.sendToClient(tracking, new ZeroOneFiveSecondShotPayload(player.getId()));
+                }
+                PacketTracker.sendToClient(player, new ZeroOneFiveSecondShotPayload(player.getId()));
+            }
 
             // 播放音效
             player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(),

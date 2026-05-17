@@ -84,6 +84,7 @@ import org.agmas.noellesroles.content.entity.WheelchairFieldItemRenderer;
 import org.agmas.noellesroles.content.item.MercenaryContractItem;
 import org.agmas.noellesroles.content.item.PanItem;
 import org.agmas.noellesroles.content.item.ProblemSetItem;
+import org.agmas.noellesroles.content.item.ZeroOneFiveSecondShotHandler;
 import org.agmas.noellesroles.game.roles.Innocent.magician.MagicianPlayerComponent;
 import org.agmas.noellesroles.game.roles.killer.insane_killer.InsaneKillerPlayerComponent;
 import org.agmas.noellesroles.init.*;
@@ -820,6 +821,10 @@ public class NoellesrolesClient implements ClientModInitializer {
 
         DetectiveListenStepHandler.registerEvents();
         InvisbleHandItem.register();
+        // 注册零一五第二枪客户端处理器
+        ClientPlayNetworking.registerGlobalReceiver(
+                org.agmas.noellesroles.content.item.ZeroOneFiveSecondShotPayload.ID,
+                new ZeroOneFiveSecondShotHandler());
         OnKillerCohortDisplay.EVENT.register((player) -> {
             if (player == null)
                 return null;

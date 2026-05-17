@@ -11,7 +11,10 @@ import io.wifi.starrailexpress.content.item.SkinableItem;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.index.TMMSounds;
+import io.wifi.starrailexpress.network.PacketTracker;
+import io.wifi.starrailexpress.network.original.ShootMuzzleS2CPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -96,10 +99,10 @@ public class ZeroOneFiveGunItem extends SkinableItem {
             HitResult collision = getGunTarget(user);
             if (collision instanceof EntityHitResult entityHitResult) {
                 Entity target = entityHitResult.getEntity();
-                ClientPlayNetworking.send(new ZeroOneFiveShootPayload(target.getId()));
+                ClientPlayNetworking.send(new ZeroOneFiveShootPayload(target.getId(), false));
                 CrosshairaddonsCompat.arrowHit();
             } else {
-                ClientPlayNetworking.send(new ZeroOneFiveShootPayload(-1));
+                ClientPlayNetworking.send(new ZeroOneFiveShootPayload(-1, false));
             }
             
             user.setXRot(user.getXRot() - 4.0F);
@@ -141,9 +144,9 @@ public class ZeroOneFiveGunItem extends SkinableItem {
             // 标记目标
             shooterMarks.put(targetUUID, HIT_MARK_DURATION);
             
-            // 2秒后（40 ticks）自动开第二枪，添加到延迟队列
+            // 1.2秒后（24 ticks）自动开第二枪，添加到延迟队列
             long currentTick = target.level().getServer().getTickCount();
-            DELAYED_SHOTS.add(new DelayedShotTask(currentTick + 40, shooter, target, true));
+            DELAYED_SHOTS.add(new DelayedShotTask(currentTick + 24, shooter, target, true));
         }
     }
 
@@ -152,7 +155,7 @@ public class ZeroOneFiveGunItem extends SkinableItem {
      */
     public static void scheduleDelayedShot(ServerPlayer shooter, ServerPlayer target) {
         long currentTick = shooter.level().getServer().getTickCount();
-        DELAYED_SHOTS.add(new DelayedShotTask(currentTick + 40, shooter, target, false));
+        DELAYED_SHOTS.add(new DelayedShotTask(currentTick + 24, shooter, target, false));
     }
 
     public static int getCooldown() {
@@ -166,6 +169,12 @@ public class ZeroOneFiveGunItem extends SkinableItem {
         // 播放射击音效
         shooter.level().playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 TMMSounds.ITEM_REVOLVER_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F);
+        
+        // 发送枪口闪光给所有追踪者（包括自己）
+        for (ServerPlayer tracking : PlayerLookup.tracking(shooter)) {
+            PacketTracker.sendToClient(tracking, new ShootMuzzleS2CPayload(shooter.getId()));
+        }
+        PacketTracker.sendToClient(shooter, new ShootMuzzleS2CPayload(shooter.getId()));
         
         // 如果目标仍然存活且在范围内，造成击杀
         if (GameUtils.isPlayerAliveAndSurvival(target)) {
@@ -214,13 +223,38 @@ public class ZeroOneFiveGunItem extends SkinableItem {
             if (currentTick >= task.executeTick()) {
                 iterator.remove();
                 ServerPlayer shooter = task.shooter();
-                ServerPlayer target = task.target();
                 if (GameUtils.isPlayerAliveAndSurvival(shooter)) {
-                    // 自动射击（不受冷却影响）
-                    shootSecondShot(shooter, target);
+                    // 检查是否持有零一五枪，没持有则取消第二次自动开枪
+                    ItemStack mainHand = shooter.getMainHandItem();
+                    ItemStack offHand = shooter.getOffhandItem();
+                    if (!mainHand.is(ModItems.ZERO_ONE_FIVE_GUN) && !offHand.is(ModItems.ZERO_ONE_FIVE_GUN)) {
+                        continue;
+                    }
+                    
+                    // 射线检测当前瞄准的目标
+                    ServerPlayer currentTarget = findCurrentTarget(shooter);
+                    if (currentTarget != null) {
+                        // 自动射击（不受冷却影响）
+                        shootSecondShot(shooter, currentTarget);
+                    }
                 }
             }
         }
+    }
+    
+    /**
+     * 查找当前瞄准的目标
+     * 直接射线检测当前瞄准的目标
+     */
+    private static ServerPlayer findCurrentTarget(ServerPlayer shooter) {
+        HitResult hitResult = getGunTarget(shooter);
+        if (hitResult instanceof EntityHitResult entityHitResult) {
+            Entity entity = entityHitResult.getEntity();
+            if (entity instanceof ServerPlayer target && GameUtils.isPlayerAliveAndSurvival(target)) {
+                return target;
+            }
+        }
+        return null;
     }
     
     /**
