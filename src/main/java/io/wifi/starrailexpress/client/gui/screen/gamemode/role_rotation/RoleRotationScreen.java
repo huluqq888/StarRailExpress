@@ -475,9 +475,9 @@ public class RoleRotationScreen extends Screen {
         } else if (role.canUseKiller()) {
             return Component.translatable("display.type.role.killer").withStyle(style -> style.withColor(0xFFCC2233));
         } else if (role.isNeutralForKiller()) {
-            return Component.translatable("display.type.role.neutral_for_killer").withStyle(style -> style.withColor(0xFFAA44CC));
+            return Component.translatable("display.type.role.neutral_for_killer_2").withStyle(style -> style.withColor(0xFFAA44CC));
         } else if (role.isNeutrals()) {
-            return Component.translatable("display.type.role.neutral").withStyle(style -> style.withColor(0xFFCCAA22));
+            return Component.translatable("display.type.role.neutral_special").withStyle(style -> style.withColor(0xFFCCAA22));
         } else if (role.isVigilanteTeam()) {
             return Component.translatable("display.type.role.vigilante").withStyle(style -> style.withColor(0xFF22BBCC));
         }

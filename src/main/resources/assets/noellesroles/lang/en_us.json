@@ -1376,7 +1376,9 @@
   "display.type.role.killer": "Killer Faction",
   "display.type.role.innocent": "Civilian Faction",
   "display.type.role.neutral": "Independent Win / Special Neutral Faction",
+  "display.type.role.neutral_special": "Special Neutral",
   "display.type.role.neutral_for_killer": "Killer-aligned Neutral Faction",
+  "display.type.role.neutral_for_killer_2": "Killer-aligned Neutral",
   "display.type.role.vigilante": "Sheriff Faction",
   "screen.roleintroduce.category.modifier": "Modifiers",
   "screen.roleintroduce.detail.type": "Type:",
@@ -2207,7 +2209,7 @@
   "item.noellesroles.sealed_vanishing_cloak.tooltip.curse": "Curse: after vanishing, your presence leaks out and SAN keeps falling.",
   "item.noellesroles.sealed_doorless_key": "Doorless Key",
   "item.noellesroles.sealed_doorless_key.tooltip.boon": "Boon: perform one short blink or bypass a sealed path.",
-  "item.noellesroles.sealed_doorless_key.tooltip.curse": "Curse: the destination may drift, even into danger."
+  "item.noellesroles.sealed_doorless_key.tooltip.curse": "Curse: the destination may drift, even into danger.",
   "item.noellesroles.repair_toolbox": "Repair Toolbox",
   "item.noellesroles.repair_toolbox.tooltip": "Use on a repair station to add a strong burst of progress.",
   "item.noellesroles.spare_parts": "Spare Parts",
