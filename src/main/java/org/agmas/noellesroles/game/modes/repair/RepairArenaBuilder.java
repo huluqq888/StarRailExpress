@@ -102,6 +102,28 @@ public final class RepairArenaBuilder {
         }
     }
 
+    public static boolean isReady(ServerLevel level) {
+        return ARENAS.containsKey(level);
+    }
+
+    public static void teleportToDefaultGameplaySpawn(ServerPlayer player, boolean hunter, int index) {
+        ServerLevel level = player.serverLevel();
+        BlockPos base = defaultMansionBase(level);
+        int[][] hunterSpawns = {
+                { 22, 1, 24 }, { 22, 1, 8 }, { 6, 1, 49 }, { 38, 1, 49 }
+        };
+        int[][] survivorSpawns = {
+                { 7, 1, 8 }, { 36, 1, 8 }, { 7, 1, 36 }, { 36, 1, 36 },
+                { 5, 1, 20 }, { 39, 1, 20 }, { 22, 1, 49 }, { 22, 1, 5 }
+        };
+        int[] offset = hunter
+                ? hunterSpawns[Math.floorMod(index, hunterSpawns.length)]
+                : survivorSpawns[Math.floorMod(index, survivorSpawns.length)];
+        BlockPos pos = base.offset(offset[0], offset[1], offset[2]);
+        float yaw = hunter ? 180.0F : 0.0F;
+        player.teleportTo(level, pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, yaw, 0.0F);
+    }
+
     private static void finishSelection(ServerLevel level, ArenaState state) {
         if (state.selectionRestored) {
             return;

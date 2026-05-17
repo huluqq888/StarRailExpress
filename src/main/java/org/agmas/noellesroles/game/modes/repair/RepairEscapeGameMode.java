@@ -77,7 +77,7 @@ public class RepairEscapeGameMode extends GameMode {
         }
 
         // 将非参战玩家传送到固定庄园上方的观察者位置
-        BlockPos manorBase = RepairArenaBuilder.defaultMansionBase();
+        BlockPos manorBase = RepairArenaBuilder.defaultMansionBase(serverWorld);
         for (ServerPlayer player : serverWorld.getServer().getPlayerList().getPlayers()) {
             if (players.contains(player)) continue;
             player.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
@@ -337,7 +337,7 @@ public class RepairEscapeGameMode extends GameMode {
     private void finalizeSelectedRoles(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         rolesFinalized = true;
         RepairArenaBuilder.finishSelection(serverWorld);
-        MapConfig.RepairConfig repairConfig = null;
+        MapConfig.RepairConfig repairConfig = RepairMapRuntimeConfig.current(serverWorld).orElse(null);
         int hunterSpawnIndex = 0;
         int survivorSpawnIndex = 0;
         for (ServerPlayer player : serverWorld.players()) {
