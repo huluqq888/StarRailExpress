@@ -38,6 +38,8 @@ import org.agmas.harpymodloader.events.ModdedRoleAssigned;
 import org.agmas.harpymodloader.modded_murder.PlayerRoleWeightManager;
 import org.agmas.harpymodloader.modded_murder.RoleAssignmentPool;
 import org.agmas.noellesroles.init.ModEffects;
+import org.agmas.noellesroles.role.ModRoles;
+import org.agmas.noellesroles.role.RedHouseRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -145,16 +147,17 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
 
         // 额外再抽取5个平民职业
         ArrayList<SRERole> availableRoles = new ArrayList<>(StupidExpress.getEnableRoles(true));
-        availableRoles.removeIf(role -> 
-            role == null || 
-            role.isOtherModeRole() || 
-            !role.canBeRandomed() || 
+        availableRoles.removeIf(role ->
+            role == null ||
+            role.isOtherModeRole() ||
+            !role.canBeRandomed() ||
             role == SpecialGameModeRoles.CUSTOM_PENDING ||
             role == TMMRoles.KILLER ||
             !role.isInnocent() ||
             role.isVigilanteTeam() ||
             role.canUseKiller() ||
-            role.isNeutrals()
+            role.isNeutrals() ||
+            isSpecialCivilianRole(role)  // 排除特殊平民职业
         );
 
         // 创建平民职业池并抽取5个
@@ -220,11 +223,11 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
             }
         }
 
-        // 添加额外5个平民职业（不能相同，不能与池中已有职业重复）
+        // 添加额外5个平民职业（不能相同，不能与池中已有职业重复，且排除特殊平民职业）
         List<SRERole> usedRoles = result.stream().map(RoleInstance::role).collect(Collectors.toList());
         List<SRERole> extraInnocents = new ArrayList<>();
         List<SRERole> availableExtra = new ArrayList<>(innocentRoles);
-        availableExtra.removeIf(role -> usedRoles.contains(role));
+        availableExtra.removeIf(role -> usedRoles.contains(role) || isSpecialCivilianRole(role));
         Collections.shuffle(availableExtra, random);
         for (int i = 0; i < 5 && i < availableExtra.size() && result.size() < count; i++) {
             SRERole extraRole = availableExtra.get(i);
@@ -389,11 +392,13 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
         Random random = new Random(world.getGameTime());
 
         if (isFinalPhase) {
-            // 最后阶段：优先从杀手/警长/中立阵营抽取
+            // 最后阶段：优先从杀手/警长/中立阵营和特殊平民职业抽取
             ArrayList<SRERole> priorityRoles = new ArrayList<>();
             for (SRERole role : poolCopy) {
                 int type = PlayerRoleWeightManager.getRoleType(role);
                 if (type == 4 || type == 5 || type == 2 || type == 3) { // 杀手、警长、中立阵营
+                    priorityRoles.add(role);
+                } else if (isSpecialCivilianRole(role)) { // 特殊平民职业也要优先
                     priorityRoles.add(role);
                 }
             }
@@ -481,11 +486,13 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
         Random random = new Random(world.getGameTime());
 
         if (isFinalPhase) {
-            // 最后阶段：优先从杀手/警长/中立阵营抽取
+            // 最后阶段：优先从杀手/警长/中立阵营和特殊平民职业抽取
             ArrayList<SRERole> priorityPool = new ArrayList<>();
             for (SRERole role : rolePool) {
                 int type = PlayerRoleWeightManager.getRoleType(role);
                 if (type == 4 || type == 5 || type == 2 || type == 3) {
+                    priorityPool.add(role);
+                } else if (isSpecialCivilianRole(role)) { // 特殊平民职业也要优先
                     priorityPool.add(role);
                 }
             }
@@ -526,25 +533,27 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
     }
     
     /**
-     * 执行职业调整阶段：把剩余池子中的杀手/中立/警长职业分配给随机平民
+     * 执行职业调整阶段：把剩余池子中的杀手/中立/警长职业和特殊平民职业分配给随机平民
      */
     public void adjustRemainingRoles(ServerLevel serverWorld) {
-        // 获取剩余池子中的杀手/中立/警长职业
+        // 获取剩余池子中的杀手/中立/警长职业和特殊平民职业
         ArrayList<SRERole> remainingPriorityRoles = new ArrayList<>();
         ArrayList<SRERole> remainingPool = new ArrayList<>(rolePool);
-        
+
         for (SRERole role : remainingPool) {
             int roleType = PlayerRoleWeightManager.getRoleType(role);
             // type 4=Killer, 5=Vigilante, 2=Neutral, 3=Evil/Arson
             if (roleType == 4 || roleType == 5 || roleType == 2 || roleType == 3) {
                 remainingPriorityRoles.add(role);
+            } else if (isSpecialCivilianRole(role)) { // 特殊平民职业也要优先替换
+                remainingPriorityRoles.add(role);
             }
         }
-        
+
         if (remainingPriorityRoles.isEmpty()) {
             return;
         }
-        
+
         // 获取场上已分配职业的平民玩家
         List<ServerPlayer> civilianPlayers = new ArrayList<>();
         for (ServerPlayer player : serverWorld.players()) {
@@ -556,33 +565,33 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
                 }
             }
         }
-        
+
         if (civilianPlayers.isEmpty()) {
             return;
         }
-        
+
         Random random = new Random(serverWorld.getGameTime());
-        
-        // 随机分配剩余的杀手/中立/警长职业给平民
+
+        // 随机分配剩余的杀手/中立/警长职业和特殊平民职业给平民
         for (SRERole priorityRole : new ArrayList<>(remainingPriorityRoles)) {
             if (civilianPlayers.isEmpty()) {
                 break;
             }
-            
+
             // 随机选择一个平民
             ServerPlayer targetPlayer = civilianPlayers.remove(random.nextInt(civilianPlayers.size()));
             UUID targetUuid = targetPlayer.getUUID();
-            
+
             // 移除该平民的旧职业（从池子中移除）
             SRERole oldRole = selectedRoles.get(targetUuid);
             if (oldRole != null && !rolePool.contains(oldRole)) {
                 rolePool.add(oldRole);
             }
-            
+
             // 分配新职业
             selectedRoles.put(targetUuid, priorityRole);
             rolePool.remove(priorityRole);
-            
+
             // 通知玩家
             targetPlayer.displayClientMessage(
                     Component.translatable("gui.sre.role_rotation.role_adjusted",
@@ -639,6 +648,28 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
 
     public int getFinalPhaseThreshold() {
         return finalPhaseThreshold;
+    }
+
+    // ==================== 特殊平民职业检查 ====================
+
+    /**
+     * 特殊平民职业列表：潜水员、医生、飞行员、锁匠、琪露诺（BAKA）、帕秋莉
+     * 这些职业在最后阶段和职业调整阶段需要被优先选取
+     */
+    private static final Set<SRERole> SPECIAL_CIVILIAN_ROLES = Set.of(
+            ModRoles.DIVER,
+            ModRoles.DOCTOR,
+            ModRoles.PILOT,
+            ModRoles.LOCKSMITH,
+            RedHouseRoles.BAKA,
+            RedHouseRoles.PACHURI
+    );
+
+    /**
+     * 检查是否是特殊平民职业
+     */
+    private boolean isSpecialCivilianRole(SRERole role) {
+        return SPECIAL_CIVILIAN_ROLES.contains(role);
     }
 
     // ==================== NBT 序列化 ====================
