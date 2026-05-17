@@ -75,9 +75,6 @@ public final class RepairSearchState {
                 }
             }
         }
-        if (reward.isEmpty()) {
-            reward = RepairLootSpawner.take(level, pos);
-        }
         if (!reward.isEmpty()) {
             player.addItem(reward);
             player.displayClientMessage(Component.translatable("message.noellesroles.repair.search_found",
@@ -86,7 +83,24 @@ public final class RepairSearchState {
                 RepairModeState.addNeutralTaskProgress(player, "collector", 1, RepairModeState.COLLECTOR_TASK_NEEDED);
             }
         } else {
-            player.displayClientMessage(Component.translatable("message.noellesroles.repair.search_empty"), true);
+            RepairLootSpawner.Reward generated = RepairLootSpawner.take(level, pos);
+            switch (generated.kind()) {
+                case ITEM -> {
+                    ItemStack stack = generated.stack();
+                    player.addItem(stack);
+                    player.displayClientMessage(Component.translatable("message.noellesroles.repair.search_found",
+                            stack.getHoverName()), true);
+                    if ("collector".equals(ModComponents.REPAIR_ROLES.get(player).activeRole)) {
+                        RepairModeState.addNeutralTaskProgress(player, "collector", 1, RepairModeState.COLLECTOR_TASK_NEEDED);
+                    }
+                }
+                case COINS -> {
+                    RepairModeState.awardCoins(player, generated.coins(), "repair_coin_source.search");
+                    player.displayClientMessage(Component.translatable("message.noellesroles.repair.search_coins",
+                            generated.coins()), true);
+                }
+                case EMPTY -> player.displayClientMessage(Component.translatable("message.noellesroles.repair.search_empty"), true);
+            }
         }
         cancel(player);
     }

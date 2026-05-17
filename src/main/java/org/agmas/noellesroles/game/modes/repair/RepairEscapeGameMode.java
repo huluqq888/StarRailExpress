@@ -402,8 +402,9 @@ public class RepairEscapeGameMode extends GameMode {
                         && ModComponents.REPAIR_ROLES.get(carried).downed
                         && !GameUtils.isPlayerEliminated(carried)
                         && !carried.getTags().contains(RepairModeState.ESCAPED_TAG)) {
-                    carried.teleportTo(player.getX() - Math.sin(Math.toRadians(player.getYRot())) * 0.75D,
-                            player.getY(), player.getZ() + Math.cos(Math.toRadians(player.getYRot())) * 0.75D);
+                    carried.teleportTo(player.getX(), player.getY() + 2.15D, player.getZ());
+                    carried.setDeltaMovement(0.0D, 0.0D, 0.0D);
+                    carried.resetFallDistance();
                     carried.addEffect(new MobEffectInstance(ModEffects.NO_COLLIDE, 20, 0, false, false, true));
                     player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 10, 1, false, false, true));
                     player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 10, 4, false, false, true));

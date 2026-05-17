@@ -2514,5 +2514,16 @@
   "hud.noellesroles.repair.injury.trial": "审判中",
   "hud.noellesroles.repair.downed_struggle_line": "Shift挣扎 %s%%",
   "message.noellesroles.repair.downed_struggle_relief": "你挣扎出短暂控制空隙，但仍保持倒地。",
-  "hud.noellesroles.repair.route.default_mansion": "大宅出口"
+  "hud.noellesroles.repair.route.default_mansion": "大宅出口",
+  "item.noellesroles.repair_medkit": "急救包",
+  "item.noellesroles.repair_medkit.tooltip": "右键治疗自己并修复一层伤势；不能救起倒地或审判中的玩家。",
+  "message.noellesroles.repair.search_coins": "找到 %s 枚金币",
+  "message.noellesroles.repair.medkit_cannot_use": "当前状态无法使用急救包",
+  "message.noellesroles.repair.medkit_full": "你现在不需要治疗",
+  "message.noellesroles.repair.medkit_used": "已使用急救包",
+  "repair_coin_source.search": "搜索奖励",
+  "hud.noellesroles.repair.route.main_gate": "庄园主门",
+  "hud.noellesroles.repair.route.secret_tunnel": "旧钥匙密道",
+  "hud.noellesroles.repair.route.service_lift": "维修升降机",
+  "hud.noellesroles.repair.route.boiler_pipe": "锅炉管道出口"
 }
