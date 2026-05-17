@@ -93,46 +93,51 @@ public class HunterChainItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        BlockPos cagePos = context.getClickedPos();
-        if (!(level.getBlockEntity(cagePos) instanceof HunterCageBlockEntity)) {
-            BlockPos relative = cagePos.relative(context.getClickedFace());
-            if (level.getBlockState(relative).canBeReplaced()) {
-                cagePos = relative;
-            }
-        }
-        HunterCageBlockEntity cage = level.getBlockEntity(cagePos) instanceof HunterCageBlockEntity existing
+        BlockPos cagePos = findExistingCage(level, context.getClickedPos());
+        HunterCageBlockEntity cage = cagePos != null && level.getBlockEntity(cagePos) instanceof HunterCageBlockEntity existing
                 ? existing
                 : null;
         if (cage == null) {
-            cagePos = findCagePos(level, cagePos);
-            if (cagePos == null) {
+            BlockPos placementPos = context.getClickedPos().relative(context.getClickedFace());
+            if (!level.getBlockState(placementPos).canBeReplaced()) {
+                placementPos = findCagePos(level, context.getClickedPos());
+            }
+            if (placementPos == null) {
                 hunter.displayClientMessage(Component.translatable("message.noellesroles.repair.no_cage_space")
                         .withStyle(ChatFormatting.RED), true);
                 return InteractionResult.FAIL;
             }
             BlockState state = ModBlocks.HUNTER_CAGE.defaultBlockState();
-            RepairArenaBuilder.trackGameplayPlacement(level, cagePos);
-            level.setBlockAndUpdate(cagePos, state);
-            if (level.getBlockEntity(cagePos) instanceof HunterCageBlockEntity created) {
+            RepairArenaBuilder.trackGameplayPlacement(level, placementPos);
+            level.setBlockAndUpdate(placementPos, state);
+            if (level.getBlockEntity(placementPos) instanceof HunterCageBlockEntity created) {
+                cagePos = placementPos;
                 cage = created;
             }
         }
-        if (cage == null || !cage.addPrisoner(prisoner.getUUID(), hunter.getUUID())) {
+        if (cage == null || cagePos == null || !cage.addPrisoner(prisoner.getUUID(), hunter.getUUID())) {
             hunter.displayClientMessage(Component.translatable("message.noellesroles.repair.trial_full")
                     .withStyle(ChatFormatting.RED), true);
             return InteractionResult.FAIL;
         }
 
-        var prisonerComponent = ModComponents.REPAIR_ROLES.get(prisoner);
-        prisonerComponent.carriedBy = null;
-        prisonerComponent.trialStand = org.agmas.noellesroles.component.RepairRolePlayerComponent.BlockPosTag.of(cagePos);
-        prisoner.teleportTo(cagePos.getX() + 0.5D, cagePos.getY(), cagePos.getZ() + 0.5D);
-        prisonerComponent.sync();
-        hunterComponent.carrying = null;
-        hunterComponent.sync();
+        RepairModeState.startTrial(hunter, prisoner, cagePos);
         RepairGameplayEffects.burst(level, cagePos.getX() + 0.5D, cagePos.getY() + 1.0D, cagePos.getZ() + 0.5D, 2);
         hunter.displayClientMessage(Component.translatable("message.noellesroles.repair.trial_started"), true);
         return InteractionResult.SUCCESS;
+    }
+
+
+    private static BlockPos findExistingCage(ServerLevel level, BlockPos clickedPos) {
+        if (level.getBlockEntity(clickedPos) instanceof HunterCageBlockEntity) {
+            return clickedPos;
+        }
+        for (BlockPos candidate : BlockPos.betweenClosed(clickedPos.offset(-2, -1, -2), clickedPos.offset(2, 1, 2))) {
+            if (level.getBlockEntity(candidate) instanceof HunterCageBlockEntity) {
+                return candidate.immutable();
+            }
+        }
+        return null;
     }
 
     private static BlockPos findCagePos(ServerLevel level, BlockPos clickedPos) {

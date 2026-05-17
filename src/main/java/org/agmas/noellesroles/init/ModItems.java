@@ -56,6 +56,9 @@ public class ModItems {
     public static final Item RESCUE_FLARE = register(
             new RescueFlareItem(new Item.Properties().stacksTo(4)),
             "rescue_flare");
+    public static final Item REPAIR_MEDKIT = register(
+            new RepairMedkitItem(new Item.Properties().stacksTo(4)),
+            "repair_medkit");
     public static final Item HUNTER_CHAIN = register(
             new HunterChainItem(new Item.Properties().stacksTo(1).durability(6)),
             "hunter_chain");
