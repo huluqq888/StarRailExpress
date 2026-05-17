@@ -218,11 +218,17 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
             }
         }
 
-        // 添加额外5个平民职业
-        int extraInnocent = 5;
-        for (int i = 0; i < extraInnocent && result.size() < count; i++) {
-            if (!innocentRoles.isEmpty()) {
-                result.add(new RoleInstance(UUID.randomUUID(), innocentRoles.get(random.nextInt(innocentRoles.size()))));
+        // 添加额外5个平民职业（不能相同，不能与池中已有职业重复）
+        List<SRERole> usedRoles = result.stream().map(RoleInstance::role).collect(Collectors.toList());
+        List<SRERole> extraInnocents = new ArrayList<>();
+        List<SRERole> availableExtra = new ArrayList<>(innocentRoles);
+        availableExtra.removeIf(role -> usedRoles.contains(role));
+        Collections.shuffle(availableExtra, random);
+        for (int i = 0; i < 5 && i < availableExtra.size() && result.size() < count; i++) {
+            SRERole extraRole = availableExtra.get(i);
+            if (!extraInnocents.contains(extraRole)) {
+                extraInnocents.add(extraRole);
+                result.add(new RoleInstance(UUID.randomUUID(), extraRole));
             }
         }
 
