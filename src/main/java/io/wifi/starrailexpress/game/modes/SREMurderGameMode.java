@@ -361,13 +361,21 @@ public class SREMurderGameMode extends GameMode {
                 neutralsPool, vigilantePool, civilianPool, true);
     }
 
+    public static List<RoleInstance> getAllRoles(int killerCount, int vigilanteCount, int neutralsCount, int playerSize,
+            int forcedRoleSize, RoleAssignmentPool killerPool, RoleAssignmentPool neutralsPool,
+            RoleAssignmentPool vigilantePool, RoleAssignmentPool civilianPool, boolean haveOccupationRoles) {
+        return getAllRoles(killerCount, vigilanteCount, neutralsCount, playerSize, forcedRoleSize, killerPool,
+                neutralsPool, vigilantePool, civilianPool, haveOccupationRoles, 5);
+    }
+
     /**
      * 新的模块化角色分配方法
      * 处理强制角色、计算各类型角色数量、创建角色池、分配角色以及处理关联角色
      */
     public static List<RoleInstance> getAllRoles(int killerCount, int vigilanteCount, int neutralsCount, int playerSize,
             int forcedRoleSize, RoleAssignmentPool killerPool, RoleAssignmentPool neutralsPool,
-            RoleAssignmentPool vigilantePool, RoleAssignmentPool civilianPool, boolean haveOccupationRoles) {
+            RoleAssignmentPool vigilantePool, RoleAssignmentPool civilianPool, boolean haveOccupationRoles,
+            int maxDepth) {
         // 第二步：创建角色池并分配角色
         // 杀手池
 
@@ -401,10 +409,12 @@ public class SREMurderGameMode extends GameMode {
             roleInstantList.add(new RoleInstance(UUID.randomUUID(), role));
         }
         List<RoleInstance> expandedRoles = roleInstantList;
+        List<RoleInstance> newRoleInstances = RoleAssignmentManager.removeOpposingJobs(roleInstantList, killerPool,
+                neutralsPool,
+                vigilantePool, civilianPool, haveOccupationRoles, maxDepth);
         if (haveOccupationRoles) {
-            expandedRoles = RoleAssignmentManager.expandWithCompanionRoles(roleInstantList);
+            expandedRoles = RoleAssignmentManager.expandWithCompanionRoles(newRoleInstances);
         }
-
         return expandedRoles;
     }
 
