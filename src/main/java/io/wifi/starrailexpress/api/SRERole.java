@@ -29,6 +29,7 @@ import org.ladysnake.cca.api.v3.component.ComponentKey;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.function.BiConsumer;
@@ -54,6 +55,7 @@ public abstract class SRERole {
     private int occupiedRoleCount = 1;
     public BiConsumer<ServerPlayer, SREGameWorldComponent> serverTickEvent = null;
     public BiConsumer<Player, SREGameWorldComponent> clientTickEvent = null;
+    public HashSet<SRERole> opposingJobs = new HashSet<>();
 
     public Random getRandom() {
         return random;
@@ -169,6 +171,52 @@ public abstract class SRERole {
 
     public int getOccupiedRoleCount() {
         return this.occupiedRoleCount;
+    }
+
+    /**
+     * 删除互斥职业
+     * 
+     * @param role
+     * @return
+     */
+    public SRERole removeOpposingJobs(SRERole role) {
+        this.opposingJobs.remove(role);
+        return this;
+    }
+
+    /**
+     * 添加双向互斥职业。互斥职业可能导致平民阵营角色数量增加。
+     * 
+     * @param role
+     * @return
+     */
+    public SRERole addTwoWayOpposingJobs(SRERole role) {
+        this.opposingJobs.add(role);
+        role.opposingJobs.add(this);
+        return this;
+    }
+
+    /**
+     * 添加单向互斥职业。互斥职业可能导致平民阵营角色数量增加。
+     * 
+     * @param role
+     * @return
+     */
+    public SRERole addOpposingJobs(SRERole role) {
+        this.opposingJobs.add(role);
+        return this;
+    }
+
+    /**
+     * 设置单向互斥职业
+     * 
+     * @param roles
+     * @return
+     */
+    public SRERole setOpposingJobs(List<SRERole> roles) {
+        this.opposingJobs.clear();
+        this.opposingJobs.addAll(roles);
+        return this;
     }
 
     public SRERole setOccupiedRoleCount(int occupiedRoleCount) {
@@ -693,6 +741,7 @@ public abstract class SRERole {
 
     /**
      * 获取小概率启用值
+     * 
      * @return
      */
     public int getEnableRareChance() {
@@ -737,6 +786,10 @@ public abstract class SRERole {
         return texture;
     }
 
+    /**
+     * -1: Unknown - 1: Innocent - 2: Neturals but not for killer - 3: Neturals for killer - 4: Killer - 5: Vigilante
+     * @return
+     */
     public int getRoleType() {
         return PlayerRoleWeightManager.getRoleType(this);
     }
@@ -748,6 +801,7 @@ public abstract class SRERole {
     /**
      * 是否是"其它模式"的职业（用于U键职业介绍页面的模式筛选）
      * 其他模式包括：游客、职业待定、超级亡命徒、土块、寻找者等
+     * 
      * @return 是否为其他模式职业
      */
     public boolean isOtherModeRole() {
@@ -756,6 +810,7 @@ public abstract class SRERole {
 
     /**
      * 设置是否为"其它模式"的职业
+     * 
      * @param isOtherModeRole 是否为其他模式职业
      * @return this
      */
