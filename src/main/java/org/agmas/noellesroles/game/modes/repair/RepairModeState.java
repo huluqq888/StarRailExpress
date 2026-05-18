@@ -30,7 +30,7 @@ public final class RepairModeState {
     public static final String NEUTRAL_WIN_TAG = "noellesroles_repair_neutral_win";
     public static final int REQUIRED_REPAIRED_STATIONS = 3;
     public static final int REPAIR_STATION_MAX_PROGRESS = 500;
-    public static final int TRIAL_EXECUTION_TICKS = 20 * 75;
+    public static final int TRIAL_EXECUTION_TICKS = 20 * 100;
     public static final float REVIVE_HEALTH = 8.0F;
     public static final int REPAIR_ACTION_COOLDOWN_TICKS = 8;
     public static final int ARCHIVIST_TASK_NEEDED = 8;
@@ -233,6 +233,27 @@ public final class RepairModeState {
         return true;
     }
 
+
+    public static void startTrial(ServerPlayer hunter, ServerPlayer prisoner, BlockPos cagePos) {
+        var hunterComponent = ModComponents.REPAIR_ROLES.get(hunter);
+        var prisonerComponent = ModComponents.REPAIR_ROLES.get(prisoner);
+        hunterComponent.carrying = null;
+        prisonerComponent.carriedBy = null;
+        prisonerComponent.carryStruggleProgress = 0;
+        prisonerComponent.downedStruggleProgress = 0;
+        prisonerComponent.downedLastStruggleTick = -1000L;
+        prisonerComponent.lastStruggleSide = "";
+        prisonerComponent.lastStruggleTick = -1000L;
+        prisonerComponent.trialStand = org.agmas.noellesroles.component.RepairRolePlayerComponent.BlockPosTag.of(cagePos);
+        prisoner.setPose(Pose.STANDING);
+        prisoner.teleportTo(cagePos.getX() + 0.5D, cagePos.getY(), cagePos.getZ() + 0.5D);
+        prisoner.setDeltaMovement(0.0D, 0.0D, 0.0D);
+        prisoner.resetFallDistance();
+        prisoner.addEffect(new MobEffectInstance(ModEffects.NO_COLLIDE, 40, 0, false, false, true));
+        prisonerComponent.sync();
+        hunterComponent.sync();
+    }
+
     public static void revivePlayer(ServerPlayer medic, ServerPlayer target) {
         var component = ModComponents.REPAIR_ROLES.get(target);
         releaseFromCarrier(target);
@@ -321,17 +342,37 @@ public final class RepairModeState {
             carriedComponent.downedLastStruggleTick = -1000L;
             carriedComponent.lastStruggleSide = "";
             carriedComponent.lastStruggleTick = -1000L;
-            carried.teleportTo(hunter.getX(), hunter.getY(), hunter.getZ());
+            BlockPos releasePos = findNearbySafeRelease(level, hunter.blockPosition());
+            carried.teleportTo(releasePos.getX() + 0.5D, releasePos.getY(), releasePos.getZ() + 0.5D);
+            carried.setDeltaMovement(0.0D, 0.0D, 0.0D);
+            carried.resetFallDistance();
+            carried.addEffect(new MobEffectInstance(ModEffects.NO_COLLIDE, 40, 0, false, false, true));
             carriedComponent.sync();
         }
         hunterComponent.carrying = null;
         hunterComponent.sync();
     }
 
+
+    private static BlockPos findNearbySafeRelease(ServerLevel level, BlockPos origin) {
+        for (BlockPos candidate : BlockPos.betweenClosed(origin.offset(-2, -1, -2), origin.offset(2, 1, 2))) {
+            BlockPos feet = candidate.immutable();
+            if (!level.getBlockState(feet.below()).isAir()
+                    && level.getBlockState(feet).canBeReplaced()
+                    && level.getBlockState(feet.above()).canBeReplaced()) {
+                return feet;
+            }
+        }
+        return origin;
+    }
+
     public static void broadcastCombatFeedback(ServerLevel level, int kind, net.minecraft.world.entity.Entity entity, double x,
             double y, double z, double radius) {
         broadcastCombatFeedback(level, kind, entity, x, y, z, radius, "");
     }
+
+
+
 
     public static void broadcastCombatFeedback(ServerLevel level, int kind, net.minecraft.world.entity.Entity entity, double x,
             double y, double z, double radius, String weaponId) {

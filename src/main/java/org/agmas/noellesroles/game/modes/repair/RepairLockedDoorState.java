@@ -45,23 +45,29 @@ public final class RepairLockedDoorState {
 
     private static void prepareDefaultMansionLocks(ServerLevel level, Map<BlockPos, DoorLock> locks,
             Map<String, EscapeRoute> routes) {
-        BlockPos spawn = level.getSharedSpawnPos();
-        int routeIndex = 0;
+        BlockPos base = RepairArenaBuilder.defaultMansionBase(level);
         int lockIndex = 0;
-        for (BlockPos pos : BlockPos.betweenClosed(spawn.offset(-64, -8, -64), spawn.offset(64, 12, 64))) {
-            BlockState state = level.getBlockState(pos);
-            ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock());
-            if (blockId.equals(ResourceLocation.withDefaultNamespace("iron_door"))
-                    && state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
-                    && state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER) {
+        for (int[] offset : new int[][] { { 14, 8 }, { 28, 8 }, { 14, 22 }, { 28, 22 }, { 14, 38 }, { 28, 38 },
+                { 10, 14 }, { 22, 14 }, { 34, 14 }, { 10, 30 }, { 22, 30 }, { 34, 30 }, { 10, 44 },
+                { 22, 44 }, { 34, 44 } }) {
+            BlockPos pos = base.offset(offset[0], 1, offset[1]);
+            if (level.getBlockState(pos).hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
                 locks.put(pos.immutable(), new DoorLock("default_mansion_lock_" + lockIndex++,
-                        "repair_old_key", true, false));
-            } else if (blockId.getPath().equals("repair_exit_gate")) {
-                routes.put("default_mansion_exit_" + routeIndex, new EscapeRoute("default_mansion_exit_" + routeIndex,
-                        "hud.noellesroles.repair.route.default_mansion", pos.immutable(), 12, new ArrayList<>(), 0));
-                routeIndex++;
+                        lockIndex % 3 == 0 ? "repair_lockpick" : "repair_old_key", true, false));
             }
         }
+        routes.put("default_mansion_main_gate", new EscapeRoute("default_mansion_main_gate",
+                "hud.noellesroles.repair.route.main_gate", base.offset(22, 1, 56), Integer.MAX_VALUE,
+                new ArrayList<>(), 0));
+        routes.put("default_mansion_secret_tunnel", new EscapeRoute("default_mansion_secret_tunnel",
+                "hud.noellesroles.repair.route.secret_tunnel", base.offset(1, 1, 22), 1,
+                new ArrayList<>(List.of("repair_old_key", "repair_crowbar")), 0));
+        routes.put("default_mansion_service_lift", new EscapeRoute("default_mansion_service_lift",
+                "hud.noellesroles.repair.route.service_lift", base.offset(43, 1, 22), 2,
+                new ArrayList<>(List.of("repair_fuse", "repair_gear_handle", "repair_battery")), 0));
+        routes.put("default_mansion_boiler_pipe", new EscapeRoute("default_mansion_boiler_pipe",
+                "hud.noellesroles.repair.route.boiler_pipe", base.offset(22, 1, 1), 2,
+                new ArrayList<>(List.of("repair_valve_handle", "repair_bolt_cutter")), 0));
     }
 
     public static boolean handleUse(ServerPlayer player, BlockPos pos) {
@@ -104,6 +110,12 @@ public final class RepairLockedDoorState {
     }
 
     private static boolean tryEscape(ServerLevel level, ServerPlayer player, EscapeRoute route) {
+        if ("default_mansion_main_gate".equals(route.id) && !RepairModeState.areExitGatesPowered(level)) {
+            prompt(player, Component.translatable("message.noellesroles.repair.gate_locked",
+                    RepairModeState.getCompletedStationCount(level), RepairModeState.REQUIRED_REPAIRED_STATIONS)
+                    .withStyle(ChatFormatting.RED));
+            return true;
+        }
         if (route.used >= route.capacity) {
             prompt(player, Component.translatable("message.noellesroles.repair.route_full").withStyle(ChatFormatting.RED));
             return true;
@@ -137,6 +149,13 @@ public final class RepairLockedDoorState {
         BlockState state = level.getBlockState(pos);
         if (state.hasProperty(BlockStateProperties.OPEN)) {
             level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.OPEN, true));
+            BlockPos otherHalf = state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                    && state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                    == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER ? pos.above() : pos.below();
+            BlockState otherState = level.getBlockState(otherHalf);
+            if (otherState.hasProperty(BlockStateProperties.OPEN)) {
+                level.setBlockAndUpdate(otherHalf, otherState.setValue(BlockStateProperties.OPEN, true));
+            }
         }
     }
 

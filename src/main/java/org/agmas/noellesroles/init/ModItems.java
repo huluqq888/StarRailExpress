@@ -26,6 +26,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemLore;
 import org.agmas.noellesroles.Noellesroles;
 import org.agmas.noellesroles.content.item.*;
+import org.agmas.noellesroles.content.item.FlareItem;
 import org.agmas.noellesroles.content.item.charge_item.*;
 import org.agmas.noellesroles.utils.LocalDateData;
 import org.agmas.noellesroles.content.item.JetpackItem;
@@ -56,6 +57,12 @@ public class ModItems {
     public static final Item RESCUE_FLARE = register(
             new RescueFlareItem(new Item.Properties().stacksTo(4)),
             "rescue_flare");
+    public static final Item FLARE = register(
+            new FlareItem(new Item.Properties().stacksTo(8)),
+            "flare");
+    public static final Item REPAIR_MEDKIT = register(
+            new RepairMedkitItem(new Item.Properties().stacksTo(4)),
+            "repair_medkit");
     public static final Item HUNTER_CHAIN = register(
             new HunterChainItem(new Item.Properties().stacksTo(1).durability(6)),
             "hunter_chain");
