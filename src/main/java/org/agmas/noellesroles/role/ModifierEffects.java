@@ -254,7 +254,7 @@ public class ModifierEffects {
         if (modifiers.isModifier(uuid, TraitorAndModifiers.BIG_EATER)) {
             SREPlayerMoodComponent mood = SREPlayerMoodComponent.KEY.get(player);
             if (mood != null) {
-                mood.setMood(mood.getMood() + 0.75f);
+                mood.setMood(mood.getMood() + 0.25f);
                 mood.sync();
             }
             

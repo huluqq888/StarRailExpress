@@ -65,14 +65,6 @@ public class TraitorAndModifiers {
             true  // 隐藏计分板
     ) {
         @Override
-        public List<ItemStack> getDefaultItems() {
-            List<ItemStack> items = new ArrayList<>();
-            items.add(new ItemStack(org.agmas.noellesroles.init.ModItems.SHORT_SHOTGUN));
-            items.add(new ItemStack(TMMItems.GRENADE));
-            return items;
-        }
-
-        @Override
         public List<io.wifi.starrailexpress.util.ShopEntry> getShopEntries() {
             return new ArrayList<>();
         }
