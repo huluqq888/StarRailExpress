@@ -102,6 +102,9 @@ public class SuperLooseEndPlayerComponent implements RoleComponent, ServerTickin
                         if (target != player && target.distanceToSqr(pos) <= radius * radius) {
                             // 杀死玩家 : 杀死次数为爆炸等级
                             for (int i = 0; i < explodeLvl; ++i) {
+                                // 玩家已被淘汰则停止击杀
+                                if (GameUtils.isPlayerEliminated(target))
+                                    break;
                                 GameUtils.killPlayer(target, true, player,
                                         io.wifi.starrailexpress.game.GameConstants.DeathReasons.GRENADE);
                             }
