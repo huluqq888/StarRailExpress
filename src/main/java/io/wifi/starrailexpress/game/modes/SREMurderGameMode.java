@@ -374,7 +374,8 @@ public class SREMurderGameMode extends GameMode {
      */
     public static List<RoleInstance> getAllRoles(int killerCount, int vigilanteCount, int neutralsCount, int playerSize,
             int forcedRoleSize, RoleAssignmentPool killerPool, RoleAssignmentPool neutralsPool,
-            RoleAssignmentPool vigilantePool, RoleAssignmentPool civilianPool, boolean haveOccupationRoles, int maxDepth) {
+            RoleAssignmentPool vigilantePool, RoleAssignmentPool civilianPool, boolean haveOccupationRoles,
+            int maxDepth) {
         // 第二步：创建角色池并分配角色
         // 杀手池
 
@@ -410,7 +411,7 @@ public class SREMurderGameMode extends GameMode {
         List<RoleInstance> expandedRoles = roleInstantList;
         List<RoleInstance> newRoleInstances = RoleAssignmentManager.removeOpposingJobs(roleInstantList, killerPool,
                 neutralsPool,
-                vigilantePool, civilianPool, haveOccupationRoles,maxDepth);
+                vigilantePool, civilianPool, haveOccupationRoles, maxDepth);
         if (haveOccupationRoles) {
             expandedRoles = RoleAssignmentManager.expandWithCompanionRoles(newRoleInstances);
         }
