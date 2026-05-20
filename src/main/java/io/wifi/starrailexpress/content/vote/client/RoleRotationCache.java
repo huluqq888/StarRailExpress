@@ -28,6 +28,9 @@ public class RoleRotationCache {
     // 当前玩家自己的序号
     private static int myRotationIndex = -1;
     
+    // 随机选择玩家集合（用于鹅鸭杀轮抽模式）
+    private static final Set<UUID> randomChoosers = new HashSet<>();
+    
     // 上次是否为轮到当前玩家（用于检测状态变化）
     private static boolean wasMyTurn = false;
 
@@ -58,6 +61,10 @@ public class RoleRotationCache {
         if (packet.getMyRotationIndex() >= 0) {
             myRotationIndex = packet.getMyRotationIndex();
         }
+        
+        // 更新随机选择玩家
+        randomChoosers.clear();
+        randomChoosers.addAll(packet.getRandomChoosers());
         
         // 更新轮到状态
         wasMyTurn = isSelecting && isMyTurnLocal();
@@ -126,6 +133,15 @@ public class RoleRotationCache {
         myRotationIndex = index;
     }
 
+    public static Set<UUID> getRandomChoosers() {
+        return randomChoosers;
+    }
+
+    public static void updateRandomChoosers(Set<UUID> choosers) {
+        randomChoosers.clear();
+        randomChoosers.addAll(choosers);
+    }
+
     public static boolean isMyTurn(UUID playerUuid) {
         Integer index = rotationOrder.get(playerUuid);
         return index != null && index == currentIndex;
@@ -155,6 +171,7 @@ public class RoleRotationCache {
         rotationOrder.clear();
         selectedRoles.clear();
         currentCandidates.clear();
+        randomChoosers.clear();
         myRotationIndex = -1;
     }
 

@@ -91,6 +91,9 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
     // 最后阶段阈值（总人数/5，最低为6）
     private int finalPhaseThreshold = 6;
 
+    // 记录哪些玩家选择了"随机"（用于鹅鸭杀轮抽模式隐藏职业显示）
+    private final HashSet<UUID> randomChoosers = new HashSet<>();
+
     public RoleRotationWorldComponent(Level world) {
         this.world = world;
     }
@@ -99,6 +102,7 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
         this.rolePool.clear();
         this.playerRotationOrder.clear();
         this.selectedRoles.clear();
+        this.randomChoosers.clear();
         this.currentRotationIndex = 1;
         this.totalPlayerCount = 0;
         this.isSelecting = false;
@@ -451,6 +455,8 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
         } else if (choiceIndex == 3) {
             // 选择随机
             selectedRole = selectRandomRole();
+            // 记录该玩家选择了随机（用于鹅鸭杀轮抽模式）
+            randomChoosers.add(playerUuid);
         }
 
         if (selectedRole == null) {
@@ -647,6 +653,10 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
         return rolePool;
     }
 
+    public HashSet<UUID> getRandomChoosers() {
+        return randomChoosers;
+    }
+
     public int getFinalPhaseThreshold() {
         return finalPhaseThreshold;
     }
@@ -734,6 +744,9 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
             int myIndex = playerRotationOrder.getOrDefault(mc.player.getUUID(), -1);
             RoleRotationCache.setMyRotationIndex(myIndex);
         }
+
+        // 更新随机选择玩家
+        RoleRotationCache.updateRandomChoosers(new HashSet<>(randomChoosers));
     }
 
     @Override
@@ -774,6 +787,13 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
             candidateList.add(StringTag.valueOf(role.identifier().toString()));
         }
         tag.put("candidates", candidateList);
+
+        // 序列化随机选择玩家
+        ListTag randomChooserList = new ListTag();
+        for (UUID uuid : randomChoosers) {
+            randomChooserList.add(StringTag.valueOf(uuid.toString()));
+        }
+        tag.put("randomChoosers", randomChooserList);
     }
 
     public void readFromSyncNbt(@NotNull CompoundTag tag, HolderLookup.Provider registryLookup) {
@@ -816,6 +836,17 @@ public class RoleRotationWorldComponent implements AutoSyncedComponent {
                 SRERole role = TMMRoles.ROLES.get(ResourceLocation.parse(rolePath));
                 if (role != null) {
                     currentCandidates.add(role);
+                }
+            }
+        }
+
+        randomChoosers.clear();
+        if (tag.contains("randomChoosers", CompoundTag.TAG_LIST)) {
+            ListTag randomChooserList = tag.getList("randomChoosers", CompoundTag.TAG_STRING);
+            for (int i = 0; i < randomChooserList.size(); i++) {
+                try {
+                    randomChoosers.add(UUID.fromString(randomChooserList.getString(i)));
+                } catch (IllegalArgumentException ignored) {
                 }
             }
         }

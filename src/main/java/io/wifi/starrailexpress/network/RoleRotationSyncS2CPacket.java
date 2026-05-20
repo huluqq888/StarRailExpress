@@ -42,6 +42,8 @@ public class RoleRotationSyncS2CPacket implements CustomPacketPayload {
     private final List<String> currentCandidates;
     // 当前玩家自己的序号
     private final int myRotationIndex;
+    // 记录哪些玩家选择了"随机"
+    private final Set<UUID> randomChoosers;
 
     public RoleRotationSyncS2CPacket(RegistryFriendlyByteBuf buf) {
         this.isSelecting = buf.readBoolean();
@@ -79,12 +81,19 @@ public class RoleRotationSyncS2CPacket implements CustomPacketPayload {
         
         // 读取myRotationIndex
         this.myRotationIndex = buf.readInt();
+        
+        // 读取randomChoosers
+        int randomSize = buf.readInt();
+        this.randomChoosers = new HashSet<>();
+        for (int i = 0; i < randomSize; i++) {
+            randomChoosers.add(buf.readUUID());
+        }
     }
 
     private RoleRotationSyncS2CPacket(boolean isSelecting, int currentIndex, int totalPlayers,
             int confirmCountdown, int finalPhaseThreshold, int remainingTime,
             HashMap<UUID, Integer> rotationOrder, HashMap<UUID, String> selectedRoles,
-            List<String> currentCandidates, int myRotationIndex) {
+            List<String> currentCandidates, int myRotationIndex, Set<UUID> randomChoosers) {
         this.isSelecting = isSelecting;
         this.currentIndex = currentIndex;
         this.totalPlayers = totalPlayers;
@@ -95,6 +104,7 @@ public class RoleRotationSyncS2CPacket implements CustomPacketPayload {
         this.selectedRoles = selectedRoles;
         this.currentCandidates = currentCandidates;
         this.myRotationIndex = myRotationIndex;
+        this.randomChoosers = randomChoosers;
     }
 
     private void write(RegistryFriendlyByteBuf buf) {
@@ -127,6 +137,12 @@ public class RoleRotationSyncS2CPacket implements CustomPacketPayload {
         
         // 写入myRotationIndex
         buf.writeInt(myRotationIndex);
+        
+        // 写入randomChoosers
+        buf.writeInt(randomChoosers.size());
+        for (UUID uuid : randomChoosers) {
+            buf.writeUUID(uuid);
+        }
     }
 
     @Override
@@ -180,7 +196,8 @@ public class RoleRotationSyncS2CPacket implements CustomPacketPayload {
                 orderMap,
                 selectedMap,
                 candidatesList,
-                myIndex
+                myIndex,
+                new HashSet<>(rrwc.getRandomChoosers())
         ));
     }
 
@@ -195,4 +212,5 @@ public class RoleRotationSyncS2CPacket implements CustomPacketPayload {
     public HashMap<UUID, String> getSelectedRoles() { return selectedRoles; }
     public List<String> getCurrentCandidates() { return currentCandidates; }
     public int getMyRotationIndex() { return myRotationIndex; }
+    public Set<UUID> getRandomChoosers() { return randomChoosers; }
 }

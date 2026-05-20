@@ -5,6 +5,7 @@ import io.wifi.starrailexpress.api.TMMRoles;
 import io.wifi.starrailexpress.content.vote.client.RoleRotationCache;
 import io.wifi.starrailexpress.network.RoleRotationSelectC2SPacket;
 import io.wifi.starrailexpress.network.RoleRotationSyncS2CPacket;
+import io.wifi.starrailexpress.SREConfig;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -301,13 +302,20 @@ public class RoleRotationScreen extends Screen {
             String roleText;
             int roleColor;
             if (selectedRolePath != null) {
-                SRERole role = getRoleByPath(selectedRolePath);
-                if (role != null) {
-                    roleText = RoleUtils.getRoleName(role).getString();
+                // 鹅鸭杀轮抽模式：玩家选择随机时不展示职业
+                if (SREConfig.instance().hideRandomRoleInRoleRotation
+                        && RoleRotationCache.getRandomChoosers().contains(playerUuid)) {
+                    roleText = Component.translatable("gui.sre.role_rotation.random").getString();
+                    roleColor = 0xFFFFAA33;
                 } else {
-                    roleText = selectedRolePath;
+                    SRERole role = getRoleByPath(selectedRolePath);
+                    if (role != null) {
+                        roleText = RoleUtils.getRoleName(role).getString();
+                    } else {
+                        roleText = selectedRolePath;
+                    }
+                    roleColor = 0xFF1ABCCC;
                 }
-                roleColor = 0xFF1ABCCC;
             } else {
                 roleText = "?";
                 roleColor = COL_TEXT_MUTED;
