@@ -1,5 +1,6 @@
 package org.agmas.noellesroles.content.item;
 
+import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.cca.SREPlayerPoisonComponent;
 import io.wifi.starrailexpress.game.GameUtils;
 import net.minecraft.server.level.ServerLevel;
@@ -22,6 +23,7 @@ import org.agmas.noellesroles.component.InfectedPlayerComponent;
 import org.agmas.noellesroles.component.ModComponents;
 import org.agmas.noellesroles.init.ModItems;
 import org.agmas.noellesroles.init.NRSounds;
+import org.agmas.noellesroles.role.ModRoles;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -65,8 +67,16 @@ public class AntidoteItem extends Item {
                                 NRSounds.SYRINGE_STAB, SoundSource.PLAYERS, 1.0F, 1.0F);
                             player.swing(InteractionHand.MAIN_HAND);
                             if (!player.isCreative()) {
-                                player.getCooldowns().addCooldown(ModItems.ANTIDOTE, 
-                                    (Integer) ModItems.ITEM_COOLDOWNS.get(ModItems.ANTIDOTE));
+                                int cd = (Integer) ModItems.ITEM_COOLDOWNS.get(ModItems.ANTIDOTE);
+                                // 如果疫使在场，解药冷却减少40%
+                                SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(world);
+                                for (ServerPlayer sp : ((ServerLevel) world).players()) {
+                                    if (gameWorld.isRole(sp, ModRoles.INFECTED)) {
+                                        cd = (int) (cd * 0.6);
+                                        break;
+                                    }
+                                }
+                                player.getCooldowns().addCooldown(ModItems.ANTIDOTE, cd);
                             }
                         }
                     }

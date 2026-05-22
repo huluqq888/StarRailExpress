@@ -1063,7 +1063,6 @@ public class ModRoles {
             .setCanUseInstinct(true)
             .setMax(1)
             .setCanSeeCoin(true)
-            .setMax(1)
             .setCanBeRandomedByOtherRoles(false);
 
     /**
@@ -1091,7 +1090,6 @@ public class ModRoles {
             .setComponentKey(ModComponents.MORTICIAN_BODYMAKER)
             .setNeutralForKiller(true)
             .setCanUseInstinct(true)
-            .setMax(1)
             .setCanSeeCoin(true)
             .setMax(1);
 
@@ -1099,7 +1097,7 @@ public class ModRoles {
             .registerRole(new NormalRole(SPELLBREAKER_ID, (new Color(132, 46, 170)).getRGB(), false,
                     true, SRERole.MoodType.FAKE, Integer.MAX_VALUE, true)
                     .setComponentKey(SpellbreakerPlayerComponent.KEY))
-            .setCanSeeCoin(true);
+            .setCanSeeCoin(true).setMax(1);
 
     public static SRERole INSANE_KILLER = TMMRoles
             .registerRole(new NormalRole(
