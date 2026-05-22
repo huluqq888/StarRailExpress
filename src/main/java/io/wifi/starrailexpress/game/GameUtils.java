@@ -312,6 +312,10 @@ public class GameUtils {
     }
 
     public static void stopGame(ServerLevel world) {
+        world.players().forEach(serverPlayer -> {
+            serverPlayer.addEffect(new MobEffectInstance(ModEffects.INVINCIBLE, 80,0,false,false,false));
+            serverPlayer.addEffect(new MobEffectInstance(ModEffects.USED_BANED, 80,0,false,false,false));
+        });
         SREGameWorldComponent component = SREGameWorldComponent.KEY.get(world);
         SREWorldBlackoutComponent.KEY.get(world).reset();
         component.setGameStatus(SREGameWorldComponent.GameStatus.STOPPING);
