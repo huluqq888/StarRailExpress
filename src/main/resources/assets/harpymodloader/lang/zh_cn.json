@@ -25,6 +25,8 @@
   "commands.setrolecount.reset": "杀手和侦探数量已重置为自动计算",
   "commands.changerole.success.changed": "已将玩家 %3$s 的角色从 %1$s 更改为 %2$s",
   "commands.changerole.success.assigned": "已将玩家 %2$s 的角色设置为 %1$s",
+  "commands.changerole.reset": "已重置玩家 %s 的角色",
+  "commands.changerole.reset.from": "已将玩家 %2$s 的角色从 %1$s 重置",
   "commands.changerole.player.notification": "您的角色已更改为 %1$s",
   "commands.changemodifier.player.notification.add": "成功为玩家 %s 添加修饰符 %s",
   "commands.changemodifier.player.notification.remove": "成功为玩家 %s 删除修饰符 %s",

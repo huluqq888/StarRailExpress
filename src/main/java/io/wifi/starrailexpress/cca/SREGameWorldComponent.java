@@ -276,6 +276,13 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         roleWorldComponent.addRole(player, role);
     }
 
+    public void removeRole(Player player) {
+        if (roleWorldComponent == null) {
+            roleWorldComponent = SRERoleWorldComponent.KEY.get(world);
+        }
+        roleWorldComponent.removeRole(player);
+    }
+
     public void resetRole(SRERole role) {
         if (roleWorldComponent == null) {
             roleWorldComponent = SRERoleWorldComponent.KEY.get(world);

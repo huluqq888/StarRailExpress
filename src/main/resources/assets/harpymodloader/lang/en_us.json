@@ -25,6 +25,8 @@
   "commands.setrolecount.reset": "Killer and detective counts reset to auto-calculate",
   "commands.changerole.success.changed": "Changed player %3$s's role from %1$s to %2$s",
   "commands.changerole.success.assigned": "Set player %2$s's role to %1$s",
+  "commands.changerole.reset": "Reset player %s's role",
+  "commands.changerole.reset.from": "Reset player %2$s's role from %1$s",
   "commands.changerole.player.notification": "Your role has been changed to %1$s",
   "commands.changemodifier.player.notification.add": "Successfully added modifier %s to player %s",
   "commands.changemodifier.player.notification.remove": "Successfully removed modifier %s from player %s",
