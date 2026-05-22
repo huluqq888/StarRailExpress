@@ -132,7 +132,7 @@ public class InfectedPlayerComponent implements RoleComponent, ServerTickingComp
     
     /**
      * 检查玩家是否可以被感染致死
-     * 杀手阵营和杀手方中立无法因感染致死
+     * 杀手阵营、杀手方中立、故障机器人无法因感染致死
      */
     public static boolean canDieFromInfection(Player player) {
         SREGameWorldComponent gameWorld = SREGameWorldComponent.KEY.get(player.level());
@@ -143,6 +143,11 @@ public class InfectedPlayerComponent implements RoleComponent, ServerTickingComp
         
         // 杀手阵营无法因感染致死
         if (role.isKillerTeam() || role.isKiller()) {
+            return false;
+        }
+        
+        // 故障机器人免疫病毒感染
+        if (gameWorld.isRole(player, ModRoles.GLITCH_ROBOT)) {
             return false;
         }
         

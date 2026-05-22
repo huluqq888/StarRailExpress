@@ -22,11 +22,14 @@ public class InfectedWinChecker {
     private static boolean wasAccelerated = false;  // 记录上一个tick的加速状态
     
     /**
-     * 检查场上是否存在医生
+     * 检查场上是否存在医生或故障机器人（都能阻止疫使时刻并让乘客获胜）
      */
     private static boolean hasDoctor(ServerLevel level, SREGameWorldComponent gameWorldComponent) {
         for (ServerPlayer player : level.getPlayers(GameUtils::isPlayerAliveAndSurvival)) {
             if (gameWorldComponent.isRole(player, ModRoles.DOCTOR)) {
+                return true;
+            }
+            if (gameWorldComponent.isRole(player, ModRoles.GLITCH_ROBOT)) {
                 return true;
             }
         }
