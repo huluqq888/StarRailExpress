@@ -31,6 +31,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
+import org.agmas.noellesroles.game.roles.neutral.monokuma.MonokumaPlayerComponent;
 import org.agmas.noellesroles.init.ModEffects;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.ComponentRegistry;
@@ -162,6 +163,9 @@ public class RefugeeComponent implements AutoSyncedComponent, ServerTickingCompo
         if (i == null) {
             i = 1;
         }
+        MonokumaPlayerComponent.KEY.get( player).clear();
+        WorldModifierComponent.KEY.get( player).removeModifier(data.uuid, SEModifiers.REFUGEE);
+
         final var areasWorldComponent = AreasWorldComponent.KEY.get(serverLevel);
         final var roomPosition = areasWorldComponent.getRoomPosition(i);
         // Teleport to death location
@@ -206,7 +210,8 @@ public class RefugeeComponent implements AutoSyncedComponent, ServerTickingCompo
                 "title @a subtitle {\"translate\":\"title.stupid_express.refugee.subtlte.active\",\"color\":\"dark_red\"}");
         serverLevel.getServer().getCommands().performPrefixedCommand(serverLevel.getServer().createCommandSourceStack(),
                 "title @a title {\"translate\":\"title.stupid_express.refugee.active\",\"color\":\"dark_red\"}");
-
+        serverLevel.getServer().getCommands().performPrefixedCommand(serverLevel.getServer().createCommandSourceStack(),
+                "title @a subtitle \"\"");
         serverLevel.players().forEach(p -> {
             ServerPlayNetworking.send(p, new TriggerStatusBarPayload("loose_end"));
             p.playNotifySound(SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.0f, 1.0f);

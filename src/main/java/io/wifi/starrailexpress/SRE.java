@@ -246,6 +246,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
             SetDeathPenaltyCommand.register(dispatcher);
             MoneyCommand.register(dispatcher);
             CustomReplayEventCommand.register(dispatcher, registryAccess);
+            ReplayScreenCommand.register(dispatcher);
             SetAutoTrainResetCommand.register(dispatcher);
             SetBoundCommand.register(dispatcher);
             AutoStartCommand.register(dispatcher);
@@ -312,6 +313,12 @@ public class SRE extends StarRailExpressID implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(
                 net.exmo.sre.mod_whitelist.common.network.ModWhitelistPayload.ID,
                 net.exmo.sre.mod_whitelist.common.network.ModWhitelistPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(
+                net.exmo.sre.mod_whitelist.common.network.ResourcePackWhitelistPayload.ID,
+                net.exmo.sre.mod_whitelist.common.network.ResourcePackWhitelistPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(
+                net.exmo.sre.mod_whitelist.common.network.ShaderPackWhitelistPayload.ID,
+                net.exmo.sre.mod_whitelist.common.network.ShaderPackWhitelistPayload.CODEC);
 
         PayloadTypeRegistry.playS2C().register(
                 net.exmo.sre.mod_whitelist.common.network.ModWhitelistConfigPayload.ID,

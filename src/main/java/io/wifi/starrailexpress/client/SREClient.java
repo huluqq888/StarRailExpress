@@ -641,6 +641,7 @@ public class SREClient implements ClientModInitializer {
             GameUtils.roomToPlayer.putAll(data);
         });
         ClientPlayNetworking.registerGlobalReceiver(ModWhitelistConfigPayload.ID, (payload, context) -> {
+            ModWhitelistClientNetworkHandler.handleModWhitelistConfigPayload(payload, context);
             ModWhitelistClientNetworkHandler.sendModWhitelistPayload();
         });
 
