@@ -1,5 +1,6 @@
 package org.agmas.noellesroles.game.roles.neutral.infected;
 
+import io.wifi.starrailexpress.cca.SREAbilityPlayerComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.event.AllowGameEnd;
 import io.wifi.starrailexpress.game.GameUtils;
@@ -247,6 +248,14 @@ public class InfectedWinChecker {
                     for (ServerPlayer p : level.players()) {
                         level.playSound(null, p.getX(), p.getY(), p.getZ(),
                             SoundEvents.WITCH_CELEBRATE, SoundSource.MASTER, 1.0F, 1.0F);
+                    }
+                    // 疫使技能冷却立刻清零
+                    for (ServerPlayer p : level.getPlayers(GameUtils::isPlayerAliveAndSurvival)) {
+                        if (gameWorldComponent.isRole(p, ModRoles.INFECTED)) {
+                            SREAbilityPlayerComponent abilityComponent = SREAbilityPlayerComponent.KEY.get(p);
+                            abilityComponent.cooldown = 0;
+                            abilityComponent.sync();
+                        }
                     }
                 }
                 InfectedAbilityHandler.checkAndTriggerLastInfected(level);
