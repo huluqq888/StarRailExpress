@@ -11,6 +11,7 @@ import io.wifi.starrailexpress.api.replay.GameReplayData;
 import io.wifi.starrailexpress.api.replay.GameReplayManager;
 import io.wifi.starrailexpress.api.replay.ReplayApiInitializer;
 import io.wifi.starrailexpress.api.replay.ReplayPayload;
+import io.wifi.starrailexpress.api.replay.screen.ReplayScreenService;
 import io.wifi.starrailexpress.cca.*;
 import io.wifi.starrailexpress.compat.TrainVoicePlugin;
 import io.wifi.starrailexpress.content.block.DoorPartBlock;
@@ -187,6 +188,7 @@ public class SRE extends StarRailExpressID implements ModInitializer {
         });
         ServerTickEvents.END_SERVER_TICK.register(serv -> {
             VoteManager.onServerTick();
+            ReplayScreenService.tick(serv);
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             SRE.isLobby = SREConfig.instance().isLobby;

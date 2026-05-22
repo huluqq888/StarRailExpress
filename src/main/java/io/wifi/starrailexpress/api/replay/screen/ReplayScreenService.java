@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
@@ -15,10 +16,21 @@ import net.minecraft.world.level.block.Blocks;
 import org.joml.Matrix4f;
 import com.mojang.math.Transformation;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public final class ReplayScreenService {
+    private static final int LINE_INTERVAL_TICKS = 12;
+    private static final float DISPLAY_VIEW_RANGE = 36.0F;
+    private static final double TEXT_OFFSET = 0.58D;
+    private static final String NAME_PREFIX = "SRE Replay Screen:";
+    private static final Map<String, ScrollAnimation> ACTIVE_ANIMATIONS = new HashMap<>();
+
     private ReplayScreenService() {
     }
 
@@ -63,30 +75,24 @@ public final class ReplayScreenService {
         buildBackground(level, entry);
         clearTextDisplay(level, entry);
         Component text = manager.generateScreenReplay(Math.max(6, entry.height() - 2));
-        Display.TextDisplay display = new ReplayTextDisplay(EntityType.TEXT_DISPLAY, level);
-        display.setText(text);
-        display.setNoGravity(true);
-        display.setBillboardConstraints(Display.BillboardConstraints.FIXED);
-        display.setYRot(yawFor(entry.direction()));
-        display.setXRot(0.0F);
-        display.setTransformation(new Transformation(new Matrix4f().scale(textScale(entry))));
-        BlockPos origin = entry.origin();
-        double x = origin.getX() + 0.5D;
-        double y = origin.getY() + Math.max(1.0D, entry.height() / 2.0D);
-        double z = origin.getZ() + 0.5D;
-        if (entry.direction().getAxis() == Direction.Axis.Z) {
-            x += (entry.width() - 1) / 2.0D;
-            z += entry.direction().getStepZ() * 0.58D;
-        } else {
-            x += entry.direction().getStepX() * 0.58D;
-            z += (entry.width() - 1) / 2.0D;
-        }
-        display.moveTo(x, y, z, yawFor(entry.direction()), 0.0F);
-        display.setCustomName(Component.literal("SRE Replay Screen: " + entry.id()).withStyle(ChatFormatting.GRAY));
-        display.setCustomNameVisible(false);
-        level.addFreshEntity(display);
-        ReplayScreenSavedData.get(level).updateLastTextDisplay(entry.id(), display.getUUID());
+        List<Component> lines = splitLines(text);
+        ScrollAnimation animation = new ScrollAnimation(entry, lines);
+        ACTIVE_ANIMATIONS.put(animationKey(level, entry.id()), animation);
+        animation.tick(level);
         return true;
+    }
+
+    public static void tick(MinecraftServer server) {
+        Iterator<Map.Entry<String, ScrollAnimation>> iterator = ACTIVE_ANIMATIONS.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, ScrollAnimation> entry = iterator.next();
+            ServerLevel level = server.getLevel(entry.getValue().screen.dimension());
+            if (level == null || entry.getValue().isDone()) {
+                iterator.remove();
+                continue;
+            }
+            entry.getValue().tick(level);
+        }
     }
 
     public static void buildBackground(ServerLevel level, ReplayScreenSavedData.ReplayScreenEntry entry) {
@@ -94,7 +100,7 @@ public final class ReplayScreenService {
         for (int w = 0; w < entry.width(); w++) {
             for (int h = 0; h < entry.height(); h++) {
                 BlockPos pos = backgroundPos(origin, entry.direction(), w, h);
-                level.setBlock(pos, Blocks.BLACK_WOOL.defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(pos, Blocks.BLACK_CONCRETE.defaultBlockState(), Block.UPDATE_ALL);
             }
         }
     }
@@ -107,12 +113,23 @@ public final class ReplayScreenService {
     }
 
     private static void clearTextDisplay(ServerLevel level, ReplayScreenSavedData.ReplayScreenEntry entry) {
+        ACTIVE_ANIMATIONS.remove(animationKey(level, entry.id()));
         UUID entityId = entry.lastTextDisplay();
-        if (entityId == null) {
-            return;
+        if (entityId != null) {
+            Entity entity = level.getEntity(entityId);
+            if (entity != null) {
+                entity.discard();
+            }
         }
-        Entity entity = level.getEntity(entityId);
-        if (entity != null) {
+        String screenName = displayName(entry.id());
+        List<Entity> oldDisplays = new ArrayList<>();
+        level.getAllEntities().forEach(entity -> {
+            if (entity instanceof Display.TextDisplay && entity.getCustomName() != null
+                    && screenName.equals(entity.getCustomName().getString())) {
+                oldDisplays.add(entity);
+            }
+        });
+        for (Entity entity : oldDisplays) {
             entity.discard();
         }
         ReplayScreenSavedData.get(level).updateLastTextDisplay(entry.id(), null);
@@ -137,6 +154,124 @@ public final class ReplayScreenService {
 
     private static float textScale(ReplayScreenSavedData.ReplayScreenEntry entry) {
         return Math.max(0.35F, Math.min(1.25F, entry.width() / 8.0F));
+    }
+
+    private static List<Component> splitLines(Component text) {
+        String raw = text == null ? "" : text.getString();
+        String[] parts = raw.split("\\R");
+        List<Component> lines = new ArrayList<>();
+        for (String part : parts) {
+            if (!part.isBlank()) {
+                lines.add(Component.literal(part));
+            }
+        }
+        if (lines.isEmpty()) {
+            lines.add(Component.literal(""));
+        }
+        return lines;
+    }
+
+    private static String animationKey(ServerLevel level, String id) {
+        return level.dimension().location() + ":" + id;
+    }
+
+    private static String displayName(String id) {
+        return NAME_PREFIX + id;
+    }
+
+    private static Display.TextDisplay spawnLine(ServerLevel level, ReplayScreenSavedData.ReplayScreenEntry entry,
+            Component text, int row, int visibleRows) {
+        Display.TextDisplay display = new ReplayTextDisplay(EntityType.TEXT_DISPLAY, level);
+        display.setText(text);
+        display.setNoGravity(true);
+        display.setBillboardConstraints(Display.BillboardConstraints.FIXED);
+        display.setYRot(yawFor(entry.direction()));
+        display.setXRot(0.0F);
+        display.setViewRange(DISPLAY_VIEW_RANGE);
+        display.setLineWidth(Math.max(80, entry.width() * 40));
+        display.setBackgroundColor(0x00000000);
+        display.setTransformation(new Transformation(new Matrix4f().scale(textScale(entry))));
+        positionLine(display, entry, row, visibleRows);
+        display.setCustomName(Component.literal(displayName(entry.id())).withStyle(ChatFormatting.GRAY));
+        display.setCustomNameVisible(false);
+        level.addFreshEntity(display);
+        return display;
+    }
+
+    private static void positionLine(Display.TextDisplay display, ReplayScreenSavedData.ReplayScreenEntry entry, int row,
+            int visibleRows) {
+        BlockPos origin = entry.origin();
+        double x = origin.getX() + 0.5D;
+        double y = origin.getY() + entry.height() - 0.65D - row * lineSpacing(entry, visibleRows);
+        double z = origin.getZ() + 0.5D;
+        if (entry.direction().getAxis() == Direction.Axis.Z) {
+            x += (entry.width() - 1) / 2.0D;
+            z += entry.direction().getStepZ() * TEXT_OFFSET;
+        } else {
+            x += entry.direction().getStepX() * TEXT_OFFSET;
+            z += (entry.width() - 1) / 2.0D;
+        }
+        display.moveTo(x, y, z, yawFor(entry.direction()), 0.0F);
+    }
+
+    private static double lineSpacing(ReplayScreenSavedData.ReplayScreenEntry entry, int visibleRows) {
+        if (visibleRows <= 1) {
+            return 0.5D;
+        }
+        return Math.max(0.28D, (entry.height() - 1.0D) / visibleRows);
+    }
+
+    private static int visibleRows(ReplayScreenSavedData.ReplayScreenEntry entry) {
+        return Math.max(2, entry.height() - 1);
+    }
+
+    private static final class ScrollAnimation {
+        private final ReplayScreenSavedData.ReplayScreenEntry screen;
+        private final List<Component> lines;
+        private final List<Display.TextDisplay> displays = new ArrayList<>();
+        private int nextLine;
+        private int ticksUntilNextLine;
+        private int idleTicks;
+
+        private ScrollAnimation(ReplayScreenSavedData.ReplayScreenEntry screen, List<Component> lines) {
+            this.screen = screen;
+            this.lines = lines;
+        }
+
+        private void tick(ServerLevel level) {
+            displays.removeIf(display -> display == null || !display.isAlive());
+            if (nextLine < lines.size()) {
+                if (ticksUntilNextLine <= 0) {
+                    addLine(level, lines.get(nextLine++));
+                    ticksUntilNextLine = LINE_INTERVAL_TICKS;
+                    idleTicks = 0;
+                } else {
+                    ticksUntilNextLine--;
+                }
+            } else {
+                idleTicks++;
+            }
+        }
+
+        private void addLine(ServerLevel level, Component line) {
+            int maxRows = visibleRows(screen);
+            if (displays.size() >= maxRows) {
+                Display.TextDisplay oldest = displays.removeFirst();
+                if (oldest != null) {
+                    oldest.discard();
+                }
+            }
+            Display.TextDisplay display = spawnLine(level, screen, line, displays.size(), maxRows);
+            displays.add(display);
+            for (int i = 0; i < displays.size(); i++) {
+                positionLine(displays.get(i), screen, i, maxRows);
+            }
+            ReplayScreenSavedData.get(level).updateLastTextDisplay(screen.id(), display.getUUID());
+        }
+
+        private boolean isDone() {
+            return nextLine >= lines.size() && idleTicks > LINE_INTERVAL_TICKS;
+        }
     }
 
     private static final class ReplayTextDisplay extends Display.TextDisplay {
