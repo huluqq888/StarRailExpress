@@ -81,6 +81,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
 
     /**
      * 检查某个物品类别是否已经被画出
+     * 
      * @param category 物品类别ID
      * @return 是否已被画出
      */
@@ -90,6 +91,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
 
     /**
      * 标记某个物品类别已被画出
+     * 
      * @param category 物品类别ID
      */
     public void markCategoryDrawn(int category) {
@@ -107,6 +109,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
 
     /**
      * 获取所有已画出的物品类别
+     * 
      * @return 已画出物品类别的副本
      */
     public Set<Integer> getDrawnCategories() {
@@ -650,7 +653,8 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
         if (player.isSpectator() || player.isCreative())
             return;
         SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(player.level());
-        if (gameWorldComponent.gameMode == SREGameModes.REPAIR_ESCAPE_MODE)return;
+        if (gameWorldComponent.gameMode == SREGameModes.REPAIR_ESCAPE_MODE)
+            return;
         final var block = player.level()
                 .getBlockState(new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ())).getBlock();
         final var block1 = player.level()
@@ -665,7 +669,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
                 GameUtils.killPlayer(player, false,
                         player.getLastAttacker() instanceof Player killerPlayer ? killerPlayer : null,
                         GameConstants.DeathReasons.FELL_OUT_OF_TRAIN);
-                {
+                if (!GameUtils.isPlayerEliminated(player)) {
                     final var block3 = player.level()
                             .getBlockState(new BlockPos((int) player.getX(), (int) player.getY(), (int) player.getZ()))
                             .getBlock();
