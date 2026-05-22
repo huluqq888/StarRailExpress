@@ -697,7 +697,7 @@ public class SREGameWorldComponent implements AutoSyncedComponent, ServerTicking
                 GameUtils.killPlayer(player, false,
                         player.getLastAttacker() instanceof Player killerPlayer ? killerPlayer : null,
                         GameConstants.DeathReasons.FELL_OUT_OF_TRAIN);
-                if ((player.getZ() >= 19000)) {
+                if (!GameUtils.isPlayerEliminated(player) && (player.getZ() >= 19000)) {
                     GameUtils.forceKillPlayer(player, false,
                             player.getLastAttacker() instanceof Player killerPlayer ? killerPlayer : null,
                             GameConstants.DeathReasons.FELL_OUT_OF_TRAIN);
