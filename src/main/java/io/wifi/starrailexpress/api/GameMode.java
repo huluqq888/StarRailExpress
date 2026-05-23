@@ -26,6 +26,7 @@ import io.wifi.starrailexpress.event.AllowPlayerDeath;
 import io.wifi.starrailexpress.event.AllowPlayerDeathWithKiller;
 import io.wifi.starrailexpress.event.AllowSpectatorPlayerInAreas;
 import io.wifi.starrailexpress.event.EarlyKillPlayer;
+import io.wifi.starrailexpress.event.OnGameTrueStarted;
 import io.wifi.starrailexpress.event.OnGiveKillerBalance;
 import io.wifi.starrailexpress.event.OnKillPlayerTriggered;
 import io.wifi.starrailexpress.event.OnPlayerDeath;
@@ -70,6 +71,7 @@ public abstract class GameMode {
     public final ResourceLocation identifier;
     public final int defaultStartTime;
     public final int minPlayerCount;
+    public long safeTimeStarted = 0;
 
     public boolean canPickBodyContent() {
         return false;
@@ -163,20 +165,28 @@ public abstract class GameMode {
     }
 
     /**
-     * 在游戏开始initializeGame后触发，在OnGameTrueStarted前触发
+     * 在游戏开始initializeGame后触发，在OnGameStarted前触发
      * 
      * @param serverWorld
      * @param gameComponent
      * @param readyPlayerList
      */
-    public void gameTrueStarted(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+    public void gameStarted(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
             ArrayList<ServerPlayer> readyPlayerList) {
         int SAFE_TIME_COOLDOWN = SREConfig.instance().safeTimeCooldown * 20;
+        safeTimeStarted = 0;
         if (hasSafeTime()) {
+            if (autoTriggerGameTrueStarted()) {
+                safeTimeStarted = serverWorld.getGameTime();
+            }
             GameUtils.addItemCooldowns(serverWorld, SAFE_TIME_COOLDOWN);
         }
         GameUtils.executeFunction(serverWorld.getServer().createCommandSourceStack(),
                 "harpymodloader:start_game_" + AreasWorldComponent.KEY.get(serverWorld).mapName);
+    }
+
+    public boolean autoTriggerGameTrueStarted() {
+        return true;
     }
 
     /**
@@ -195,7 +205,14 @@ public abstract class GameMode {
      * @param gameWorldComponent
      */
 
-    public abstract void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent);
+    public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        if (safeTimeStarted > 10) {
+            if (serverWorld.getGameTime() - safeTimeStarted >= SREConfig.instance().safeTimeCooldown * 20) {
+                safeTimeStarted = 0;
+                OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
+            }
+        }
+    }
 
     /**
      * 初始化游戏，还未正式开始。
@@ -217,6 +234,7 @@ public abstract class GameMode {
     public void beforeInitializeGame(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             List<ServerPlayer> players) {
         GameUtils.baseInitialize(serverWorld, gameWorldComponent, players);
+        safeTimeStarted = 0;
     }
 
     /**
@@ -612,7 +630,8 @@ public abstract class GameMode {
                         // 检查腐化修饰符 - 腐化尸体会直接显示为骷髅
                         if (victim.level() instanceof ServerLevel serverLevel) {
                             WorldModifierComponent modifiers = WorldModifierComponent.KEY.get(serverLevel);
-                            if (modifiers != null && modifiers.isModifier(victim.getUUID(), TraitorAndModifiers.CORRUPTED)) {
+                            if (modifiers != null
+                                    && modifiers.isModifier(victim.getUUID(), TraitorAndModifiers.CORRUPTED)) {
                                 body.setCorrupted(true);
                             }
                         }

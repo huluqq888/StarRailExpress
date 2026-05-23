@@ -6,6 +6,7 @@ import io.wifi.starrailexpress.api.replay.GameReplayUtils;
 import io.wifi.starrailexpress.cca.SREGameTimeComponent;
 import io.wifi.starrailexpress.cca.SREGameWorldComponent;
 import io.wifi.starrailexpress.client.SREClient;
+import io.wifi.starrailexpress.event.OnGameTrueStarted;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
 import io.wifi.starrailexpress.game.roles.SpecialGameModeModifiers;
@@ -203,6 +204,11 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
     }
 
     @Override
+    public boolean autoTriggerGameTrueStarted() {
+        return false;
+    }
+
+    @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         boolean haveSafeTime = false;
         int aliveCount = 0;
@@ -336,6 +342,13 @@ public class SRETNTTagGameMode extends SREMurderGameMode {
             }
             return false;
         });
+    }
+
+    @Override
+    public void gameStarted(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+            ArrayList<ServerPlayer> readyPlayerList) {
+        super.gameStarted(serverWorld, gameComponent, readyPlayerList);
+        OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
     }
 
     @Override

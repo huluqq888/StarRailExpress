@@ -58,7 +58,6 @@ import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
-import org.agmas.harpymodloader.events.ModdedRoleAssigned;
 import org.agmas.harpymodloader.events.ModdedRoleRemoved;
 import org.agmas.noellesroles.*;
 import org.agmas.noellesroles.commands.BroadcastCommand;
@@ -133,7 +132,7 @@ public class ModEventsRegister {
     private static AttributeModifier noJumpingAttribute = new AttributeModifier(
             Noellesroles.id("no_jumping"), -1.0f, AttributeModifier.Operation.ADD_VALUE);
     private static final Map<UUID, Vec3> oldmanPigRidePositions = new HashMap<>();
-    
+
     // 本局游戏是否已发放过年兽鞭炮（一局只能有一次）
     private static boolean nianShouFirecrackersDistributedThisGame = false;
     // private static AttributeModifier oldmanAttribute = new AttributeModifier(
@@ -1649,48 +1648,9 @@ public class ModEventsRegister {
             }
             return true;
         });
-        // 可以改玩家职业
-        // OnGamePlayerRolesConfirm.EVENT.register((serverLevel, roleAssignments) -> {
-        // String currentMap = "unknown";
-        // if (serverLevel.getServer() != null) {
-        // var areas =
-        // io.wifi.starrailexpress.cca.AreasWorldComponent.KEY.get(serverLevel);
-        // if (areas != null && areas.mapName != null) {
-        // currentMap = areas.mapName;
-        // }
-        // }
-        // });
 
-        // 年兽二次分发身份时补发鞭炮（适配阳光自选/职业轮选模式）
-        ModdedRoleAssigned.EVENT.register((player, role) -> {
-            if (!role.identifier().equals(ModRoles.NIAN_SHOU_ID)) {
-                return;
-            }
-            if (nianShouFirecrackersDistributedThisGame) {
-                return;
-            }
-            // 场上存在年兽，发放全场鞭炮
-            var level = player.level();
-            SREGameWorldComponent gw = SREGameWorldComponent.KEY.get(level);
-            if (gw == null || !gw.isRunning()) {
-                return;
-            }
-            nianShouFirecrackersDistributedThisGame = true;
-            if (level instanceof ServerLevel serverLevel) {
-                for (var p : serverLevel.players()) {
-                    ItemStack firecrackerStack = new ItemStack(TMMItems.FIRECRACKER);
-                    firecrackerStack.set(DataComponents.MAX_STACK_SIZE, 4);
-                    firecrackerStack.setCount(4);
-                    p.getInventory().add(firecrackerStack);
-                    BroadcastCommand.BroadcastMessage(p, Component
-                            .translatable("message.noellesroles.nianshou.firecrackers_distributed")
-                            .withStyle(ChatFormatting.GOLD));
-                }
-            }
-            Noellesroles.LOGGER.info("NianShou firecrackers distributed via ModdedRoleAssigned (补发)");
-        });
-
-        OnGameTrueStarted.EVENT.register((serverLevel) -> {
+        // 游戏开始，安全时间刚开始计时
+        OnGameStarted.EVENT.register((serverLevel) -> {
             TarotAssemblyManager.havingMeeting = false;
             HoanMeirinFistPunchHandler.PUNCH_RECORDS.clear();
             RoleShopHandler.resetOldmanEasterEggState();
@@ -1704,8 +1664,44 @@ public class ModEventsRegister {
             }
             // 重置疫使时刻状态
             org.agmas.noellesroles.game.roles.neutral.infected.InfectedWinChecker.resetAcceleratedState();
+
+            // 判断是否有指定职业
             SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(serverLevel);
             WorldModifierComponent worldModifierComponent = WorldModifierComponent.KEY.get(serverLevel);
+            final var all_players = serverLevel.players();
+            for (var p : all_players) {
+                if (!gameWorldComponent.isJumpAvailable() && GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p)) {
+                    // NO JUMPING! For everyone who hasn't permissions
+                    if (!p.hasPermissions(2)) {
+                        p.getAttribute(Attributes.JUMP_STRENGTH).addOrReplacePermanentModifier(noJumpingAttribute);
+                    }
+                }
+                if (worldModifierComponent.isModifier(p, NRModifiers.EXPEDITION)) {
+                    SRERole role = gameWorldComponent.getRole(p);
+                    var expeditionComponent = ExpeditionComponent.KEY.get(p);
+                    if (expeditionComponent != null && expeditionComponent.isExpedition()) {
+                        // 检查新角色是否是好人阵营
+                        // 如果不是好人阵营（是杀手或中立），则清除远征队组件
+                        if (role != null && (!role.isInnocent() || role.canUseKiller() || role.isNeutrals())) {
+                            // 清除远征队组件
+                            expeditionComponent.clear();
+                            expeditionComponent.sync();
+
+                            // 注意：由于 Harpymodloader 的修饰符系统限制，我们只能清除组件功能
+                            // 修饰符本身仍然保留在系统中，但不会生效
+                            // 这是为了防止某些角色（如赌徒、慕恋者）变成杀手后仍保留远征队能力
+                            worldModifierComponent.removeModifier(p.getUUID(), NRModifiers.EXPEDITION);
+                            Noellesroles.LOGGER
+                                    .info("Expedition modifier effect disabled for player due to role change: "
+                                            + p.getName().getString() + ", new role: " + role.identifier());
+                        }
+                    }
+                }
+            }
+        });
+        // 游戏正式开始，安全时间结束！
+        OnGameTrueStarted.EVENT.register((serverLevel) -> {
+            SREGameWorldComponent gameWorldComponent = SREGameWorldComponent.KEY.get(serverLevel);
             boolean hasDio = false;
             boolean hasRecorder = false;
             boolean hasCandlebearer = false;
@@ -1739,27 +1735,6 @@ public class ModEventsRegister {
                     hasArsonist = true;
                 } else if (gameWorldComponent.isRole(p, ModRoles.CUCKOO)) {
                     hasCuckoo = true;
-                }
-                if (worldModifierComponent.isModifier(p, NRModifiers.EXPEDITION)) {
-                    SRERole role = gameWorldComponent.getRole(p);
-                    var expeditionComponent = ExpeditionComponent.KEY.get(p);
-                    if (expeditionComponent != null && expeditionComponent.isExpedition()) {
-                        // 检查新角色是否是好人阵营
-                        // 如果不是好人阵营（是杀手或中立），则清除远征队组件
-                        if (role != null && (!role.isInnocent() || role.canUseKiller() || role.isNeutrals())) {
-                            // 清除远征队组件
-                            expeditionComponent.clear();
-                            expeditionComponent.sync();
-
-                            // 注意：由于 Harpymodloader 的修饰符系统限制，我们只能清除组件功能
-                            // 修饰符本身仍然保留在系统中，但不会生效
-                            // 这是为了防止某些角色（如赌徒、慕恋者）变成杀手后仍保留远征队能力
-                            worldModifierComponent.removeModifier(p.getUUID(), NRModifiers.EXPEDITION);
-                            Noellesroles.LOGGER
-                                    .info("Expedition modifier effect disabled for player due to role change: "
-                                            + p.getName().getString() + ", new role: " + role.identifier());
-                        }
-                    }
                 }
             }
             if (hasDio) {

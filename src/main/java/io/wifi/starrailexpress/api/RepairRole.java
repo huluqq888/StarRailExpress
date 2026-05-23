@@ -5,12 +5,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import org.agmas.noellesroles.game.modes.repair.RepairArenaBuilder;
 import org.agmas.noellesroles.init.ModBlocks;
 import org.agmas.noellesroles.init.ModItems;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -223,10 +219,6 @@ public class RepairRole extends NormalRole{
     }
 
     private static ShopEntry shopItem(net.minecraft.world.item.Item item, int price, ShopEntry.Type type) {
-        return new ShopEntry(new ItemStack(item), price, type);
-    }
-
-    private static ShopEntry shopItem(net.minecraft.world.level.ItemLike item, int price, ShopEntry.Type type) {
         return new ShopEntry(new ItemStack(item), price, type);
     }
 }

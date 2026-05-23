@@ -273,6 +273,8 @@ public class SREDevilRouletteGameMode extends GameMode {
 
     @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        super.tickServerGameLoop(serverWorld, gameWorldComponent);
+
         if (curAssignTick++ >= ASSIGN_INTERVAL) {
             addAllPlayerId(winners);
             assignMatch(serverWorld);

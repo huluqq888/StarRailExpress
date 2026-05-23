@@ -371,9 +371,9 @@ public class GameUtils {
 
         gameComponent.getGameMode().recordPlayerStats(serverWorld, gameComponent, readyPlayerList);
 
-        gameComponent.getGameMode().gameTrueStarted(serverWorld, gameComponent, readyPlayerList);
+        gameComponent.getGameMode().gameStarted(serverWorld, gameComponent, readyPlayerList);
 
-        OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
+        OnGameStarted.EVENT.invoker().onGameStarted(serverWorld);
         // --- 结束新增统计数据更新逻辑 ---
         OnTrainAreaHaveReseted.EVENT.invoker().onWorldHaveInited(serverWorld);
         isGameStarted = true;
