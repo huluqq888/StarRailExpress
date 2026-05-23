@@ -11,6 +11,7 @@ import io.wifi.starrailexpress.cca.SRERoleWorldComponent;
 import io.wifi.starrailexpress.cca.gamemode.RoleRotationWorldComponent;
 import io.wifi.starrailexpress.cca.gamemode.RoleRotationPlayerComponent;
 import io.wifi.starrailexpress.event.AllowGameEnd;
+import io.wifi.starrailexpress.event.OnGameTrueStarted;
 import io.wifi.starrailexpress.game.GameConstants;
 import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.modes.SREMurderGameMode;
@@ -134,34 +135,39 @@ public class SRERoleRotationGameMode extends SREMurderGameMode {
     }
 
     @Override
+    public boolean autoTriggerGameTrueStarted() {
+        return false;
+    }
+
+    @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         // 处理职业轮选阶段
         if (isInRotationPhase && rotationTimeout != -1) {
             RoleRotationWorldComponent rrwc = RoleRotationWorldComponent.KEY.get(serverWorld);
-            
+
             // 检查是否处于确认倒计时阶段
             if (!rrwc.isSelecting() && rrwc.getConfirmCountdown() > 0) {
                 // 更新确认倒计时
                 rrwc.tickConfirmCountdown();
                 rrwc.sync();
-                
+
                 // 检查确认倒计时是否结束
                 if (rrwc.getConfirmCountdown() <= 0) {
                     // 执行职业调整阶段：把剩余的杀手/中立/警长职业分配给随机平民
                     rrwc.adjustRemainingRoles(serverWorld);
                     rrwc.sync();
-                    
+
                     // 关闭所有玩家的GUI
                     for (ServerPlayer player : serverWorld.players()) {
                         ServerPlayNetworking.send(player, new CloseUiPayload());
                     }
-                    
+
                     // 结束轮选阶段
                     finishRotationPhase(serverWorld, gameWorldComponent);
                     return;
                 }
             }
-            
+
             // 检查总超时（5分钟）
             if (serverWorld.getGameTime() >= rotationTimeout) {
                 // 总超时，所有玩家选完职业
@@ -180,23 +186,23 @@ public class SRERoleRotationGameMode extends SREMurderGameMode {
     }
 
     @Override
-    public void gameTrueStarted(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
+    public void gameStarted(ServerLevel serverWorld, SREGameWorldComponent gameComponent,
             ArrayList<ServerPlayer> readyPlayerList) {
         // 不调用父类的安全时间，让玩家一直处于职业轮选安全时间直到选完职业
     }
 
     private void finishRotationPhase(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
         RoleRotationWorldComponent rrwc = RoleRotationWorldComponent.KEY.get(serverWorld);
-        
+
         // 在 clear 之前保存已选职业（adjustRemainingRoles 阶段可能已修改 selectedRoles）
         HashMap<UUID, SRERole> finalSelectedRoles = new HashMap<>(rrwc.getSelectedRoles());
         int finalTotalPlayers = rrwc.getTotalPlayers();
         ArrayList<SRERole> finalRolePool = new ArrayList<>(rrwc.getRolePool());
-        
+
         // 清除状态并同步，让客户端知道轮选已结束
         rrwc.clear();
         rrwc.sync();
-        
+
         isInRotationPhase = false;
         rotationTimeout = -1;
 
@@ -206,23 +212,24 @@ public class SRERoleRotationGameMode extends SREMurderGameMode {
         } else {
             autoAssignRemainingPlayers(serverWorld, gameWorldComponent, finalSelectedRoles, finalRolePool);
         }
-        serverWorld.players().forEach(p ->{
+        serverWorld.players().forEach(p -> {
             SREPlayerMoodComponent srePlayerMoodComponent = SREPlayerMoodComponent.KEY.get(p);
             srePlayerMoodComponent.setMood(1);
             srePlayerMoodComponent.sync();
 
         });
+        OnGameTrueStarted.EVENT.invoker().onGameTrueStarted(serverWorld);
     }
 
     public void completeRoleSelection(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
-        completeRoleSelection(serverWorld, gameWorldComponent, 
-            RoleRotationWorldComponent.KEY.get(serverWorld).getSelectedRoles());
+        completeRoleSelection(serverWorld, gameWorldComponent,
+                RoleRotationWorldComponent.KEY.get(serverWorld).getSelectedRoles());
     }
 
     public void completeRoleSelection(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent,
             HashMap<UUID, SRERole> selectedRoles) {
         SRERoleWorldComponent roleWorldComponent = SRERoleWorldComponent.KEY.get(serverWorld);
-        
+
         // 为所有玩家分配职业（使用传入的 selectedRoles map）
         for (ServerPlayer p : serverWorld.players()) {
             SRERole role = selectedRoles.get(p.getUUID());
@@ -230,25 +237,26 @@ public class SRERoleRotationGameMode extends SREMurderGameMode {
                 gameWorldComponent.addRole(p, role, false);
             }
         }
-        
+
         // 同步职业组件
         roleWorldComponent.sync();
-        
+
         // 获取所有存活的玩家并发送欢迎报幕、分配职业能力
-        List<ServerPlayer> players = serverWorld.getPlayers((p) -> GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p));
+        List<ServerPlayer> players = serverWorld
+                .getPlayers((p) -> GameUtils.isPlayerAliveAndSurvivalIgnoreShitSplit(p));
         for (ServerPlayer p : players) {
             SRERole role = roleWorldComponent.getRole(p);
-            
+
             // 移除安全时间效果
             p.removeEffect(ModEffects.SKILL_BANED);
             p.removeEffect(ModEffects.SAFE_TIME);
             p.removeEffect(ModEffects.MOVE_BANED);
             p.removeEffect(MobEffects.INVISIBILITY);
-            
+
             if (role != null) {
                 // 发送欢迎报幕
                 RoleUtils.sendWelcomeAnnouncement(p);
-                
+
                 // 杀手初始化金币
                 if (role.canUseKiller()) {
                     SREPlayerShopComponent playerShopComponent = SREPlayerShopComponent.KEY.get(p);
@@ -256,11 +264,11 @@ public class SRERoleRotationGameMode extends SREMurderGameMode {
                         playerShopComponent.setBalance(GameConstants.getMoneyStart());
                     }
                 }
-                
+
                 // 调用职业分配事件
                 ModdedRoleAssigned.EVENT.invoker().assignModdedRole(p, role);
             }
-            
+
             // 关闭UI
             ServerPlayNetworking.send(p, new CloseUiPayload());
         }

@@ -639,6 +639,7 @@ public class SREMurderGameMode extends GameMode {
 
     @Override
     public void tickServerGameLoop(ServerLevel serverWorld, SREGameWorldComponent gameWorldComponent) {
+        super.tickServerGameLoop(serverWorld, gameWorldComponent);
         GameUtils.WinStatus winStatus = GameUtils.WinStatus.NONE;
 
         boolean civilianAlive = false;
