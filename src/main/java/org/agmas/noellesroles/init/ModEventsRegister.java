@@ -58,6 +58,7 @@ import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.phys.Vec3;
 import org.agmas.harpymodloader.Harpymodloader;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
+import org.agmas.harpymodloader.events.ModdedRoleAssigned;
 import org.agmas.harpymodloader.events.ModdedRoleRemoved;
 import org.agmas.noellesroles.*;
 import org.agmas.noellesroles.commands.BroadcastCommand;
@@ -132,6 +133,9 @@ public class ModEventsRegister {
     private static AttributeModifier noJumpingAttribute = new AttributeModifier(
             Noellesroles.id("no_jumping"), -1.0f, AttributeModifier.Operation.ADD_VALUE);
     private static final Map<UUID, Vec3> oldmanPigRidePositions = new HashMap<>();
+    
+    // 本局游戏是否已发放过年兽鞭炮（一局只能有一次）
+    private static boolean nianShouFirecrackersDistributedThisGame = false;
     // private static AttributeModifier oldmanAttribute = new AttributeModifier(
     // Noellesroles.id("oldman"), -0.4f, AttributeModifier.Operation.ADD_VALUE);
     // private static AttributeModifier windYaoseScaleAttribute = new
@@ -925,6 +929,7 @@ public class ModEventsRegister {
             ModComponents.DEATH_PENALTY.get(player).init();
         };
         OnGameEnd.EVENT.register((world, gameWorldComponent) -> {
+            nianShouFirecrackersDistributedThisGame = false;
             HoanMeirinFistPunchHandler.PUNCH_RECORDS.clear();
             RoleShopHandler.resetOldmanEasterEggState();
             org.agmas.noellesroles.game.roles.killer.delayer.DelayerPlayerComponent.timeBoostTriggered = false;
@@ -1656,6 +1661,35 @@ public class ModEventsRegister {
         // }
         // });
 
+        // 年兽二次分发身份时补发鞭炮（适配阳光自选/职业轮选模式）
+        ModdedRoleAssigned.EVENT.register((player, role) -> {
+            if (!role.identifier().equals(ModRoles.NIAN_SHOU_ID)) {
+                return;
+            }
+            if (nianShouFirecrackersDistributedThisGame) {
+                return;
+            }
+            // 场上存在年兽，发放全场鞭炮
+            var level = player.level();
+            SREGameWorldComponent gw = SREGameWorldComponent.KEY.get(level);
+            if (gw == null || !gw.isRunning()) {
+                return;
+            }
+            nianShouFirecrackersDistributedThisGame = true;
+            if (level instanceof ServerLevel serverLevel) {
+                for (var p : serverLevel.players()) {
+                    ItemStack firecrackerStack = new ItemStack(TMMItems.FIRECRACKER);
+                    firecrackerStack.set(DataComponents.MAX_STACK_SIZE, 4);
+                    firecrackerStack.setCount(4);
+                    p.getInventory().add(firecrackerStack);
+                    BroadcastCommand.BroadcastMessage(p, Component
+                            .translatable("message.noellesroles.nianshou.firecrackers_distributed")
+                            .withStyle(ChatFormatting.GOLD));
+                }
+            }
+            Noellesroles.LOGGER.info("NianShou firecrackers distributed via ModdedRoleAssigned (补发)");
+        });
+
         OnGameTrueStarted.EVENT.register((serverLevel) -> {
             TarotAssemblyManager.havingMeeting = false;
             HoanMeirinFistPunchHandler.PUNCH_RECORDS.clear();
@@ -1770,7 +1804,8 @@ public class ModEventsRegister {
                     }
                 });
             }
-            if (hasNianShou) {
+            if (hasNianShou && !nianShouFirecrackersDistributedThisGame) {
+                nianShouFirecrackersDistributedThisGame = true;
                 for (var player : all_players) {
                     // 给每个玩家4个鞭炮
                     ItemStack firecrackerStack = new ItemStack(TMMItems.FIRECRACKER);
