@@ -1304,6 +1304,7 @@
   "gui.noellesroles.infected.ready": "感染：就緒",
   "gui.noellesroles.infected.time.locked": "疫使時刻：未解鎖",
   "gui.noellesroles.infected.time.unlocked": "疫使時刻：已解鎖",
+  "message.noellesroles.infected.time.triggered": "☠ 疫使時刻已觸發！所有殺手已陣亡，病毒傳播加速！ ☠",
   "hud.infected.target_miss": "請瞄準要感染的玩家",
   "gui.noellesroles.candlebearer.progress": "秉燭進度：%s/%s",
   "gui.noellesroles.candlebearer.charges": "隱身機會：%s/%s",

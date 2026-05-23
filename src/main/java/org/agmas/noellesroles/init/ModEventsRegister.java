@@ -1395,6 +1395,14 @@ public class ModEventsRegister {
                 }
             }
             RoleUtils.RemoveAllEffects(playerEntity);
+            // 葬仪死亡时清除拖动状态
+            if (gameWorldComponent.isRole(playerEntity, ModRoles.MORTICIAN_BODYMAKER)) {
+                var morticianComponent = org.agmas.noellesroles.component.ModComponents.MORTICIAN_BODYMAKER.get(playerEntity);
+                if (morticianComponent != null && morticianComponent.draggedBodyUuid != null) {
+                    morticianComponent.draggedBodyUuid = null;
+                    morticianComponent.sync();
+                }
+            }
             if (gameWorldComponent.isRole(playerEntity, ModRoles.JOJO)) {
                 int dropCount = 1 + MCItemsUtils.countItem(playerEntity, TMMItemTags.GUNS);
                 while (dropCount > 0) {

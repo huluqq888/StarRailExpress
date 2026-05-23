@@ -1282,6 +1282,7 @@
   "gui.noellesroles.infected.ready": "Infect: Ready",
   "gui.noellesroles.infected.time.locked": "Infected Time: Locked",
   "gui.noellesroles.infected.time.unlocked": "Infected Time: Unlocked",
+  "message.noellesroles.infected.time.triggered": "\u2620 Infected Time triggered! All killers are dead, virus spread accelerated! \u2620",
   "hud.infected.target_miss": "Please aim at the player to infect",
   "gui.noellesroles.candlebearer.progress": "Candle lighting progress: %s/%s",
   "gui.noellesroles.candlebearer.charges": "Invisibility charges: %s/%s",

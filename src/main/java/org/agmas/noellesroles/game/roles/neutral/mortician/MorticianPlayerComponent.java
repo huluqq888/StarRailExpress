@@ -460,16 +460,21 @@ public class MorticianPlayerComponent extends SREAbilityPlayerComponent {
             return;
         }
 
+        // 玩家死亡时立即解除拖动（必须在SAFE_TIME检查之前，否则死亡后可能被跳过）
+        if (!player.isAlive()) {
+            if (this.draggedBody != null) {
+                this.draggedBody = null;
+                this.draggedBodyUuid = null;
+                this.sync();
+            }
+            return;
+        }
+
         if (player.hasEffect(org.agmas.noellesroles.init.ModEffects.SAFE_TIME)) {
             return;
         }
 
-        // 玩家死亡时自动解除拖动
-        if (!player.isAlive() && this.draggedBody != null) {
-            this.draggedBody = null;
-            this.draggedBodyUuid = null;
-            this.sync();
-        }
+        // 玩家死亡时自动解除拖动 — 已移至SAFE_TIME检查之前确保可靠性
 
         // 减少技能冷却
         if (this.cooldown > 0) {

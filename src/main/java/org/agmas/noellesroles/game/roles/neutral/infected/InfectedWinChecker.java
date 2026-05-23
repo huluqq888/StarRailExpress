@@ -7,6 +7,9 @@ import io.wifi.starrailexpress.game.GameUtils;
 import io.wifi.starrailexpress.game.GameUtils.WinStatus;
 import io.wifi.starrailexpress.api.TMMRoles;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,6 +17,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import org.agmas.noellesroles.component.InfectedPlayerComponent;
 import org.agmas.noellesroles.component.ModComponents;
+import org.agmas.noellesroles.packet.BroadcastMessageS2CPacket;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
 
@@ -258,6 +262,12 @@ public class InfectedWinChecker {
                     for (ServerPlayer p : level.players()) {
                         level.playSound(null, p.getX(), p.getY(), p.getZ(),
                             SoundEvents.WITCH_CELEBRATE, SoundSource.MASTER, 1.0F, 1.0F);
+                    }
+                    // 全场广播疫使时刻提示
+                    Component broadcast = Component.translatable("message.noellesroles.infected.time.triggered")
+                            .withStyle(ChatFormatting.DARK_GREEN, ChatFormatting.BOLD);
+                    for (ServerPlayer p : level.getServer().getPlayerList().getPlayers()) {
+                        ServerPlayNetworking.send(p, new BroadcastMessageS2CPacket(broadcast));
                     }
                     // 疫使技能冷却立刻清零
                     for (ServerPlayer p : level.getPlayers(GameUtils::isPlayerAliveAndSurvival)) {
