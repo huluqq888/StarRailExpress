@@ -17,6 +17,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import org.agmas.noellesroles.component.InfectedPlayerComponent;
 import org.agmas.noellesroles.component.ModComponents;
+import org.agmas.noellesroles.init.ModEffects;
 import org.agmas.noellesroles.packet.BroadcastMessageS2CPacket;
 import org.agmas.noellesroles.role.ModRoles;
 import org.agmas.noellesroles.utils.RoleUtils;
@@ -221,6 +222,7 @@ public class InfectedWinChecker {
             boolean hasKiller = false;
             boolean hasDoctor = false;
             boolean hasLooseEnd = false;
+            boolean hasSafeTime = false;
 
             for (ServerPlayer player : level.getPlayers(GameUtils::isPlayerAliveAndSurvival)) {
                 if (gameWorldComponent.isRole(player, ModRoles.INFECTED)) {
@@ -238,6 +240,10 @@ public class InfectedWinChecker {
                 if (!hasLooseEnd && gameWorldComponent.isRole(player, TMMRoles.LOOSE_END)) {
                     hasLooseEnd = true;
                 }
+                // 检查是否处于安全时间（游戏开始安全时间、阳光自选、职业轮抽的选择阶段）
+                if (!hasSafeTime && player.hasEffect(ModEffects.SAFE_TIME)) {
+                    hasSafeTime = true;
+                }
             }
 
             if (!hasInfected) {
@@ -249,9 +255,9 @@ public class InfectedWinChecker {
                 return;
             }
 
-            // 检查触发条件：所有杀手已阵亡 且 没有医生 且 不处于亡命时刻
+            // 检查触发条件：所有杀手已阵亡 且 没有医生 且 不处于亡命时刻 且 不处于安全时间
             boolean killersAllDead = !hasKiller;
-            boolean shouldAccelerate = killersAllDead && !hasDoctor && !hasLooseEnd;
+            boolean shouldAccelerate = killersAllDead && !hasDoctor && !hasLooseEnd && !hasSafeTime;
 
             if (shouldAccelerate) {
                 // 设置加速传播（病毒传染时间缩短至10秒）
