@@ -109,7 +109,7 @@ public class AvengerPlayerComponent implements RoleComponent, ServerTickingCompo
     }
 
     /**
-     * 随机绑定一个无辜玩家
+     * 随机绑定一个无辜或中立玩家
      */
     public void bindRandomTarget() {
         if (!(player instanceof ServerPlayer serverPlayer))
@@ -127,7 +127,7 @@ public class AvengerPlayerComponent implements RoleComponent, ServerTickingCompo
             Player targetPlayer = player.level().getPlayerByUUID(uuid);
             if (targetPlayer == null)
                 return;
-            if (role.isInnocent() && GameUtils.isPlayerAliveAndSurvival(targetPlayer)) {
+            if ((role.isInnocent() || role.isNeutrals()) && GameUtils.isPlayerAliveAndSurvival(targetPlayer)) {
                 innocentPlayers.add(uuid);
             }
         });
